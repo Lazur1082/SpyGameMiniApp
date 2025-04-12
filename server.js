@@ -36,36 +36,26 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
     }
 });
 
-// Обработка команды /start
-bot.onText(/\/start/, async (msg) => {
-    try {
-        const chatId = msg.chat.id;
-        const username = msg.from.username || msg.from.first_name;
-        
-        // Отправляем приветственное сообщение с фото
-        await bot.sendPhoto(chatId, 'public/images/SpyGameBanner.png', {
-            caption: `🎮 Добро пожаловать в игру "Шпион", ${username}!\n\n` +
-                    `🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n` +
-                    `🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n` +
-                    `📱 Для начала игры нажмите кнопку ниже:`,
-            parse_mode: 'HTML',
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { 
-                            text: '🎮 Начать игру', 
-                            web_app: { 
-                                url: process.env.WEB_APP_URL 
-                            } 
-                        }
-                    ]
-                ]
-            }
-        });
-    } catch (error) {
-        console.error('Error in /start command:', error);
-        await bot.sendMessage(chatId, 'Произошла ошибка при запуске бота. Пожалуйста, попробуйте позже.');
-    }
+// Обработчик команды /start
+bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    const firstName = msg.from.first_name;
+    
+    const message = `Привет, ${firstName}! Добро пожаловать в игру "Шпион"! 🎮\n\n` +
+                   `Нажми на кнопку ниже, чтобы начать игру:`;
+    
+    const keyboard = {
+        inline_keyboard: [[{
+            text: '🎮 Играть в Шпиона',
+            web_app: { url: process.env.WEB_APP_URL }
+        }]]
+    };
+    
+    bot.sendMessage(chatId, message, {
+        reply_markup: keyboard
+    }).catch(error => {
+        console.error('Ошибка отправки сообщения:', error);
+    });
 });
 
 // Обработка ошибок бота
@@ -101,50 +91,22 @@ function getRandomLocation() {
 io.on('connection', (socket) => {
     console.log('Новое подключение:', socket.id);
 
-    // Обработка создания игры
-    socket.on('createGame', async (data) => {
+    // Создание новой игры
+    socket.on('createGame', ({ name }) => {
         try {
-            const { name } = data;
-            if (!name) {
-                socket.emit('error', { message: 'Имя игрока не указано' });
-                return;
-            }
-
-            // Генерируем уникальный ID игры
-            const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
-            
-            // Создаем новую игру
+            const gameId = generateGameId();
             const game = {
                 id: gameId,
-                players: [{
-                    id: socket.id,
-                    name: name,
-                    isAdmin: true
-                }],
+                players: [{ id: socket.id, name, isAdmin: true }],
                 status: 'waiting',
-                timer: 300, // 5 минут
-                createdAt: Date.now()
+                location: null,
+                spy: null
             };
-
-            // Сохраняем игру
             games.set(gameId, game);
-            
-            // Присоединяем сокет к комнате игры
             socket.join(gameId);
-            
-            // Отправляем ответ клиенту
-            socket.emit('gameCreated', {
-                gameId: gameId,
-                player: {
-                    name: name,
-                    isAdmin: true
-                },
-                players: game.players
-            });
-
-            console.log(`Game created: ${gameId} by ${name} (admin)`);
+            socket.emit('gameCreated', { gameId, player: game.players[0], players: game.players });
         } catch (error) {
-            console.error('Error creating game:', error);
+            console.error('Ошибка при создании игры:', error);
             socket.emit('error', { message: 'Ошибка при создании игры' });
         }
     });
@@ -177,57 +139,69 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Обработка начала игры
+    // Обработчик начала игры
     socket.on('startGame', ({ gameId }) => {
-        try {
-            const game = games.get(gameId);
-            if (!game) {
-                socket.emit('error', { message: 'Игра не найдена' });
-                return;
-            }
-
-            // Проверяем, является ли игрок администратором
-            const player = game.players.find(p => p.id === socket.id);
-            if (!player || !player.isAdmin) {
-                socket.emit('error', { message: 'Только администратор может начать игру' });
-                return;
-            }
-
-            // Проверяем количество игроков
-            if (game.players.length < 2) {
-                socket.emit('error', { message: 'Недостаточно игроков для начала игры' });
-                return;
-            }
-
+        const game = games.get(gameId);
+        if (game && game.players.length >= 3) {
             // Выбираем случайную локацию
-            const locations = ['Аэропорт', 'Банк', 'Больница', 'Кафе', 'Кинотеатр', 'Магазин', 'Ресторан', 'Школа'];
             const location = locations[Math.floor(Math.random() * locations.length)];
-
+            
             // Выбираем случайного шпиона
             const spyIndex = Math.floor(Math.random() * game.players.length);
-            const spy = game.players[spyIndex];
-
-            // Обновляем состояние игры
-            game.status = 'playing';
-            game.location = location;
-            game.spy = spy.id;
-
-            // Отправляем информацию игрокам
-            game.players.forEach(player => {
-                const role = player.id === spy.id ? 'spy' : 'civilian';
-                const playerLocation = role === 'spy' ? null : location;
-                
-                io.to(player.id).emit('gameStarted', {
-                    role: role,
-                    location: playerLocation,
-                    players: game.players
-                });
+            
+            // Отправляем роли игрокам
+            game.players.forEach((player, index) => {
+                const role = index === spyIndex ? 'spy' : 'civilian';
+                const playerSocket = io.sockets.sockets.get(player.id);
+                if (playerSocket) {
+                    playerSocket.emit('gameStarted', { role, location });
+                }
             });
+            
+            // Отправляем сообщение с фото и кнопкой
+            const message = {
+                type: 'gameStart',
+                photo: 'https://example.com/game-start.jpg', // Замените на реальный URL фото
+                caption: 'Игра началась!',
+                buttons: [
+                    {
+                        text: 'Правила игры',
+                        callback_data: 'rules'
+                    },
+                    {
+                        text: 'Начать обсуждение',
+                        callback_data: 'start_discussion'
+                    }
+                ]
+            };
+            
+            io.to(gameId).emit('gameMessage', message);
+            
+            // Удаляем игру из списка активных
+            games.delete(gameId);
+        }
+    });
 
-            console.log(`Game started: ${gameId}`);
-        } catch (error) {
-            console.error('Error starting game:', error);
-            socket.emit('error', { message: 'Ошибка при начале игры' });
+    // Обработчик нажатия на inline кнопку
+    socket.on('buttonClick', ({ gameId, buttonId }) => {
+        const game = games.get(gameId);
+        if (game) {
+            switch (buttonId) {
+                case 'rules':
+                    const rulesMessage = {
+                        type: 'rules',
+                        text: 'Правила игры:\n1. Один игрок - шпион\n2. Остальные - мирные жители\n3. Шпион не знает локацию\n4. Мирные жители знают локацию\n5. Обсуждайте локацию, не называя её\n6. Шпион должен угадать локацию'
+                    };
+                    io.to(gameId).emit('gameMessage', rulesMessage);
+                    break;
+                case 'start_discussion':
+                    const discussionMessage = {
+                        type: 'discussion',
+                        text: 'Обсуждение началось! Время: 10 минут'
+                    };
+                    io.to(gameId).emit('gameMessage', discussionMessage);
+                    break;
+            }
         }
     });
 
@@ -254,13 +228,6 @@ io.on('connection', (socket) => {
         try {
             const game = games.get(gameId);
             if (!game) return;
-
-            // Проверяем, является ли игрок админом
-            const player = game.players.find(p => p.id === socket.id);
-            if (!player || !player.isAdmin) {
-                socket.emit('error', { message: 'Только администратор может завершить игру' });
-                return;
-            }
 
             const spy = game.players.find(p => p.id === game.spy);
             io.to(gameId).emit('gameEnded', {

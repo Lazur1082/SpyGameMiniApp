@@ -93,7 +93,7 @@ const state = {
     sound: localStorage.getItem('sound') === 'true',
     gameId: null,
     playerName: null,
-    isAdmin: false,
+    role: null,
     players: [],
     messages: [],
     language: localStorage.getItem('language') || 'ru'
@@ -224,15 +224,17 @@ function showScreen(screenName) {
 }
 
 function updatePlayersList(players) {
-    const playersList = document.getElementById('playersList');
-    if (!playersList) return;
-    
-    playersList.innerHTML = '';
+    elements.playersList.innerHTML = '';
     players.forEach(player => {
-        const playerElement = document.createElement('div');
-        playerElement.className = 'player-item';
-        playerElement.textContent = `${player.name}${player.isAdmin ? ' (Админ)' : ''}`;
-        playersList.appendChild(playerElement);
+        const playerItem = document.createElement('div');
+        playerItem.className = 'player-item';
+        const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        playerItem.innerHTML = `
+            <div class="player-avatar">${initials}</div>
+            <span class="player-name">${player.name}</span>
+            ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
+        `;
+        elements.playersList.appendChild(playerItem);
     });
 }
 
@@ -257,9 +259,32 @@ function addChatMessage(message) {
         `;
     }
     
+    if (message.buttons && message.buttons.length > 0) {
+        messageContent += `<div class="message-buttons">`;
+        message.buttons.forEach(button => {
+            messageContent += `
+                <button class="inline-button" data-callback="${button.callback_data}">
+                    ${button.text}
+                </button>
+            `;
+        });
+        messageContent += `</div>`;
+    }
+    
     messageDiv.innerHTML = messageContent;
     elements.chatMessages.appendChild(messageDiv);
     elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+    
+    // Добавляем обработчики для inline кнопок
+    messageDiv.querySelectorAll('.inline-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const callbackData = button.dataset.callback;
+            socket.emit('buttonClick', {
+                gameId: state.gameId,
+                buttonId: callbackData
+            });
+        });
+    });
     
     if (state.sound && message.sender !== state.playerName) {
         sounds.message.play().catch(() => {});
@@ -337,70 +362,16 @@ function updateLanguage(lang) {
     document.querySelector('.settings-item label').textContent = t.language;
 }
 
-// Функция обновления игрового экрана
-function updateGameScreen(game) {
-    const roleDisplay = document.getElementById('playerRole');
-    const timerDisplay = document.getElementById('timer');
-    const endGameButton = document.getElementById('endGameButton');
-    
-    // Обновляем роль
-    if (game.spy === state.playerName) {
-        roleDisplay.textContent = 'Вы - Шпион! 🕵️‍♂️';
-    } else {
-        roleDisplay.textContent = `Вы - Гражданский. Локация: ${game.location}`;
-    }
-    
-    // Обновляем таймер
-    updateTimer(game.timer);
-    
-    // Показываем/скрываем кнопку завершения игры
-    const isAdmin = game.players.find(p => p.name === state.playerName)?.isAdmin;
-    endGameButton.style.display = isAdmin ? 'block' : 'none';
-}
-
 // Обработчики событий
 function initializeEventListeners() {
     console.log('Initializing event listeners');
     
-    // Кнопка создания игры в главном меню
-    document.getElementById('createGameButton').addEventListener('click', () => {
-        showScreen('createGameScreen');
-    });
-    
-    // Кнопка присоединения к игре в главном меню
-    document.getElementById('joinGameButton').addEventListener('click', () => {
-        showScreen('joinGameScreen');
-    });
-    
-    // Кнопка создания игры
-    const createGameButton = document.getElementById('createGameButton');
-    if (createGameButton) {
-        createGameButton.onclick = function() {
-            console.log('Create game button clicked');
-            const name = document.getElementById('playerName').value.trim();
-            if (name) {
-                console.log('Creating game with name:', name);
-                socket.emit('createGame', { name });
-            } else {
-                tg.showAlert('Введите ваше имя');
-            }
-        };
-    }
-    
-    // Кнопка присоединения к существующей игре
-    const joinExistingGameButton = document.getElementById('joinExistingGameButton');
-    if (joinExistingGameButton) {
-        joinExistingGameButton.onclick = function() {
-            console.log('Join existing game button clicked');
-            const name = document.getElementById('joinPlayerName').value.trim();
-            const gameId = document.getElementById('gameCode').value.trim();
-            if (name && gameId) {
-                console.log('Joining game:', gameId, 'with name:', name);
-                socket.emit('joinGame', { name, gameId });
-            } else {
-                tg.showAlert('Введите имя и код игры');
-            }
-        };
+    // Выбор языка
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        languageSelect.addEventListener('change', (e) => {
+            updateLanguage(e.target.value);
+        });
     }
     
     // Кнопка темы в хедере
@@ -413,6 +384,21 @@ function initializeEventListeners() {
         });
     }
     
+    // Переключатель темы в настройках
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        // Устанавливаем начальное состояние
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        themeToggle.checked = savedTheme === 'dark';
+        updateTheme(savedTheme);
+        
+        themeToggle.addEventListener('change', (e) => {
+            console.log('Theme toggle changed:', e.target.checked);
+            const isDark = e.target.checked;
+            updateTheme(isDark ? 'dark' : 'light');
+        });
+    }
+
     // Кнопка настроек
     const settingsButton = document.getElementById('settingsButton');
     if (settingsButton) {
@@ -421,73 +407,130 @@ function initializeEventListeners() {
         });
     }
     
-    // Кнопка назад из настроек
-    const backFromSettings = document.getElementById('backFromSettings');
-    if (backFromSettings) {
-        backFromSettings.addEventListener('click', () => {
+    if (elements.backFromSettings) {
+        elements.backFromSettings.addEventListener('click', () => {
+            console.log('Back from settings clicked');
             showScreen('main');
         });
     }
     
-    // Кнопка назад из лобби
-    const leaveLobbyButton = document.getElementById('leaveLobbyButton');
-    if (leaveLobbyButton) {
-        leaveLobbyButton.onclick = function() {
-            console.log('Leave lobby button clicked');
-            document.getElementById('lobbyScreen').classList.add('hidden');
-            document.getElementById('mainMenuScreen').classList.remove('hidden');
-            socket.emit('leaveGame');
-        };
-    }
-    
-    // Кнопка назад из создания игры
-    const backFromCreate = document.getElementById('backFromCreate');
-    if (backFromCreate) {
-        backFromCreate.onclick = function() {
-            console.log('Back from create clicked');
-            document.getElementById('createGameScreen').classList.add('hidden');
-            document.getElementById('mainMenuScreen').classList.remove('hidden');
-        };
-    }
-    
-    // Кнопка назад из присоединения к игре
-    const backFromJoin = document.getElementById('backFromJoin');
-    if (backFromJoin) {
-        backFromJoin.onclick = function() {
-            console.log('Back from join clicked');
-            document.getElementById('joinGameScreen').classList.add('hidden');
-            document.getElementById('mainMenuScreen').classList.remove('hidden');
-        };
-    }
-    
-    // Кнопка начала игры в лобби
-    const startGameButton = document.getElementById('startGameButton');
-    if (startGameButton) {
-        startGameButton.onclick = function() {
-            console.log('Start game button clicked');
-            console.log('Current state:', state);
-            if (state.isAdmin) {
-                console.log('Starting game as admin');
-                socket.emit('startGame', { gameId: state.gameId });
-            } else {
-                console.log('Not an admin, cannot start game');
-                tg.showAlert('Только администратор может начать игру');
-            }
-        };
-    }
-    
-    // Кнопка отправки сообщения
-    const sendMessageButton = document.getElementById('sendMessageButton');
-    if (sendMessageButton) {
-        sendMessageButton.addEventListener('click', () => {
-            const text = document.getElementById('messageInput').value.trim();
-            if (text) {
-                socket.emit('chatMessage', { text });
-                document.getElementById('messageInput').value = '';
-            }
+    if (elements.showCreateGame) {
+        elements.showCreateGame.addEventListener('click', () => {
+            console.log('Show create game clicked');
+            showScreen('start');
         });
     }
     
+    if (elements.showJoinGame) {
+        elements.showJoinGame.addEventListener('click', () => {
+            console.log('Show join game clicked');
+            showScreen('join');
+        });
+    }
+    
+    if (elements.backToMenu1) {
+        elements.backToMenu1.addEventListener('click', () => {
+            console.log('Back to menu 1 clicked');
+            showScreen('main');
+        });
+    }
+    
+    if (elements.backToMenu2) {
+        elements.backToMenu2.addEventListener('click', () => {
+            console.log('Back to menu 2 clicked');
+            showScreen('main');
+        });
+    }
+    
+    if (elements.backToMenu3) {
+        elements.backToMenu3.addEventListener('click', () => {
+            console.log('Back to menu 3 clicked');
+            showScreen('main');
+        });
+    }
+
+    // Кнопки действий
+    if (elements.createGame) {
+        elements.createGame.addEventListener('click', () => {
+            console.log('Create game clicked');
+            const name = elements.playerName.value.trim();
+            if (name) {
+                socket.emit('createGame', { name });
+            } else {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: 'Введите ваше имя',
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        });
+    }
+
+    if (elements.joinGame) {
+        elements.joinGame.addEventListener('click', () => {
+            console.log('Join game clicked');
+            const name = elements.playerNameJoin.value.trim();
+            const gameId = elements.gameId.value.trim().toUpperCase();
+            if (name && gameId) {
+                socket.emit('joinGame', { name, gameId });
+            } else {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: 'Заполните все поля',
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        });
+    }
+
+    if (elements.startGame) {
+        elements.startGame.addEventListener('click', () => {
+            console.log('Start game clicked');
+            const gameId = elements.currentGameId.textContent;
+            if (gameId) {
+                socket.emit('startGame', { gameId });
+            }
+        });
+    }
+
+    if (elements.endGame) {
+        elements.endGame.addEventListener('click', () => {
+            console.log('End game clicked');
+            const gameId = elements.currentGameId.textContent;
+            if (gameId) {
+                socket.emit('endGame', { gameId });
+            }
+        });
+    }
+
+    if (elements.sendMessage) {
+        elements.sendMessage.addEventListener('click', () => {
+            console.log('Send message clicked');
+            const text = elements.messageInput.value.trim();
+            if (text) {
+                socket.emit('chatMessage', { text });
+                elements.messageInput.value = '';
+            }
+        });
+    }
+
+    if (elements.messageInput) {
+        elements.messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                console.log('Send message keypress');
+                elements.sendMessage.click();
+            }
+        });
+    }
+
+    // Настройки
+    if (elements.soundToggle) {
+        elements.soundToggle.addEventListener('change', (e) => {
+            console.log('Sound toggle changed');
+            updateSound(e.target.checked);
+        });
+    }
+
     // Кнопка отправки фото
     const sendPhotoButton = document.getElementById('sendPhotoButton');
     if (sendPhotoButton) {
@@ -514,25 +557,6 @@ function initializeEventListeners() {
             input.click();
         });
     }
-    
-    // Кнопка завершения игры
-    const endGameButton = document.getElementById('endGameButton');
-    if (endGameButton) {
-        endGameButton.addEventListener('click', () => {
-            const gameId = document.getElementById('gameCodeDisplay').textContent;
-            if (gameId) {
-                socket.emit('endGame', { gameId });
-            }
-        });
-    }
-    
-    // Выбор языка
-    const languageSelect = document.getElementById('languageSelect');
-    if (languageSelect) {
-        languageSelect.addEventListener('change', (e) => {
-            updateLanguage(e.target.value);
-        });
-    }
 }
 
 // Обработчики событий Socket.io
@@ -552,49 +576,41 @@ socket.on('disconnect', () => {
 });
 
 socket.on('error', (error) => {
-    console.error('Socket error:', error);
-    tg.showAlert(error.message || 'Произошла ошибка');
+    console.error('Ошибка:', error);
+    tg.showPopup({
+        title: 'Ошибка',
+        message: error.message || 'Произошла ошибка',
+        buttons: [{type: 'ok'}]
+    });
 });
 
-socket.on('gameCreated', (data) => {
-    console.log('Game created:', data);
-    const { gameId, player, players } = data;
-    
-    // Сохраняем информацию об игре
+socket.on('gameCreated', ({ gameId, player, players }) => {
     state.gameId = gameId;
     state.playerName = player.name;
-    state.isAdmin = true; // Создатель игры всегда администратор
+    state.role = player.role;
     state.players = players;
-    
-    // Обновляем отображение
-    document.getElementById('gameCodeDisplay').textContent = gameId;
+    elements.currentGameId.textContent = gameId;
     updatePlayersList(players);
+    showScreen('waiting');
     
-    // Переходим в лобби
-    document.getElementById('createGameScreen').classList.add('hidden');
-    document.getElementById('lobbyScreen').classList.remove('hidden');
-    
-    // Проверяем статус администратора
-    console.log('Player is admin:', state.isAdmin);
+    // Копируем ID игры в буфер обмена
+    navigator.clipboard.writeText(gameId).catch(() => {});
+    tg.showPopup({
+        title: 'Игра создана',
+        message: `ID игры: ${gameId}\nID скопирован в буфер обмена`,
+        buttons: [{type: 'ok'}]
+    });
 });
 
-socket.on('joinedGame', (data) => {
-    console.log('Joined game:', data);
-    const { gameId, player, players } = data;
-    
-    // Сохраняем информацию об игре
+socket.on('joinedGame', ({ gameId, player, players }) => {
     state.gameId = gameId;
     state.playerName = player.name;
-    state.isAdmin = player.isAdmin;
+    state.role = player.role;
     state.players = players;
-    
-    // Обновляем отображение
-    document.getElementById('gameCodeDisplay').textContent = gameId;
+    elements.currentGameId.textContent = gameId;
     updatePlayersList(players);
-    
-    // Переходим в лобби
-    document.getElementById('joinGameScreen').classList.add('hidden');
-    document.getElementById('lobbyScreen').classList.remove('hidden');
+    showScreen('waiting');
+    playSound('join');
 });
 
 socket.on('playerJoined', ({ players }) => {
@@ -609,13 +625,20 @@ socket.on('playerLeft', ({ players }) => {
     playSound('leave');
 });
 
-socket.on('gameStarted', (game) => {
-    state.game = game;
+socket.on('gameStarted', ({ role, location }) => {
+    state.role = role;
+    elements.roleInfo.innerHTML = `
+        <h3 class="role-title">${role === 'spy' ? 'Вы - Шпион! 🕵️‍♂️' : 'Ваша роль'}</h3>
+        <p>${role === 'spy' ? 
+            'Попытайтесь угадать локацию, слушая разговор других игроков' : 
+            `Локация: ${location}<br>Не дайте шпиону догадаться!`}</p>
+    `;
+    elements.chatMessages.innerHTML = '';
     showScreen('game');
-    updateGameScreen(game);
+    playSound('start');
 });
 
-socket.on('chatMessage', (message) => {
+socket.on('gameMessage', (message) => {
     addChatMessage(message);
 });
 
