@@ -145,47 +145,8 @@ function getRandomLocation() {
     return locations[Math.floor(Math.random() * locations.length)];
 }
 
-// API Routes
-app.post('/api/profile', upload.single('avatar'), async (req, res) => {
-    try {
-        const { telegramId, name } = req.body;
-        const avatar = req.file ? `/images/avatars/${req.file.filename}` : null;
-
-        db.run(
-            'INSERT OR REPLACE INTO users (telegram_id, name, avatar) VALUES (?, ?, ?)',
-            [telegramId, name, avatar],
-            function(err) {
-                if (err) {
-                    res.status(500).json({ success: false, error: err.message });
-                } else {
-                    res.json({ success: true, userId: this.lastID });
-                }
-            }
-        );
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/profile/:telegramId', async (req, res) => {
-    try {
-        db.get(
-            'SELECT * FROM users WHERE telegram_id = ?',
-            [req.params.telegramId],
-            (err, user) => {
-                if (err) {
-                    res.status(500).json({ success: false, error: err.message });
-                } else if (user) {
-                    res.json({ success: true, user });
-                } else {
-                    res.status(404).json({ success: false, error: 'User not found' });
-                }
-            }
-        );
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+// Хранилище активных игр
+const activeGames = new Map();
 
 // Обработка подключений Socket.io
 io.on('connection', (socket) => {
@@ -195,39 +156,22 @@ io.on('connection', (socket) => {
     socket.on('createGame', async (data) => {
         try {
             const gameId = uuidv4().substring(0, 6);
-            db.serialize(() => {
-                db.run('BEGIN TRANSACTION');
-                
-                // Создаем игру
-                db.run(
-                    'INSERT INTO games (game_id, status) VALUES (?, ?)',
-                    [gameId, 'waiting'],
-                    function(err) {
-                        if (err) {
-                            db.run('ROLLBACK');
-                            socket.emit('error', { message: 'Ошибка создания игры' });
-                            return;
-                        }
-                        
-                        // Добавляем игрока
-                        db.run(
-                            'INSERT INTO players (game_id, user_id, role) VALUES (?, ?, ?)',
-                            [gameId, data.user.id, 'spy'],
-                            function(err) {
-                                if (err) {
-                                    db.run('ROLLBACK');
-                                    socket.emit('error', { message: 'Ошибка добавления игрока' });
-                                    return;
-                                }
-                                
-                                db.run('COMMIT');
-                                socket.join(gameId);
-                                socket.emit('gameCreated', { gameId });
-                            }
-                        );
-                    }
-                );
-            });
+            const game = {
+                id: gameId,
+                status: 'waiting',
+                players: [{
+                    id: data.user.id,
+                    name: data.user.name,
+                    avatar: data.user.avatar,
+                    isAdmin: true
+                }],
+                location: null,
+                spy: null
+            };
+
+            activeGames.set(gameId, game);
+            socket.join(gameId);
+            socket.emit('gameCreated', { gameId });
         } catch (error) {
             console.error('Error creating game:', error);
             socket.emit('error', { message: 'Ошибка создания игры' });
@@ -237,236 +181,116 @@ io.on('connection', (socket) => {
     // Присоединение к игре
     socket.on('joinGame', async (data) => {
         try {
-            console.log('Joining game:', data);
             const { gameId, user } = data;
             
             if (!gameId || !user || !user.id) {
                 throw new Error('Неверные данные для присоединения к игре');
             }
             
-            const game = games.get(gameId);
+            const game = activeGames.get(gameId);
             if (!game) {
                 throw new Error('Игра не найдена');
             }
-            
-            if (game.players.length >= 4) {
-                throw new Error('Игра уже заполнена');
+
+            if (game.status !== 'waiting') {
+                throw new Error('Игра уже началась');
             }
-            
-            // Добавляем игрока в игру
+
+            // Проверяем, не присоединился ли уже игрок
+            const existingPlayer = game.players.find(p => p.id === user.id);
+            if (existingPlayer) {
+                throw new Error('Вы уже в этой игре');
+            }
+
+            // Добавляем игрока
             game.players.push({
                 id: user.id,
                 name: user.name,
                 avatar: user.avatar,
-                socketId: socket.id
+                isAdmin: false
             });
-            
-            // Обновляем игру в базе данных
-            const [result] = await pool.query(
-                'UPDATE games SET players = ? WHERE id = ?',
-                [JSON.stringify(game.players), gameId]
-            );
-            
-            if (result.affectedRows === 0) {
-                throw new Error('Не удалось обновить игру');
-            }
-            
-            // Присоединяем сокет к комнате игры
+
             socket.join(gameId);
-            
-            // Отправляем обновление всем игрокам
-            io.to(gameId).emit('gameUpdated', {
-                gameId: gameId,
+            socket.emit('gameJoined', { 
+                gameId,
                 players: game.players
             });
-            
-            // Отправляем подтверждение присоединения
-            socket.emit('gameJoined', {
-                gameId: gameId,
-                players: game.players
+
+            // Оповещаем остальных игроков
+            socket.to(gameId).emit('playerJoined', {
+                playerName: user.name,
+                avatar: user.avatar
             });
-            
-            console.log(`Player ${user.name} joined game ${gameId}`);
         } catch (error) {
             console.error('Error joining game:', error);
             socket.emit('error', { message: error.message });
         }
     });
 
-    // Начало игры
-    socket.on('startGame', async (data) => {
+    // Отправка сообщения в чат
+    socket.on('chatMessage', (data) => {
         try {
-            db.serialize(() => {
-                db.run('BEGIN TRANSACTION');
+            const { gameId, sender, text } = data;
+            const game = activeGames.get(gameId);
+            
+            if (!game) {
+                throw new Error('Игра не найдена');
+            }
+
+            io.to(gameId).emit('chatMessage', {
+                sender,
+                text,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error sending message:', error);
+            socket.emit('error', { message: 'Ошибка отправки сообщения' });
+        }
+    });
+
+    // Начало игры
+    socket.on('startGame', (data) => {
+        try {
+            const { gameId } = data;
+            const game = activeGames.get(gameId);
+            
+            if (!game) {
+                throw new Error('Игра не найдена');
+            }
+
+            if (game.status !== 'waiting') {
+                throw new Error('Игра уже началась');
+            }
+
+            // Выбираем случайную локацию
+            game.location = getRandomLocation();
+            
+            // Выбираем случайного шпиона
+            const spyIndex = Math.floor(Math.random() * game.players.length);
+            game.spy = game.players[spyIndex].id;
+            
+            game.status = 'playing';
+
+            // Отправляем роли игрокам
+            game.players.forEach(player => {
+                const role = player.id === game.spy ? 'spy' : 'civilian';
+                const word = role === 'spy' ? 'Вы шпион!' : game.location;
                 
-                // Обновляем статус игры
-                db.run(
-                    'UPDATE games SET status = ? WHERE game_id = ?',
-                    ['playing', data.gameId],
-                    function(err) {
-                        if (err) {
-                            db.run('ROLLBACK');
-                            socket.emit('error', { message: 'Ошибка начала игры' });
-                            return;
-                        }
-                        
-                        // Получаем список игроков
-                        db.all(
-                            'SELECT * FROM players WHERE game_id = ?',
-                            [data.gameId],
-                            (err, players) => {
-                                if (err) {
-                                    db.run('ROLLBACK');
-                                    socket.emit('error', { message: 'Ошибка получения списка игроков' });
-                                    return;
-                                }
-                                
-                                // Выбираем случайного шпиона
-                                const spyIndex = Math.floor(Math.random() * players.length);
-                                const location = getRandomLocation();
-                                
-                                // Обновляем роли и слова
-                                players.forEach((player, index) => {
-                                    const role = index === spyIndex ? 'spy' : 'civilian';
-                                    const word = role === 'spy' ? '' : location;
-                                    
-                                    db.run(
-                                        'UPDATE players SET role = ?, word = ? WHERE id = ?',
-                                        [role, word, player.id],
-                                        (err) => {
-                                            if (err) {
-                                                db.run('ROLLBACK');
-                                                socket.emit('error', { message: 'Ошибка обновления ролей' });
-                                                return;
-                                            }
-                                        }
-                                    );
-                                });
-                                
-                                db.run('COMMIT');
-                                io.to(data.gameId).emit('gameStarted', { players });
-                            }
-                        );
-                    }
-                );
+                io.to(player.id).emit('gameStarted', {
+                    role,
+                    word
+                });
             });
         } catch (error) {
             console.error('Error starting game:', error);
-            socket.emit('error', { message: 'Ошибка начала игры' });
+            socket.emit('error', { message: error.message });
         }
     });
 
-    // Отправка сообщения в чат
-    socket.on('chatMessage', ({ text }) => {
-        try {
-            db.get(
-                'SELECT p.*, u.name FROM players p JOIN users u ON p.user_id = u.id WHERE p.id = ?',
-                [socket.id],
-                (err, player) => {
-                    if (err || !player) {
-                        socket.emit('error', { message: 'Ошибка отправки сообщения' });
-                        return;
-                    }
-                    
-                    io.to(player.game_id).emit('chatMessage', {
-                        sender: player.name,
-                        text
-                    });
-                }
-            );
-        } catch (error) {
-            console.error('Ошибка при отправке сообщения:', error);
-        }
-    });
-
-    // Завершение игры
-    socket.on('endGame', ({ gameId }) => {
-        try {
-            db.serialize(() => {
-                db.run('BEGIN TRANSACTION');
-                
-                // Получаем информацию об игре
-                db.get(
-                    'SELECT p.*, u.name FROM players p JOIN users u ON p.user_id = u.id WHERE p.game_id = ? AND p.role = ?',
-                    [gameId, 'spy'],
-                    (err, spy) => {
-                        if (err) {
-                            db.run('ROLLBACK');
-                            socket.emit('error', { message: 'Ошибка завершения игры' });
-                            return;
-                        }
-                        
-                        // Обновляем статус игры
-                        db.run(
-                            'UPDATE games SET status = ? WHERE game_id = ?',
-                            ['ended', gameId],
-                            (err) => {
-                                if (err) {
-                                    db.run('ROLLBACK');
-                                    socket.emit('error', { message: 'Ошибка завершения игры' });
-                                    return;
-                                }
-                                
-                                db.run('COMMIT');
-                                io.to(gameId).emit('gameEnded', {
-                                    spy: spy.name,
-                                    location: getRandomLocation()
-                                });
-                            }
-                        );
-                    }
-                );
-            });
-        } catch (error) {
-            console.error('Ошибка при завершении игры:', error);
-        }
-    });
-
-    // Выход из игры
-    socket.on('leaveGame', () => {
-        try {
-            db.get(
-                'SELECT game_id FROM players WHERE id = ?',
-                [socket.id],
-                (err, player) => {
-                    if (err || !player) return;
-                    
-                    db.run(
-                        'DELETE FROM players WHERE id = ?',
-                        [socket.id],
-                        (err) => {
-                            if (err) return;
-                            
-                            // Проверяем, остались ли игроки
-                            db.get(
-                                'SELECT COUNT(*) as count FROM players WHERE game_id = ?',
-                                [player.game_id],
-                                (err, result) => {
-                                    if (err) return;
-                                    
-                                    if (result.count === 0) {
-                                        // Удаляем игру, если нет игроков
-                                        db.run(
-                                            'DELETE FROM games WHERE game_id = ?',
-                                            [player.game_id]
-                                        );
-                                    } else {
-                                        io.to(player.game_id).emit('playerLeft', { players: result.count });
-                                    }
-                                }
-                            );
-                        }
-                    );
-                }
-            );
-        } catch (error) {
-            console.error('Ошибка при выходе из игры:', error);
-        }
-    });
-
-    // Обработка отключения
+    // Отключение игрока
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        console.log('Отключение:', socket.id);
+        // Здесь можно добавить логику для обработки отключения игрока
     });
 });
 
