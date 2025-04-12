@@ -37,13 +37,17 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
 });
 
 // Обработчик команды /start
-bot.command('start', async (ctx) => {
+bot.onText(/\/start/, async (msg) => {
     try {
+        const chatId = msg.chat.id;
+        const firstName = msg.from.first_name;
+        
         // Отправляем приветственное сообщение с фото
-        await ctx.replyWithPhoto(
-            { source: 'public/images/SpyGameBanner.png' },
+        await bot.sendPhoto(
+            chatId,
+            'public/images/SpyGameBanner.png',
             {
-                caption: `🎮 Добро пожаловать в игру "Шпион"!\n\n` +
+                caption: `🎮 Добро пожаловать в игру "Шпион", ${firstName}!\n\n` +
                         `🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n` +
                         `🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n` +
                         `📱 Для начала игры:\n` +
@@ -66,7 +70,7 @@ bot.command('start', async (ctx) => {
         );
     } catch (error) {
         console.error('Ошибка при отправке стартового сообщения:', error);
-        await ctx.reply('Произошла ошибка при запуске бота. Пожалуйста, попробуйте позже.');
+        await bot.sendMessage(msg.chat.id, 'Произошла ошибка при запуске бота. Пожалуйста, попробуйте позже.');
     }
 });
 
@@ -204,6 +208,13 @@ io.on('connection', (socket) => {
         try {
             const game = games.get(gameId);
             if (!game) return;
+
+            // Проверяем, является ли игрок админом
+            const player = game.players.find(p => p.id === socket.id);
+            if (!player || !player.isAdmin) {
+                socket.emit('error', { message: 'Только администратор может завершить игру' });
+                return;
+            }
 
             const spy = game.players.find(p => p.id === game.spy);
             io.to(gameId).emit('gameEnded', {

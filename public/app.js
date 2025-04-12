@@ -339,6 +339,27 @@ function updateLanguage(lang) {
     document.querySelector('.settings-item label').textContent = t.language;
 }
 
+// Функция обновления игрового экрана
+function updateGameScreen(game) {
+    const roleDisplay = document.getElementById('playerRole');
+    const timerDisplay = document.getElementById('timer');
+    const endGameButton = document.getElementById('endGameButton');
+    
+    // Обновляем роль
+    if (game.spy === state.playerName) {
+        roleDisplay.textContent = 'Вы - Шпион! 🕵️‍♂️';
+    } else {
+        roleDisplay.textContent = `Вы - Гражданский. Локация: ${game.location}`;
+    }
+    
+    // Обновляем таймер
+    updateTimer(game.timer);
+    
+    // Показываем/скрываем кнопку завершения игры
+    const isAdmin = game.players.find(p => p.name === state.playerName)?.isAdmin;
+    endGameButton.style.display = isAdmin ? 'block' : 'none';
+}
+
 // Обработчики событий
 function initializeEventListeners() {
     console.log('Initializing event listeners');
@@ -602,17 +623,10 @@ socket.on('playerLeft', ({ players }) => {
     playSound('leave');
 });
 
-socket.on('gameStarted', ({ role, location }) => {
-    state.role = role;
-    elements.roleInfo.innerHTML = `
-        <h3 class="role-title">${role === 'spy' ? 'Вы - Шпион! 🕵️‍♂️' : 'Ваша роль'}</h3>
-        <p>${role === 'spy' ? 
-            'Попытайтесь угадать локацию, слушая разговор других игроков' : 
-            `Локация: ${location}<br>Не дайте шпиону догадаться!`}</p>
-    `;
-    elements.chatMessages.innerHTML = '';
+socket.on('gameStarted', (game) => {
+    state.game = game;
     showScreen('game');
-    playSound('start');
+    updateGameScreen(game);
 });
 
 socket.on('chatMessage', (message) => {
