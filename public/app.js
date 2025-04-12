@@ -226,8 +226,12 @@ function updateProfile(name, avatar) {
     console.log('Updating profile:', { name, avatar });
     userProfile.name = name;
     userProfile.avatar = avatar;
+    
+    // Сохраняем в localStorage
     localStorage.setItem('userName', name);
     localStorage.setItem('userAvatar', avatar);
+    
+    // Обновляем UI
     updateProfileUI();
 }
 
@@ -367,185 +371,163 @@ function handleAvatarUpload(event) {
 function initializeEventListeners() {
     console.log('Initializing event listeners...');
 
-    // Профиль
-    document.getElementById('profileButton').addEventListener('click', () => {
-        console.log('Profile button clicked');
-        showScreen('profileScreen');
-    });
-
-    document.getElementById('profileNav').addEventListener('click', () => {
-        console.log('Profile nav clicked');
-        showScreen('profileScreen');
-    });
-
-    document.getElementById('backFromProfile').addEventListener('click', () => {
-        console.log('Back from profile clicked');
-        showScreen('mainMenu');
-    });
-
-    // Загрузка аватара
-    const uploadAvatar = document.getElementById('uploadAvatar');
-    const avatarInput = document.getElementById('avatarInput');
-    
-    if (uploadAvatar && avatarInput) {
-        uploadAvatar.addEventListener('click', () => {
-            avatarInput.click();
+    // Сохранение ника
+    const saveNicknameBtn = document.getElementById('saveNickname');
+    if (saveNicknameBtn) {
+        saveNicknameBtn.addEventListener('click', () => {
+            const nameInput = document.getElementById('profileName');
+            if (nameInput) {
+                const newName = nameInput.value.trim();
+                if (newName) {
+                    updateProfile(newName, userProfile.avatar);
+                    console.log('Nickname saved:', newName);
+                }
+            }
         });
-        
-        avatarInput.addEventListener('change', handleAvatarUpload);
     }
 
-    // Выбор аватара
-    document.querySelectorAll('.avatar-option').forEach(option => {
-        option.addEventListener('click', () => {
-            const avatar = option.dataset.avatar;
-            updateProfile(userProfile.name, avatar);
-            
-            // Обновляем выбранный аватар
-            document.querySelectorAll('.avatar-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            option.classList.add('selected');
-        });
-    });
-
-    // Имя профиля
-    document.getElementById('profileName').addEventListener('input', (e) => {
-        console.log('Profile name changed:', e.target.value);
-        updateProfile(e.target.value, userProfile.avatar);
-    });
-
-    // Тема
-    document.getElementById('themeButton').addEventListener('click', () => {
-        const newTheme = state.theme === 'light' ? 'dark' : 'light';
-        updateTheme(newTheme);
-    });
-
-    // Навигационные кнопки
-    document.getElementById('mainMenuNav').addEventListener('click', () => {
-        console.log('Main menu nav clicked');
-        showScreen('mainMenu');
-    });
-
-    document.getElementById('settingsButton').addEventListener('click', () => {
-        console.log('Settings button clicked');
-        showScreen('settingsScreen');
-    });
-
-    document.getElementById('backFromSettings').addEventListener('click', () => {
-        console.log('Back from settings clicked');
-        showScreen('mainMenu');
-    });
-
-    document.getElementById('showCreateGame').addEventListener('click', () => {
-        console.log('Show create game clicked');
-        showScreen('startScreen');
-    });
-
-    document.getElementById('showJoinGame').addEventListener('click', () => {
-        console.log('Show join game clicked');
-        showScreen('joinScreen');
-    });
-
-    document.getElementById('backToMenu1').addEventListener('click', () => {
-        console.log('Back to menu 1 clicked');
-        showScreen('mainMenu');
-    });
-
-    document.getElementById('backToMenu2').addEventListener('click', () => {
-        console.log('Back to menu 2 clicked');
-        showScreen('mainMenu');
-    });
-
-    document.getElementById('backToMenu3').addEventListener('click', () => {
-        console.log('Back to menu 3 clicked');
-        showScreen('mainMenu');
-    });
-
-    // Навигация
-    document.getElementById('createGameNav').addEventListener('click', () => {
-        console.log('Create game nav clicked');
-        showScreen('startScreen');
-    });
-
-    document.getElementById('joinGameNav').addEventListener('click', () => {
-        console.log('Join game nav clicked');
-        showScreen('joinScreen');
-    });
-
     // Создание игры
-    document.getElementById('createGame').addEventListener('click', () => {
-        console.log('Create game clicked');
-        createGame();
-    });
+    const createGameBtn = document.getElementById('createGame');
+    if (createGameBtn) {
+        createGameBtn.addEventListener('click', () => {
+            console.log('Create game button clicked');
+            createGame();
+        });
+    } else {
+        console.error('Create game button not found');
+    }
 
     // Присоединение к игре
-    document.getElementById('joinGame').addEventListener('click', () => {
-        console.log('Join game clicked');
-        joinGame();
-    });
+    const joinGameBtn = document.getElementById('joinGame');
+    if (joinGameBtn) {
+        joinGameBtn.addEventListener('click', () => {
+            console.log('Join game button clicked');
+            joinGame();
+        });
+    } else {
+        console.error('Join game button not found');
+    }
 
-    document.getElementById('startGame').addEventListener('click', () => {
-        console.log('Start game clicked');
-        startGame();
-    });
+    // Навигация
+    const mainMenuNav = document.getElementById('mainMenuNav');
+    if (mainMenuNav) {
+        mainMenuNav.addEventListener('click', () => {
+            console.log('Main menu nav clicked');
+            showScreen('mainMenu');
+        });
+    }
 
-    document.getElementById('endGame').addEventListener('click', () => {
-        console.log('End game clicked');
-        endGame();
-    });
+    const createGameNav = document.getElementById('createGameNav');
+    if (createGameNav) {
+        createGameNav.addEventListener('click', () => {
+            console.log('Create game nav clicked');
+            showScreen('startScreen');
+        });
+    }
 
-    document.getElementById('newGame').addEventListener('click', () => {
-        console.log('New game clicked');
-        showScreen('mainMenu');
+    const joinGameNav = document.getElementById('joinGameNav');
+    if (joinGameNav) {
+        joinGameNav.addEventListener('click', () => {
+            console.log('Join game nav clicked');
+            showScreen('joinScreen');
+        });
+    }
+
+    // Профиль
+    const profileButton = document.getElementById('profileButton');
+    if (profileButton) {
+        profileButton.addEventListener('click', () => {
+            console.log('Profile button clicked');
+            showScreen('profileScreen');
+        });
+    }
+
+    const profileNav = document.getElementById('profileNav');
+    if (profileNav) {
+        profileNav.addEventListener('click', () => {
+            console.log('Profile nav clicked');
+            showScreen('profileScreen');
+        });
+    }
+
+    // Настройки
+    const settingsButton = document.getElementById('settingsButton');
+    if (settingsButton) {
+        settingsButton.addEventListener('click', () => {
+            console.log('Settings button clicked');
+            showScreen('settingsScreen');
+        });
+    }
+
+    // Кнопки "Назад"
+    const backButtons = [
+        { id: 'backFromProfile', screen: 'mainMenu' },
+        { id: 'backFromSettings', screen: 'mainMenu' },
+        { id: 'backToMenu1', screen: 'mainMenu' },
+        { id: 'backToMenu2', screen: 'mainMenu' },
+        { id: 'backToMenu3', screen: 'mainMenu' }
+    ];
+
+    backButtons.forEach(button => {
+        const element = document.getElementById(button.id);
+        if (element) {
+            element.addEventListener('click', () => {
+                console.log(`${button.id} clicked`);
+                showScreen(button.screen);
+            });
+        }
     });
 
     // Чат
-    document.getElementById('sendMessage').addEventListener('click', () => {
-        const messageInput = document.getElementById('messageInput');
-        const message = messageInput.value.trim();
-        
-        if (message) {
-            if (message.startsWith('/')) {
-                handleCommand(message);
-            } else {
-                socket.emit('chatMessage', {
-                    sender: userProfile.name,
-                    text: message
-                });
-            }
-            messageInput.value = '';
-        }
-    });
-
-    // Язык
-    document.getElementById('languageSelect').addEventListener('change', (e) => {
-        console.log('Language changed:', e.target.value);
-        updateLanguage(e.target.value);
-    });
-
-    // Обработка нажатия Enter в полях ввода
-    document.getElementById('messageInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const message = e.target.value.trim();
+    const sendMessageBtn = document.getElementById('sendMessage');
+    if (sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', () => {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
             if (message) {
-                socket.emit('chatMessage', {
-                    sender: userProfile.name,
-                    text: message
-                });
-                e.target.value = '';
+                if (message.startsWith('/')) {
+                    handleCommand(message);
+                } else {
+                    socket.emit('chatMessage', {
+                        sender: userProfile.name,
+                        text: message
+                    });
+                }
+                messageInput.value = '';
             }
-        }
-    });
+        });
+    }
 
-    document.getElementById('gameId').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const gameId = e.target.value.trim();
-            if (gameId) {
-                joinGame(gameId, userProfile.name);
+    // Обработка Enter в полях ввода
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const message = e.target.value.trim();
+                if (message) {
+                    if (message.startsWith('/')) {
+                        handleCommand(message);
+                    } else {
+                        socket.emit('chatMessage', {
+                            sender: userProfile.name,
+                            text: message
+                        });
+                    }
+                    e.target.value = '';
+                }
             }
-        }
-    });
+        });
+    }
+
+    const gameIdInput = document.getElementById('gameId');
+    if (gameIdInput) {
+        gameIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                joinGame();
+            }
+        });
+    }
 }
 
 // Обработчики событий Socket.io
@@ -645,7 +627,8 @@ function createGame() {
     console.log('Creating game...');
     if (!userProfile.name) {
         console.error('Player name is required');
-        return;
+        const defaultName = tg?.initDataUnsafe?.user?.username || 'Игрок';
+        updateProfile(defaultName, userProfile.avatar);
     }
     
     socket.emit('createGame', {
@@ -665,7 +648,8 @@ function joinGame() {
     
     if (!userProfile.name) {
         console.error('Player name is required');
-        return;
+        const defaultName = tg?.initDataUnsafe?.user?.username || 'Игрок';
+        updateProfile(defaultName, userProfile.avatar);
     }
     
     socket.emit('joinGame', {
@@ -724,6 +708,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Установка начальной темы
     const savedTheme = localStorage.getItem('theme') || 'light';
     updateTheme(savedTheme);
+    
+    // Установка имени игрока, если оно не установлено
+    if (!userProfile.name) {
+        const defaultName = tg?.initDataUnsafe?.user?.username || 'Игрок';
+        updateProfile(defaultName, userProfile.avatar);
+    }
     
     // Обновление профиля
     updateProfileUI();

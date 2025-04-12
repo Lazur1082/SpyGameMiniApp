@@ -804,6 +804,22 @@ body {
     gap: 20px;
 }
 
+.profile-info .input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.profile-info .input-group .input-field {
+    flex: 1;
+    margin: 0;
+}
+
+.profile-info .input-group .primary-button {
+    margin: 0;
+    white-space: nowrap;
+}
+
 .profile-stats {
     display: flex;
     justify-content: space-around;
