@@ -149,7 +149,13 @@ function addChatMessage(message) {
 
 function playSound(soundName) {
     if (settings.sound && sounds[soundName]) {
-        sounds[soundName].play().catch(() => {});
+        try {
+            sounds[soundName].play().catch(error => {
+                console.warn('Ошибка воспроизведения звука:', error);
+            });
+        } catch (error) {
+            console.warn('Ошибка воспроизведения звука:', error);
+        }
     }
 }
 
@@ -410,14 +416,15 @@ socket.on('gameEnded', ({ spy, location }) => {
     showScreen('end');
 });
 
-// Инициализация
+// Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded');
     try {
         // Загружаем сохраненные настройки
         const savedTheme = localStorage.getItem('theme') || 'light';
-        updateTheme(savedTheme);
+        const savedSound = localStorage.getItem('sound');
         
+        updateTheme(savedTheme);
         if (savedSound !== null) {
             updateSound(savedSound === 'true');
         }
@@ -426,8 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tg.initDataUnsafe?.user) {
             const user = tg.initDataUnsafe.user;
             const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
-            elements.playerName.value = name;
-            elements.playerNameJoin.value = name;
+            if (elements.playerName) elements.playerName.value = name;
+            if (elements.playerNameJoin) elements.playerNameJoin.value = name;
         }
         
         // Инициализация обработчиков событий
@@ -440,6 +447,10 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.connect();
     } catch (error) {
         console.error('Ошибка инициализации:', error);
-        tg.showAlert('Произошла ошибка при загрузке приложения');
+        try {
+            tg.showAlert('Произошла ошибка при загрузке приложения');
+        } catch (e) {
+            alert('Произошла ошибка при загрузке приложения');
+        }
     }
 }); 

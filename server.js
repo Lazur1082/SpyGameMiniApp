@@ -25,27 +25,47 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Инициализация бота
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+// Инициализация бота Telegram
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
+    polling: {
+        interval: 300,
+        autoStart: true,
+        params: {
+            timeout: 10
+        }
+    }
+});
 
-// Обработка команды /start
+// Обработчик команды /start
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    const welcomeMessage = `👋 Привет, ${msg.from.first_name}! Я бот для игры "Шпион".\n\n` +
-        `🎮 Чтобы начать играть, нажмите на кнопку ниже и откройте игру в Telegram Mini App.`;
+    const firstName = msg.from.first_name;
+    
+    const message = `Привет, ${firstName}! Добро пожаловать в игру "Шпион"! 🎮\n\n` +
+                   `Нажми на кнопку ниже, чтобы начать игру:`;
     
     const keyboard = {
-        inline_keyboard: [[
-            {
-                text: '🎮 Играть в Шпиона',
-                web_app: { url: process.env.WEB_APP_URL }
-            }
-        ]]
+        inline_keyboard: [[{
+            text: '🎮 Играть в Шпиона',
+            web_app: { url: process.env.WEB_APP_URL }
+        }]]
     };
-
-    bot.sendMessage(chatId, welcomeMessage, {
+    
+    bot.sendMessage(chatId, message, {
         reply_markup: keyboard
+    }).catch(error => {
+        console.error('Ошибка отправки сообщения:', error);
     });
+});
+
+// Обработка ошибок бота
+bot.on('polling_error', (error) => {
+    console.error('Ошибка polling:', error);
+    // Перезапускаем бота при ошибке
+    setTimeout(() => {
+        bot.stopPolling();
+        bot.startPolling();
+    }, 5000);
 });
 
 // Хранение игр
