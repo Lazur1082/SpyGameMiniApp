@@ -26,57 +26,56 @@
         <section id="settingsScreen" class="screen settings-screen hidden">
             <div class="settings-group">
                 <div class="settings-item">
-                    <label for="languageSelect">Язык</label>
-                    <select id="languageSelect" class="language-select">
-                        <option value="ru">Русский</option>
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                    </select>
+                    <label for="themeToggle">Темная тема</label>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="theme-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item">
+                    <label for="soundToggle">Звук</label>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <span class="theme-slider"></span>
+                    </label>
                 </div>
             </div>
             <button id="backFromSettings" class="secondary-button">Назад</button>
         </section>
 
-        <!-- Профиль -->
-        <section id="profileScreen" class="screen profile-screen hidden">
-            <div class="profile-content">
-                <div class="profile-avatar">
-                    <img id="profileAvatar" src="/images/default-avatar.png" alt="Аватар">
-                    <button id="changeAvatar" class="change-avatar-button">Изменить</button>
-                </div>
-                <div class="profile-info">
-                    <input type="text" id="profileName" class="profile-name" placeholder="Введите имя">
-                    <button id="saveProfile" class="primary-button">Сохранить</button>
-                </div>
-            </div>
-        </section>
-
         <!-- Основное меню -->
-        <section id="mainMenuScreen" class="screen main-menu-screen">
+        <section id="mainMenu" class="screen main-menu-screen">
             <div class="menu-content">
                 <h2 class="menu-title">Добро пожаловать!</h2>
                 <p class="menu-description">Выберите действие:</p>
+                <div class="menu-buttons">
+                    <button id="showCreateGame" class="primary-button">Создать игру</button>
+                    <button id="showJoinGame" class="primary-button">Присоединиться</button>
+                </div>
             </div>
         </section>
 
         <!-- Создание игры -->
-        <section id="createGameScreen" class="screen create-game-screen hidden">
+        <section id="startScreen" class="screen create-game-screen hidden">
             <div class="input-group">
-                <input type="number" id="playerCount" class="input-field" placeholder="Количество игроков" min="3" max="10">
+                <input type="text" id="playerName" class="input-field" placeholder="Ваше имя">
                 <button id="createGame" class="primary-button">Создать игру</button>
             </div>
+            <button id="backToMenu1" class="secondary-button">Назад</button>
         </section>
 
         <!-- Присоединение к игре -->
-        <section id="joinGameScreen" class="screen join-game-screen hidden">
+        <section id="joinScreen" class="screen join-game-screen hidden">
             <div class="input-group">
+                <input type="text" id="playerNameJoin" class="input-field" placeholder="Ваше имя">
                 <input type="text" id="gameId" class="input-field" placeholder="ID игры">
                 <button id="joinGame" class="primary-button">Присоединиться</button>
             </div>
+            <button id="backToMenu2" class="secondary-button">Назад</button>
         </section>
 
-        <!-- Лобби -->
-        <section id="lobbyScreen" class="screen lobby-screen hidden">
+        <!-- Ожидание игроков -->
+        <section id="waitingScreen" class="screen lobby-screen hidden">
             <div class="lobby-content">
                 <div class="game-id">
                     <span>ID игры:</span>
@@ -96,6 +95,8 @@
                         <button id="sendMessage" class="send-button">Отправить</button>
                     </div>
                 </div>
+                <button id="startGame" class="primary-button">Начать игру</button>
+                <button id="backToMenu3" class="secondary-button">Назад</button>
             </div>
         </section>
 
@@ -103,11 +104,8 @@
         <section id="gameScreen" class="screen game-screen hidden">
             <div class="game-content">
                 <div class="game-info">
-                    <h2 id="gameRole"></h2>
+                    <h2 id="roleInfo"></h2>
                     <p id="gameWord"></p>
-                </div>
-                <div class="timer-container">
-                    <div class="timer" id="gameTimer">60</div>
                 </div>
                 <div class="chat-container">
                     <div id="gameChatMessages" class="chat-messages"></div>
@@ -116,24 +114,19 @@
                         <button id="sendGameMessage" class="send-button">Отправить</button>
                     </div>
                 </div>
+                <button id="endGame" class="primary-button">Завершить игру</button>
+            </div>
+        </section>
+
+        <!-- Результаты игры -->
+        <section id="endScreen" class="screen end-screen hidden">
+            <div class="end-content">
+                <h2>Игра завершена!</h2>
+                <div id="gameResults" class="game-results"></div>
+                <button id="newGame" class="primary-button">Новая игра</button>
             </div>
         </section>
     </main>
-
-    <nav class="bottom-nav">
-        <button id="createGameNav" class="nav-button">
-            <span class="nav-icon">🎮</span>
-            <span class="nav-text">Создать</span>
-        </button>
-        <button id="joinGameNav" class="nav-button">
-            <span class="nav-icon">🔗</span>
-            <span class="nav-text">Присоединиться</span>
-        </button>
-        <button id="profileNav" class="nav-button">
-            <span class="nav-icon">👤</span>
-            <span class="nav-text">Профиль</span>
-        </button>
-    </nav>
 
     <script src="app.js"></script>
 </body>
