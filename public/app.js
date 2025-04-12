@@ -89,7 +89,8 @@ const state = {
     role: null,
     players: [],
     messages: [],
-    isInGame: false
+    isInGame: false,
+    isAdmin: false
 };
 
 // Звуковые эффекты
@@ -172,8 +173,8 @@ function translatePage() {
     });
 }
 
-// User Profile
-let userProfile = {
+// Профиль пользователя
+const userProfile = {
     name: localStorage.getItem('userName') || '',
     avatar: localStorage.getItem('userAvatar') || '/images/default-avatar.png',
     gamesPlayed: parseInt(localStorage.getItem('gamesPlayed')) || 0,
@@ -207,29 +208,18 @@ function updateTheme(theme) {
 function showScreen(screenId) {
     console.log('Showing screen:', screenId);
     
-    // Если мы в игре, разрешаем показывать только игровые экраны
     if (state.isInGame && !['gameScreen', 'waitingScreen'].includes(screenId)) {
         console.log('Navigation blocked during gameplay');
         return;
     }
     
-    // Скрываем все экраны
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.add('hidden');
     });
     
-    // Показываем нужный экран
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
         targetScreen.classList.remove('hidden');
-        console.log('Screen shown:', screenId);
-    } else {
-        console.error('Screen not found:', screenId);
-        // Если экран не найден, показываем главное меню
-        const mainMenu = document.getElementById('mainMenu');
-        if (mainMenu) {
-            mainMenu.classList.remove('hidden');
-        }
     }
 }
 
@@ -293,9 +283,10 @@ function updatePlayersList(players) {
     players.forEach(player => {
         const playerItem = document.createElement('div');
         playerItem.className = 'player-item';
-        const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
         playerItem.innerHTML = `
-            <div class="player-avatar">${initials}</div>
+            <div class="player-avatar">
+                <img src="${userProfile.avatar}" alt="${player.name}">
+            </div>
             <span class="player-name">${player.name}</span>
             ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
         `;
@@ -305,12 +296,8 @@ function updatePlayersList(players) {
 
 // Функция добавления сообщения в чат
 function addChatMessage(message) {
-    console.log('Adding chat message:', message);
     const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) {
-        console.error('Chat messages container not found');
-        return;
-    }
+    if (!chatMessages) return;
 
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${message.isOwn ? 'own' : ''}`;
@@ -332,18 +319,8 @@ function addChatMessage(message) {
     `;
     
     messageDiv.innerHTML = messageContent;
-    
-    try {
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        // Воспроизводим звук только для входящих сообщений
-        if (!message.isOwn && state.sound) {
-            playSound('message');
-        }
-    } catch (error) {
-        console.error('Error adding message to chat:', error);
-    }
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function playSound(soundName) {
@@ -560,168 +537,121 @@ function initializeEventListeners() {
 }
 
 // Обработчики событий Socket.io
-socket.on('connect', () => {
-    console.log('Connected to server');
-    showScreen('mainMenu');
-    
-    // Отправляем приветственное сообщение
-    const welcomeMessage = {
-        text: '🎮 Добро пожаловать в игру "Шпион"!\n\n🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n📱 Для начала игры нажмите кнопку ниже:',
-        image: '/images/SpyGameBannerWelcome.png'
-    };
-    
-    addChatMessage({
-        sender: 'Система',
-        text: welcomeMessage.text,
-        image: welcomeMessage.image
-    });
-});
-
-socket.on('connect_error', (error) => {
-    console.error('Connection error:', error);
-    tg.showAlert('Ошибка подключения к серверу. Пожалуйста, проверьте интернет-соединение.');
-});
-
-socket.on('disconnect', () => {
-    console.log('Disconnected from server');
-    tg.showAlert('Потеряно соединение с сервером. Пытаемся переподключиться...');
-});
-
-socket.on('error', (error) => {
-    console.error('Socket error:', error);
-    if (error.message === 'games is not defined') {
-        tg.showAlert('Сервер не готов к работе. Пожалуйста, попробуйте позже.');
-    } else {
-        tg.showAlert(error.message || 'Произошла ошибка');
-    }
-});
-
-socket.on('gameJoined', (data) => {
-    console.log('Game joined:', data);
-    state.gameId = data.gameId;
-    state.players = data.players;
-    showScreen('waitingScreen');
-    updatePlayersList(data.players);
-    document.getElementById('currentGameId').textContent = data.gameId;
-    
-    // Добавляем системное сообщение
-    addChatMessage({
-        sender: 'Система',
-        text: `Вы присоединились к игре ${data.gameId}`
-    });
-});
-
-socket.on('gameUpdated', (data) => {
-    console.log('Game updated:', data);
-    updatePlayersList(data.players);
-});
-
-socket.on('gameCreated', (data) => {
-    console.log('Game created:', data);
-    state.gameId = data.gameId;
-    state.players = [{ name: userProfile.name, isAdmin: true }];
-    showScreen('waitingScreen');
-    updatePlayersList(state.players);
-    document.getElementById('currentGameId').textContent = data.gameId;
-    
-    // Добавляем системное сообщение
-    addChatMessage({
-        sender: 'Система',
-        text: `Игра ${data.gameId} создана. Ожидаем игроков...`
-    });
-});
-
-socket.on('playerJoined', (data) => {
-    console.log('Player joined:', data);
-    if (!state.players) state.players = [];
-    state.players.push({ name: data.playerName, isAdmin: false });
-    updatePlayersList(state.players);
-    
-    // Добавляем системное сообщение
-    addChatMessage({
-        sender: 'Система',
-        text: `${data.playerName} присоединился к игре`
-    });
-});
-
-socket.on('gameStarted', (data) => {
-    console.log('Game started:', data);
-    state.role = data.role;
-    state.isInGame = true;
-    showScreen('gameScreen');
-    
-    // Отключаем навигацию
-    const bottomNav = document.querySelector('.bottom-navigation');
-    if (bottomNav) {
-        bottomNav.style.display = 'none';
-    }
-    
-    const header = document.querySelector('.header');
-    if (header) {
-        header.style.display = 'none';
-    }
-});
-
-socket.on('chatMessage', (data) => {
-    console.log('Received chat message:', data);
-    addChatMessage({
-        sender: data.sender,
-        text: data.text,
-        isOwn: data.sender === userProfile.name
-    });
-});
-
-socket.on('gameEnded', ({ spy, location }) => {
-    state.isInGame = false;
-    elements.gameResults.innerHTML = `
-        <h3>Игра завершена!</h3>
-        <p>Шпион: ${spy}</p>
-        <p>Локация: ${location}</p>
-    `;
-    showScreen('endScreen');
-    playSound('end');
-    
-    // Включаем навигацию
-    const bottomNav = document.querySelector('.bottom-navigation');
-    if (bottomNav) {
-        bottomNav.style.display = 'flex';
-    }
-    
-    const header = document.querySelector('.header');
-    if (header) {
-        header.style.display = 'flex';
-    }
-});
-
-socket.on('chatError', (error) => {
-    console.error('Chat error:', error);
-    tg.showAlert('Ошибка отправки сообщения. Попробуйте еще раз.');
-});
-
-socket.on('joinError', (error) => {
-    console.error('Join error:', error);
-    tg.showAlert(error.message || 'Ошибка присоединения к игре');
-    showScreen('joinScreen');
-});
-
-// Sound handling
-function initializeSound() {
-    const soundToggle = document.getElementById('soundToggle');
-    if (soundToggle) {
-        soundToggle.checked = state.sound;
-        soundToggle.addEventListener('change', (e) => {
-            state.sound = e.target.checked;
-            localStorage.setItem('sound', state.sound);
-            console.log('Sound setting changed:', state.sound);
+function setupSocketHandlers() {
+    socket.on('connect', () => {
+        console.log('Connected to server');
+        showScreen('mainMenu');
+        
+        // Отправляем приветственное сообщение
+        const welcomeMessage = {
+            text: '🎮 Добро пожаловать в игру "Шпион"!\n\n🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n📱 Для начала игры нажмите кнопку ниже:',
+            image: '/images/SpyGameBannerWelcome.png'
+        };
+        
+        addChatMessage({
+            sender: 'Система',
+            text: welcomeMessage.text,
+            image: welcomeMessage.image
         });
-    }
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+        tg.showAlert('Ошибка подключения к серверу. Пожалуйста, проверьте интернет-соединение.');
+    });
+
+    socket.on('error', (error) => {
+        console.error('Socket error:', error);
+        tg.showAlert(error.message || 'Произошла ошибка');
+    });
+
+    socket.on('gameCreated', (data) => {
+        console.log('Game created:', data);
+        state.gameId = data.gameId;
+        state.players = [{ name: userProfile.name, isAdmin: true }];
+        state.isAdmin = true;
+        showScreen('waitingScreen');
+        updatePlayersList(state.players);
+        document.getElementById('currentGameId').textContent = data.gameId;
+        
+        addChatMessage({
+            sender: 'Система',
+            text: `Игра ${data.gameId} создана. Ожидаем игроков...`
+        });
+    });
+
+    socket.on('gameJoined', (data) => {
+        console.log('Game joined:', data);
+        state.gameId = data.gameId;
+        state.players = data.players;
+        state.isAdmin = false;
+        showScreen('waitingScreen');
+        updatePlayersList(data.players);
+        document.getElementById('currentGameId').textContent = data.gameId;
+        
+        addChatMessage({
+            sender: 'Система',
+            text: `Вы присоединились к игре ${data.gameId}`
+        });
+    });
+
+    socket.on('playerJoined', (data) => {
+        console.log('Player joined:', data);
+        if (!state.players) state.players = [];
+        state.players.push({ name: data.playerName, isAdmin: false });
+        updatePlayersList(state.players);
+        
+        addChatMessage({
+            sender: 'Система',
+            text: `${data.playerName} присоединился к игре`
+        });
+    });
+
+    socket.on('chatMessage', (data) => {
+        console.log('Received chat message:', data);
+        addChatMessage({
+            sender: data.sender,
+            text: data.text,
+            isOwn: data.sender === userProfile.name
+        });
+    });
+
+    socket.on('gameStarted', (data) => {
+        console.log('Game started:', data);
+        state.role = data.role;
+        state.isInGame = true;
+        showScreen('gameScreen');
+        
+        // Отключаем навигацию
+        document.querySelector('.bottom-navigation').style.display = 'none';
+        document.querySelector('.header').style.display = 'none';
+        
+        addChatMessage({
+            sender: 'Система',
+            text: `Игра началась! Ваша роль: ${data.role}`
+        });
+    });
+
+    socket.on('gameEnded', (data) => {
+        console.log('Game ended:', data);
+        state.isInGame = false;
+        showScreen('endScreen');
+        
+        // Включаем навигацию
+        document.querySelector('.bottom-navigation').style.display = 'flex';
+        document.querySelector('.header').style.display = 'flex';
+        
+        addChatMessage({
+            sender: 'Система',
+            text: `Игра завершена! Шпион: ${data.spy}, Локация: ${data.location}`
+        });
+    });
 }
 
-// Функция создания игры
+// Функции управления игрой
 function createGame() {
     console.log('Creating game...');
     if (!userProfile.name) {
-        console.error('Player name is required');
         const defaultName = tg?.initDataUnsafe?.user?.username || 'Игрок';
         updateProfile(defaultName, userProfile.avatar);
     }
@@ -736,89 +666,59 @@ function createGame() {
     });
 }
 
-// Функция отправки сообщения
-function sendMessage() {
-    const messageInput = document.getElementById('messageInput');
-    if (!messageInput) {
-        console.error('Message input not found');
-        return;
-    }
-
-    const message = messageInput.value.trim();
-    if (!message) {
-        console.log('Empty message, not sending');
-        return;
-    }
-
-    if (!state.gameId) {
-        console.error('No active game');
-        tg.showAlert('Вы не находитесь в игре');
-        return;
-    }
-
-    console.log('Sending message:', message);
-    
-    try {
-        // Отправляем сообщение на сервер
-        socket.emit('chatMessage', {
-            gameId: state.gameId,
-            sender: userProfile.name,
-            text: message,
-            timestamp: new Date().toISOString()
-        });
-        
-        // Очищаем поле ввода
-        messageInput.value = '';
-    } catch (error) {
-        console.error('Error sending message:', error);
-        tg.showAlert('Ошибка отправки сообщения. Попробуйте еще раз.');
-    }
-}
-
-// Функция присоединения к игре
 function joinGame() {
     console.log('Joining game...');
     const gameId = document.getElementById('gameId').value.trim();
     if (!gameId) {
-        console.error('Game ID is required');
         tg.showAlert('Введите ID игры');
         return;
     }
     
     if (!userProfile.name) {
-        console.error('Player name is required');
         const defaultName = tg?.initDataUnsafe?.user?.username || 'Игрок';
         updateProfile(defaultName, userProfile.avatar);
     }
     
-    console.log('Joining game with ID:', gameId);
-    
-    try {
-        socket.emit('joinGame', {
-            gameId: gameId,
-            playerName: userProfile.name,
-            user: {
-                id: socket.id,
-                name: userProfile.name,
-                avatar: userProfile.avatar
-            }
-        });
-    } catch (error) {
-        console.error('Error joining game:', error);
-        tg.showAlert('Ошибка присоединения к игре. Попробуйте еще раз.');
+    socket.emit('joinGame', {
+        gameId: gameId,
+        playerName: userProfile.name,
+        user: {
+            id: socket.id,
+            name: userProfile.name,
+            avatar: userProfile.avatar
+        }
+    });
+}
+
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    if (!messageInput) return;
+
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    if (!state.gameId) {
+        tg.showAlert('Вы не находитесь в игре');
+        return;
     }
+
+    socket.emit('chatMessage', {
+        gameId: state.gameId,
+        sender: userProfile.name,
+        text: message,
+        timestamp: new Date().toISOString()
+    });
+    
+    messageInput.value = '';
 }
 
-// Функция начала игры
 function startGame() {
-    console.log('Starting game');
-    socket.emit('startGame');
-}
-
-// Функция завершения игры
-function endGame() {
-    console.log('Ending game');
-    socket.emit('endGame');
+    if (!state.isAdmin) {
+        tg.showAlert('Только администратор может начать игру');
+        return;
+    }
+    
+    socket.emit('startGame', { gameId: state.gameId });
 }
 
 // Обработка команд чата
@@ -847,8 +747,7 @@ function handleCommand(command) {
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing app...');
-    
-    // Инициализация обработчиков событий
+    setupSocketHandlers();
     initializeEventListeners();
     
     // Установка начального языка
@@ -858,12 +757,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Установка начальной темы
     const savedTheme = localStorage.getItem('theme') || 'light';
     updateTheme(savedTheme);
-    
-    // Установка имени игрока, если оно не установлено
-    if (!userProfile.name) {
-        const defaultName = tg?.initDataUnsafe?.user?.username || 'Игрок';
-        updateProfile(defaultName, userProfile.avatar);
-    }
     
     // Обновление профиля
     updateProfileUI();
