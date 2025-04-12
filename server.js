@@ -26,7 +26,22 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Инициализация бота
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+let bot;
+try {
+    bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { 
+        polling: {
+            interval: 300,
+            autoStart: true,
+            params: {
+                timeout: 10
+            }
+        }
+    });
+    console.log('Бот успешно инициализирован');
+} catch (error) {
+    console.error('Ошибка инициализации бота:', error);
+    process.exit(1);
+}
 
 // Обработка команды /start
 bot.onText(/\/start/, (msg) => {

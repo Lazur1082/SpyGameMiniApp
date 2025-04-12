@@ -291,23 +291,50 @@ socket.on('gameEnded', (data) => {
     showScreen('end');
 });
 
+// Функция копирования ID игры
+function copyGameId() {
+    const gameId = elements.currentGameId.textContent;
+    if (gameId) {
+        navigator.clipboard.writeText(gameId)
+            .then(() => {
+                tg.showPopup({
+                    title: 'Скопировано',
+                    message: 'ID игры скопирован в буфер обмена',
+                    buttons: [{type: 'ok'}]
+                });
+            })
+            .catch(() => {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: 'Не удалось скопировать ID игры',
+                    buttons: [{type: 'ok'}]
+                });
+            });
+    }
+}
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    // Установка темы
-    updateTheme(settings.theme);
-    updateSound(settings.sound);
-    
-    // Установка имени из Telegram
-    if (tg.initDataUnsafe?.user) {
-        const user = tg.initDataUnsafe.user;
-        const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
-        elements.playerName.value = name;
-        elements.playerNameJoin.value = name;
+    try {
+        // Установка темы
+        updateTheme(settings.theme);
+        updateSound(settings.sound);
+        
+        // Установка имени из Telegram
+        if (tg.initDataUnsafe?.user) {
+            const user = tg.initDataUnsafe.user;
+            const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
+            elements.playerName.value = name;
+            elements.playerNameJoin.value = name;
+        }
+        
+        // Показываем главное меню
+        showScreen('main');
+        
+        // Подключаемся к серверу
+        socket.connect();
+    } catch (error) {
+        console.error('Ошибка инициализации:', error);
+        tg.showAlert('Произошла ошибка при загрузке приложения');
     }
-    
-    // Показываем главное меню
-    showScreen('main');
-    
-    // Подключаемся к серверу
-    socket.connect();
 }); 
