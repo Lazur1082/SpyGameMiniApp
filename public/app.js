@@ -198,10 +198,10 @@ function updateTheme(theme) {
     
     // Обновляем цвета в Telegram WebApp
     if (theme === 'dark') {
-        tg.setHeaderColor('#212121');
-        tg.setBackgroundColor('#212121');
+        tg.setHeaderColor('#36393f');
+        tg.setBackgroundColor('#36393f');
     } else {
-        tg.setHeaderColor('#2481cc');
+        tg.setHeaderColor('#ffffff');
         tg.setBackgroundColor('#ffffff');
     }
 }
@@ -226,19 +226,33 @@ function showScreen(screenId) {
     if (targetScreen) {
         targetScreen.classList.remove('hidden');
         console.log('Screen shown:', screenId);
+        
+        // Обновляем активную кнопку в навигации
+        updateActiveNavButton(screenId);
     } else {
         console.error('Screen not found:', screenId);
-        // Если экран не найден, показываем главное меню
-        const mainMenu = document.getElementById('mainMenu');
-        if (mainMenu) {
-            mainMenu.classList.remove('hidden');
-        }
     }
+}
+
+// Функция обновления активной кнопки в навигации
+function updateActiveNavButton(screenId) {
+    const navButtons = document.querySelectorAll('.nav-button');
+    navButtons.forEach(button => {
+        button.classList.remove('active');
+        if (button.getAttribute('data-screen') === screenId) {
+            button.classList.add('active');
+        }
+    });
 }
 
 // Функция обновления профиля
 function updateProfile(name, avatar) {
     console.log('Updating profile:', { name, avatar });
+    if (!name || !avatar) {
+        console.error('Invalid profile data');
+        return;
+    }
+    
     userProfile.name = name;
     userProfile.avatar = avatar;
     
