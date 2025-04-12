@@ -206,45 +206,6 @@ function updateTheme(theme) {
     }
 }
 
-// Функция показа экрана
-function showScreen(screenId) {
-    console.log('Showing screen:', screenId);
-    
-    // Если мы в игре, разрешаем показывать только игровые экраны
-    if (state.isInGame && !['gameScreen', 'waitingScreen'].includes(screenId)) {
-        console.log('Navigation blocked during gameplay');
-        return;
-    }
-    
-    // Скрываем все экраны
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.add('hidden');
-    });
-    
-    // Показываем нужный экран
-    const targetScreen = document.getElementById(screenId);
-    if (targetScreen) {
-        targetScreen.classList.remove('hidden');
-        console.log('Screen shown:', screenId);
-        
-        // Обновляем активную кнопку в навигации
-        updateActiveNavButton(screenId);
-    } else {
-        console.error('Screen not found:', screenId);
-    }
-}
-
-// Функция обновления активной кнопки в навигации
-function updateActiveNavButton(screenId) {
-    const navButtons = document.querySelectorAll('.nav-button');
-    navButtons.forEach(button => {
-        button.classList.remove('active');
-        if (button.getAttribute('data-screen') === screenId) {
-            button.classList.add('active');
-        }
-    });
-}
-
 // Функция обновления профиля
 function updateProfile(name, avatar) {
     console.log('Updating profile:', { name, avatar });
@@ -380,171 +341,6 @@ function playSound(soundName) {
 function initializeEventListeners() {
     console.log('Initializing event listeners...');
 
-    // Сохранение ника
-    const saveNicknameBtn = document.getElementById('saveNickname');
-    if (saveNicknameBtn) {
-        saveNicknameBtn.addEventListener('click', () => {
-            const nameInput = document.getElementById('profileName');
-            if (nameInput) {
-                const newName = nameInput.value.trim();
-                if (newName) {
-                    updateProfile(newName, userProfile.avatar);
-                    console.log('Nickname saved:', newName);
-                }
-            }
-        });
-    }
-
-    // Создание игры
-    const createGameBtn = document.getElementById('createGame');
-    if (createGameBtn) {
-        createGameBtn.addEventListener('click', () => {
-            console.log('Create game button clicked');
-            createGame();
-        });
-    } else {
-        console.error('Create game button not found');
-    }
-
-    // Присоединение к игре
-    const joinGameBtn = document.getElementById('joinGame');
-    if (joinGameBtn) {
-        joinGameBtn.addEventListener('click', () => {
-            console.log('Join game button clicked');
-            joinGame();
-        });
-    } else {
-        console.error('Join game button not found');
-    }
-
-    // Навигация
-    const mainMenuNav = document.getElementById('mainMenuNav');
-    if (mainMenuNav) {
-        mainMenuNav.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Main menu nav clicked');
-            showScreen('mainMenu');
-        });
-    }
-
-    const createGameNav = document.getElementById('createGameNav');
-    if (createGameNav) {
-        createGameNav.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Create game nav clicked');
-            showScreen('startScreen');
-        });
-    }
-
-    const joinGameNav = document.getElementById('joinGameNav');
-    if (joinGameNav) {
-        joinGameNav.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Join game nav clicked');
-            showScreen('joinScreen');
-        });
-    }
-
-    // Профиль
-    const profileButton = document.getElementById('profileButton');
-    if (profileButton) {
-        profileButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Profile button clicked');
-            showScreen('profileScreen');
-        });
-    }
-
-    const profileNav = document.getElementById('profileNav');
-    if (profileNav) {
-        profileNav.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Profile nav clicked');
-            showScreen('profileScreen');
-        });
-    }
-
-    // Настройки
-    const settingsButton = document.getElementById('settingsButton');
-    if (settingsButton) {
-        settingsButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Settings button clicked');
-            showScreen('settingsScreen');
-        });
-    }
-
-    // Кнопки "Назад"
-    const backButtons = [
-        { id: 'backFromProfile', screen: 'mainMenu' },
-        { id: 'backFromSettings', screen: 'mainMenu' },
-        { id: 'backToMenu1', screen: 'mainMenu' },
-        { id: 'backToMenu2', screen: 'mainMenu' },
-        { id: 'backToMenu3', screen: 'mainMenu' }
-    ];
-
-    backButtons.forEach(button => {
-        const element = document.getElementById(button.id);
-        if (element) {
-            element.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log(`${button.id} clicked`);
-                showScreen(button.screen);
-            });
-        }
-    });
-
-    // Чат
-    const sendMessageBtn = document.getElementById('sendMessage');
-    if (sendMessageBtn) {
-        sendMessageBtn.addEventListener('click', () => {
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value.trim();
-            
-            if (message) {
-                if (message.startsWith('/')) {
-                    handleCommand(message);
-                } else {
-                    socket.emit('chatMessage', {
-                        sender: userProfile.name,
-                        text: message
-                    });
-                }
-                messageInput.value = '';
-            }
-        });
-    }
-
-    // Обработка Enter в полях ввода
-    const messageInput = document.getElementById('messageInput');
-    if (messageInput) {
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const message = e.target.value.trim();
-                if (message) {
-                    if (message.startsWith('/')) {
-                        handleCommand(message);
-                    } else {
-                        socket.emit('chatMessage', {
-                            sender: userProfile.name,
-                            text: message
-                        });
-                    }
-                    e.target.value = '';
-                }
-            }
-        });
-    }
-
-    const gameIdInput = document.getElementById('gameId');
-    if (gameIdInput) {
-        gameIdInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                joinGame();
-            }
-        });
-    }
-
     // Обработчик кнопки темы
     const themeButton = document.getElementById('themeButton');
     if (themeButton) {
@@ -565,11 +361,49 @@ function initializeEventListeners() {
         avatarUpload.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
+                // Проверяем тип файла
+                if (!file.type.startsWith('image/')) {
+                    tg.showAlert('Пожалуйста, выберите изображение');
+                    return;
+                }
+
+                // Проверяем размер файла (максимум 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    tg.showAlert('Размер файла не должен превышать 2MB');
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     updateProfile(userProfile.name, e.target.result);
                 };
                 reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Обработчики навигации
+    const navButtons = document.querySelectorAll('.nav-button');
+    navButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const screenId = button.getAttribute('data-screen');
+            if (screenId) {
+                showScreen(screenId);
+            }
+        });
+    });
+
+    // Обработчик сохранения имени
+    const saveNameButton = document.getElementById('saveName');
+    if (saveNameButton) {
+        saveNameButton.addEventListener('click', () => {
+            const nameInput = document.getElementById('profileName');
+            if (nameInput) {
+                const newName = nameInput.value.trim();
+                if (newName) {
+                    updateProfile(newName, userProfile.avatar);
+                }
             }
         });
     }
