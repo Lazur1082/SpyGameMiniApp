@@ -59,6 +59,22 @@
     --tg-theme-section-header-text-color: #ffffff;
     --tg-theme-subtitle-text-color: #7d8b99;
     --tg-theme-destructive-text-color: #ff3b30;
+    
+    /* Light theme variables */
+    --light-bg-color: #ffffff;
+    --light-text-color: #000000;
+    --light-secondary-bg: #f5f5f5;
+    --light-accent-color: #0088cc;
+    --light-border-color: #e0e0e0;
+    --light-hover-color: #f0f0f0;
+    
+    /* Dark theme variables */
+    --dark-bg-color: #17212b;
+    --dark-text-color: #ffffff;
+    --dark-secondary-bg: #232e3c;
+    --dark-accent-color: #2ea6ff;
+    --dark-border-color: #2a3a4d;
+    --dark-hover-color: #2a3a4d;
 }
 
 [data-theme="dark"] {
@@ -82,8 +98,8 @@
 }
 
 body {
-    background-color: var(--tg-theme-bg-color);
-    color: var(--tg-theme-text-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
     line-height: 1.6;
     overflow-x: hidden;
     min-height: 100vh;
@@ -153,15 +169,16 @@ h1, h2 {
 .input-field {
     width: 100%;
     padding: 12px 16px;
-    background-color: var(--tg-theme-secondary-bg-color);
-    color: var(--tg-theme-text-color);
-    border: none;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 16px;
 }
 
 .input-field::placeholder {
-    color: var(--tg-theme-hint-color);
+    color: var(--text-color);
+    opacity: 0.5;
 }
 
 .game-info {
@@ -293,7 +310,7 @@ h1, h2 {
     align-items: center;
     justify-content: space-between;
     padding: 16px;
-    background-color: var(--tg-theme-secondary-bg-color);
+    background-color: var(--secondary-bg);
     border-radius: 8px;
     margin-bottom: 8px;
 }
@@ -318,7 +335,7 @@ h1, h2 {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--tg-theme-bg-color);
+    background-color: var(--border-color);
     transition: .4s;
     border-radius: 24px;
 }
@@ -336,7 +353,7 @@ h1, h2 {
 }
 
 input:checked + .slider {
-    background-color: var(--tg-theme-accent-color);
+    background-color: var(--accent-color);
 }
 
 input:checked + .slider:before {
@@ -348,24 +365,28 @@ input:checked + .slider:before {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: var(--tg-theme-secondary-bg-color);
+    background-color: var(--secondary-bg);
     display: flex;
     justify-content: space-around;
     padding: 8px 0;
-    border-top: 1px solid var(--tg-theme-bg-color);
+    border-top: 1px solid var(--border-color);
 }
 
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: var(--tg-theme-hint-color);
+    color: var(--text-color);
     text-decoration: none;
     font-size: 12px;
+    padding: 8px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
 }
 
 .nav-item.active {
-    color: var(--tg-theme-accent-color);
+    opacity: 1;
+    color: var(--accent-color);
 }
 
 .nav-icon {
@@ -828,5 +849,182 @@ input:checked + .slider:before {
 
     .message.own .message-text {
         background-color: #0a84ff;
+    }
+}
+
+/* Theme variables */
+[data-theme="light"] {
+    --bg-color: var(--light-bg-color);
+    --text-color: var(--light-text-color);
+    --secondary-bg: var(--light-secondary-bg);
+    --accent-color: var(--light-accent-color);
+    --border-color: var(--light-border-color);
+    --hover-color: var(--light-hover-color);
+}
+
+[data-theme="dark"] {
+    --bg-color: var(--dark-bg-color);
+    --text-color: var(--dark-text-color);
+    --secondary-bg: var(--dark-secondary-bg);
+    --accent-color: var(--dark-accent-color);
+    --border-color: var(--dark-border-color);
+    --hover-color: var(--dark-hover-color);
+}
+
+/* Header styles */
+.header {
+    background-color: var(--secondary-bg);
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-title {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.header-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 20px;
+    padding: 8px;
+}
+
+.language-select, .theme-select {
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+/* Main content styles */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.section {
+    display: none;
+    min-height: calc(100vh - 120px);
+}
+
+.section.active {
+    display: block;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Button styles */
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 16px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button.primary {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.button.secondary {
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+/* Input styles */
+.input-group {
+    margin: 16px 0;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.input-field::placeholder {
+    color: var(--text-color);
+    opacity: 0.5;
+}
+
+/* Settings styles */
+.settings-group {
+    background-color: var(--secondary-bg);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+/* Responsive styles */
+@media (max-width: 480px) {
+    .header-title {
+        font-size: 20px;
+    }
+    
+    .button, .input-field {
+        font-size: 14px;
+    }
+    
+    .nav-item {
+        font-size: 10px;
+    }
+    
+    .nav-icon {
+        font-size: 18px;
     }
 }
