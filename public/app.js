@@ -370,17 +370,17 @@ function initializeEventListeners() {
     // Профиль
     document.getElementById('profileButton').addEventListener('click', () => {
         console.log('Profile button clicked');
-        showScreen('profile');
+        showScreen('profileScreen');
     });
 
     document.getElementById('profileNav').addEventListener('click', () => {
         console.log('Profile nav clicked');
-        showScreen('profile');
+        showScreen('profileScreen');
     });
 
     document.getElementById('backFromProfile').addEventListener('click', () => {
         console.log('Back from profile clicked');
-        showScreen('main');
+        showScreen('mainMenu');
     });
 
     // Загрузка аватара
@@ -424,53 +424,53 @@ function initializeEventListeners() {
     // Навигационные кнопки
     document.getElementById('mainMenuNav').addEventListener('click', () => {
         console.log('Main menu nav clicked');
-        showScreen('main');
+        showScreen('mainMenu');
     });
 
     document.getElementById('settingsButton').addEventListener('click', () => {
         console.log('Settings button clicked');
-        showScreen('settings');
+        showScreen('settingsScreen');
     });
 
     document.getElementById('backFromSettings').addEventListener('click', () => {
         console.log('Back from settings clicked');
-        showScreen('main');
+        showScreen('mainMenu');
     });
 
     document.getElementById('showCreateGame').addEventListener('click', () => {
         console.log('Show create game clicked');
-        showScreen('start');
+        showScreen('startScreen');
     });
 
     document.getElementById('showJoinGame').addEventListener('click', () => {
         console.log('Show join game clicked');
-        showScreen('join');
+        showScreen('joinScreen');
     });
 
     document.getElementById('backToMenu1').addEventListener('click', () => {
         console.log('Back to menu 1 clicked');
-        showScreen('main');
+        showScreen('mainMenu');
     });
 
     document.getElementById('backToMenu2').addEventListener('click', () => {
         console.log('Back to menu 2 clicked');
-        showScreen('main');
+        showScreen('mainMenu');
     });
 
     document.getElementById('backToMenu3').addEventListener('click', () => {
         console.log('Back to menu 3 clicked');
-        showScreen('main');
+        showScreen('mainMenu');
     });
 
-    // Нижняя навигация
+    // Навигация
     document.getElementById('createGameNav').addEventListener('click', () => {
         console.log('Create game nav clicked');
-        showScreen('start');
+        showScreen('startScreen');
     });
 
     document.getElementById('joinGameNav').addEventListener('click', () => {
         console.log('Join game nav clicked');
-        showScreen('join');
+        showScreen('joinScreen');
     });
 
     // Создание игры
@@ -502,7 +502,7 @@ function initializeEventListeners() {
 
     document.getElementById('newGame').addEventListener('click', () => {
         console.log('New game clicked');
-        showScreen('main');
+        showScreen('mainMenu');
     });
 
     // Чат
@@ -673,7 +673,7 @@ function handleCommand(command) {
         case '/start':
             const startMessage = {
                 text: '🎮 Добро пожаловать в игру "Шпион"!\n\n🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n📱 Для начала игры нажмите кнопку ниже:',
-                image: '/images/welcome-image.png'
+                image: '/images/SpyGameBannerWelcome.png'
             };
             addChatMessage({
                 sender: 'Система',
@@ -709,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateProfileUI();
     
     // Показываем главное меню
-    showScreen('main');
+    showScreen('mainMenu');
     console.log('Main menu should be visible now');
     
     console.log('App initialized successfully');
