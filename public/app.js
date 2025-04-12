@@ -7,7 +7,7 @@ const socket = io();
 
 // Application state
 const state = {
-    currentScreen: 'homeScreen',
+    currentScreen: 'home',
     gameId: null,
     isAdmin: false,
     players: [],
@@ -51,17 +51,27 @@ const elements = {
 
 // Functions
 function showScreen(screenId) {
+    // Hide all screens
     Object.values(elements.screens).forEach(screen => {
-        screen.classList.remove('active');
+        if (screen) {
+            screen.classList.remove('active');
+        }
     });
-    elements.screens[screenId].classList.add('active');
-    state.currentScreen = screenId;
+    
+    // Show the requested screen
+    const targetScreen = elements.screens[screenId];
+    if (targetScreen) {
+        targetScreen.classList.add('active');
+        state.currentScreen = screenId;
+    }
     
     // Update navigation
     elements.navItems.forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.screen === screenId) {
-            item.classList.add('active');
+        if (item) {
+            item.classList.remove('active');
+            if (item.dataset.screen === screenId) {
+                item.classList.add('active');
+            }
         }
     });
 }
@@ -191,5 +201,13 @@ socket.on('gameError', (error) => {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Ensure all screens are properly initialized
+    Object.values(elements.screens).forEach(screen => {
+        if (screen) {
+            screen.style.display = 'none';
+        }
+    });
+    
+    // Show the home screen
     showScreen('home');
 });
