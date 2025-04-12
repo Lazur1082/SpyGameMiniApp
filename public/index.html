@@ -7,14 +7,22 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <!-- Menu Screen -->
-    <div id="menuScreen" class="screen">
+    <div id="menuScreen" class="screen active">
         <div class="container">
             <h1>Spy Game</h1>
-            <button id="createGameBtn" class="button">Создать игру</button>
-            <button class="button secondary" onclick="showScreen('join')">Присоединиться к игре</button>
+            <button id="createGameBtn" class="button">
+                <i class="fas fa-plus"></i> Создать игру
+            </button>
+            <button id="joinGameBtn" class="button secondary">
+                <i class="fas fa-sign-in-alt"></i> Присоединиться
+            </button>
+            <button id="settingsBtn" class="button secondary">
+                <i class="fas fa-cog"></i> Настройки
+            </button>
         </div>
     </div>
 
@@ -25,20 +33,25 @@
             <div class="input-group">
                 <input type="text" id="joinGameInput" class="input-field" placeholder="Введите ID игры">
             </div>
-            <button id="joinGameBtn" class="button">Присоединиться</button>
-            <button class="button secondary" onclick="showScreen('menu')">Назад</button>
+            <button id="confirmJoinBtn" class="button">Присоединиться</button>
+            <button id="backToMenuBtn" class="button secondary">Назад</button>
         </div>
     </div>
 
     <!-- Lobby Screen -->
     <div id="lobbyScreen" class="screen">
         <div class="container">
-            <h2>Лобби</h2>
             <div class="game-info">
-                ID игры: <span id="gameId"></span>
+                <h2>Лобби</h2>
+                <p>ID игры: <span id="gameId"></span></p>
+                <button id="copyGameIdBtn" class="button secondary">
+                    <i class="fas fa-copy"></i> Копировать ID
+                </button>
             </div>
             <div class="players-list" id="playersList"></div>
-            <button id="startGameBtn" class="button">Начать игру</button>
+            <button id="startGameBtn" class="button">
+                <i class="fas fa-play"></i> Начать игру
+            </button>
         </div>
     </div>
 
@@ -48,16 +61,57 @@
             <div class="game-info">
                 <h2 id="roleDisplay"></h2>
                 <p id="locationDisplay"></p>
+                <div id="timerDisplay" class="timer"></div>
             </div>
             <div class="chat-container">
                 <div class="chat-messages" id="chatMessages"></div>
                 <div class="chat-input">
                     <input type="text" id="chatInput" placeholder="Введите сообщение...">
-                    <button id="sendMessageBtn">Отправить</button>
+                    <button id="sendMessageBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Settings Screen -->
+    <div id="settingsScreen" class="screen">
+        <div class="container">
+            <h2>Настройки</h2>
+            <div class="settings-group">
+                <label class="switch">
+                    <input type="checkbox" id="soundToggle">
+                    <span class="slider"></span>
+                </label>
+                <span>Звуковые эффекты</span>
+            </div>
+            <div class="settings-group">
+                <label class="switch">
+                    <input type="checkbox" id="notificationsToggle">
+                    <span class="slider"></span>
+                </label>
+                <span>Уведомления</span>
+            </div>
+            <button id="backToMenuBtn2" class="button secondary">Назад</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item" data-screen="menu">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Главная</span>
+        </a>
+        <a href="#" class="nav-item" data-screen="lobby">
+            <i class="fas fa-users nav-icon"></i>
+            <span>Игра</span>
+        </a>
+        <a href="#" class="nav-item" data-screen="settings">
+            <i class="fas fa-cog nav-icon"></i>
+            <span>Настройки</span>
+        </a>
+    </nav>
 
     <script src="app.js"></script>
 </body>
