@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spy Game</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -10,144 +10,119 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <h1 class="header-title">Spy Game</h1>
-            <div class="header-actions">
-                <button id="themeToggle" class="icon-button">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <select id="languageSelect" class="language-select">
-                    <option value="ru">Русский</option>
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                </select>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="header-title">Spy Game</h1>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Home Screen -->
-        <div id="homeScreen" class="screen active">
-            <div class="container">
-                <h2 data-i18n="welcome">Добро пожаловать в Spy Game!</h2>
-                <p data-i18n="welcomeDescription">Выберите действие для начала игры</p>
-                <div class="action-buttons">
-                    <button id="createGameBtn" class="button primary">
-                        <i class="fas fa-plus"></i>
-                        <span data-i18n="createGame">Создать игру</span>
-                    </button>
-                    <button id="joinGameBtn" class="button secondary">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span data-i18n="joinGame">Присоединиться</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Create Game Screen -->
-        <div id="createGameScreen" class="screen">
-            <div class="container">
-                <h2 data-i18n="createGame">Создать игру</h2>
-                <div class="game-settings">
-                    <div class="setting-group">
-                        <label data-i18n="playersCount">Количество игроков</label>
-                        <input type="number" id="playersCount" min="3" max="10" value="4">
-                    </div>
-                    <div class="setting-group">
-                        <label data-i18n="roundTime">Время раунда (минуты)</label>
-                        <input type="number" id="roundTime" min="1" max="10" value="5">
-                    </div>
-                </div>
-                <button id="confirmCreateBtn" class="button primary">
-                    <i class="fas fa-play"></i>
-                    <span data-i18n="startGame">Начать игру</span>
-                </button>
-                <button id="backFromCreateBtn" class="button secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    <span data-i18n="back">Назад</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Join Game Screen -->
-        <div id="joinGameScreen" class="screen">
-            <div class="container">
-                <h2 data-i18n="joinGame">Присоединиться к игре</h2>
-                <div class="input-group">
-                    <input type="text" id="gameCode" class="input-field" placeholder="Введите код игры" data-i18n-placeholder="enterGameCode">
-                </div>
-                <button id="confirmJoinBtn" class="button primary">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span data-i18n="join">Присоединиться</span>
-                </button>
-                <button id="backFromJoinBtn" class="button secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    <span data-i18n="back">Назад</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Lobby Screen -->
-        <div id="lobbyScreen" class="screen">
-            <div class="container">
-                <div class="game-info">
-                    <h2 data-i18n="lobby">Лобби</h2>
-                    <p>ID игры: <span id="gameId"></span></p>
-                    <button id="copyGameIdBtn" class="button secondary">
-                        <i class="fas fa-copy"></i>
-                        <span data-i18n="copyGameId">Копировать ID</span>
-                    </button>
-                </div>
-                <div class="players-list" id="playersList"></div>
-                <button id="startGameBtn" class="button primary">
-                    <i class="fas fa-play"></i>
-                    <span data-i18n="startGame">Начать игру</span>
-                </button>
-                <button id="backFromLobbyBtn" class="button secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    <span data-i18n="back">Назад</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Game Screen -->
-        <div id="gameScreen" class="screen">
-            <div class="container">
-                <div class="game-status">
-                    <div class="timer" id="gameTimer">05:00</div>
-                    <div class="role-info" id="roleInfo"></div>
-                </div>
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages"></div>
-                    <div class="chat-input">
-                        <input type="text" id="messageInput" placeholder="Введите сообщение...">
-                        <button id="sendMessageBtn">
-                            <i class="fas fa-paper-plane"></i>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Home Screen -->
+            <div id="homeScreen" class="screen active">
+                <div class="container">
+                    <h2>Добро пожаловать в Spy Game!</h2>
+                    <div class="action-buttons">
+                        <button id="createGameBtn" class="button primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Создать игру</span>
+                        </button>
+                        <button id="joinGameBtn" class="button secondary">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Присоединиться</span>
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <a href="#" class="nav-item active" data-screen="home">
-            <i class="fas fa-home"></i>
-            <span data-i18n="home">Главная</span>
-        </a>
-        <a href="#" class="nav-item" data-screen="create">
-            <i class="fas fa-plus"></i>
-            <span data-i18n="createGame">Создать</span>
-        </a>
-        <a href="#" class="nav-item" data-screen="join">
-            <i class="fas fa-sign-in-alt"></i>
-            <span data-i18n="joinGame">Присоединиться</span>
-        </a>
-    </nav>
+            <!-- Create Game Screen -->
+            <div id="createGameScreen" class="screen">
+                <div class="container">
+                    <h2>Создать игру</h2>
+                    <div class="game-settings">
+                        <div class="setting-group">
+                            <label>Количество игроков</label>
+                            <input type="number" id="playersCount" min="3" max="10" value="4">
+                        </div>
+                        <div class="setting-group">
+                            <label>Время раунда (минуты)</label>
+                            <input type="number" id="roundTime" min="1" max="10" value="5">
+                        </div>
+                    </div>
+                    <button id="confirmCreateBtn" class="button primary">
+                        <i class="fas fa-play"></i>
+                        <span>Начать игру</span>
+                    </button>
+                    <button id="backFromCreateBtn" class="button secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Назад</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Join Game Screen -->
+            <div id="joinGameScreen" class="screen">
+                <div class="container">
+                    <h2>Присоединиться к игре</h2>
+                    <div class="input-group">
+                        <input type="text" id="gameCode" class="input-field" placeholder="Введите код игры">
+                    </div>
+                    <button id="confirmJoinBtn" class="button primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Присоединиться</span>
+                    </button>
+                    <button id="backFromJoinBtn" class="button secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Назад</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lobby Screen -->
+            <div id="lobbyScreen" class="screen">
+                <div class="container">
+                    <div class="game-info">
+                        <h2>Лобби</h2>
+                        <p>ID игры: <span id="gameId"></span></p>
+                        <button id="copyGameIdBtn" class="button secondary">
+                            <i class="fas fa-copy"></i>
+                            <span>Копировать ID</span>
+                        </button>
+                    </div>
+                    <div class="players-list" id="playersList"></div>
+                    <button id="startGameBtn" class="button primary">
+                        <i class="fas fa-play"></i>
+                        <span>Начать игру</span>
+                    </button>
+                    <button id="backFromLobbyBtn" class="button secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Назад</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div class="container">
+                    <div class="game-status">
+                        <div class="timer" id="gameTimer">05:00</div>
+                        <div class="role-info" id="roleInfo"></div>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="messageInput" placeholder="Введите сообщение...">
+                            <button id="sendMessageBtn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script src="app.js"></script>
 </body>
