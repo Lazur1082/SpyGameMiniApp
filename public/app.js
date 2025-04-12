@@ -93,7 +93,7 @@ const state = {
     sound: localStorage.getItem('sound') === 'true',
     gameId: null,
     playerName: null,
-    role: null,
+    isAdmin: false,
     players: [],
     messages: [],
     language: localStorage.getItem('language') || 'ru'
@@ -536,7 +536,7 @@ socket.on('gameCreated', (data) => {
     // Сохраняем информацию об игре
     state.gameId = gameId;
     state.playerName = player.name;
-    state.isAdmin = player.isAdmin;
+    state.isAdmin = true; // Создатель игры всегда администратор
     state.players = players;
     
     // Обновляем отображение
