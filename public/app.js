@@ -224,17 +224,15 @@ function showScreen(screenName) {
 }
 
 function updatePlayersList(players) {
-    elements.playersList.innerHTML = '';
+    const playersList = document.getElementById('playersList');
+    if (!playersList) return;
+    
+    playersList.innerHTML = '';
     players.forEach(player => {
-        const playerItem = document.createElement('div');
-        playerItem.className = 'player-item';
-        const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
-        playerItem.innerHTML = `
-            <div class="player-avatar">${initials}</div>
-            <span class="player-name">${player.name}</span>
-            ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
-        `;
-        elements.playersList.appendChild(playerItem);
+        const playerElement = document.createElement('div');
+        playerElement.className = 'player-item';
+        playerElement.textContent = `${player.name}${player.isAdmin ? ' (Админ)' : ''}`;
+        playersList.appendChild(playerElement);
     });
 }
 
@@ -404,63 +402,48 @@ function initializeEventListeners() {
         });
     }
     
-    // Кнопка начала игры
-    const startGameButton = document.getElementById('startGameButton');
-    if (startGameButton) {
-        startGameButton.addEventListener('click', () => {
-            console.log('Start game button clicked');
-            const name = document.getElementById('playerName').value.trim();
-            if (name) {
-                console.log('Creating game with name:', name);
-                socket.emit('createGame', { name });
-            } else {
-                tg.showAlert('Введите ваше имя');
-            }
-        });
+    // Кнопка назад из лобби
+    const leaveLobbyButton = document.getElementById('leaveLobbyButton');
+    if (leaveLobbyButton) {
+        leaveLobbyButton.onclick = function() {
+            console.log('Leave lobby button clicked');
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('mainMenuScreen').classList.remove('hidden');
+            socket.emit('leaveGame');
+        };
     }
     
     // Кнопка назад из создания игры
     const backFromCreate = document.getElementById('backFromCreate');
     if (backFromCreate) {
-        backFromCreate.addEventListener('click', () => {
-            showScreen('main');
-        });
-    }
-    
-    // Кнопка присоединения к существующей игре
-    const joinExistingGameButton = document.getElementById('joinExistingGameButton');
-    if (joinExistingGameButton) {
-        joinExistingGameButton.addEventListener('click', () => {
-            console.log('Join existing game button clicked');
-            const name = document.getElementById('joinPlayerName').value.trim();
-            const gameId = document.getElementById('gameCode').value.trim();
-            if (name && gameId) {
-                socket.emit('joinGame', { name, gameId });
-            } else {
-                tg.showAlert('Введите имя и код игры');
-            }
-        });
+        backFromCreate.onclick = function() {
+            console.log('Back from create clicked');
+            document.getElementById('createGameScreen').classList.add('hidden');
+            document.getElementById('mainMenuScreen').classList.remove('hidden');
+        };
     }
     
     // Кнопка назад из присоединения к игре
     const backFromJoin = document.getElementById('backFromJoin');
     if (backFromJoin) {
-        backFromJoin.addEventListener('click', () => {
-            showScreen('main');
-        });
+        backFromJoin.onclick = function() {
+            console.log('Back from join clicked');
+            document.getElementById('joinGameScreen').classList.add('hidden');
+            document.getElementById('mainMenuScreen').classList.remove('hidden');
+        };
     }
     
-    // Кнопка копирования кода игры
-    const copyGameCode = document.getElementById('copyGameCode');
-    if (copyGameCode) {
-        copyGameCode.addEventListener('click', () => {
-            const gameCode = document.getElementById('gameCodeDisplay').textContent;
-            navigator.clipboard.writeText(gameCode).then(() => {
-                tg.showAlert('Код игры скопирован');
-            }).catch(() => {
-                tg.showAlert('Не удалось скопировать код');
-            });
-        });
+    // Кнопка начала игры в лобби
+    const startGameButton = document.getElementById('startGameButton');
+    if (startGameButton) {
+        startGameButton.onclick = function() {
+            console.log('Start game button clicked');
+            if (state.isAdmin) {
+                socket.emit('startGame', { gameId: state.gameId });
+            } else {
+                tg.showAlert('Только администратор может начать игру');
+            }
+        };
     }
     
     // Кнопка отправки сообщения
@@ -513,14 +496,6 @@ function initializeEventListeners() {
         });
     }
     
-    // Кнопка выхода из лобби
-    const leaveLobbyButton = document.getElementById('leaveLobbyButton');
-    if (leaveLobbyButton) {
-        leaveLobbyButton.addEventListener('click', () => {
-            showScreen('main');
-        });
-    }
-    
     // Выбор языка
     const languageSelect = document.getElementById('languageSelect');
     if (languageSelect) {
@@ -570,15 +545,23 @@ socket.on('gameCreated', (data) => {
     document.getElementById('lobbyScreen').classList.remove('hidden');
 });
 
-socket.on('joinedGame', ({ gameId, player, players }) => {
+socket.on('joinedGame', (data) => {
+    console.log('Joined game:', data);
+    const { gameId, player, players } = data;
+    
+    // Сохраняем информацию об игре
     state.gameId = gameId;
     state.playerName = player.name;
-    state.role = player.role;
+    state.isAdmin = player.isAdmin;
     state.players = players;
-    elements.currentGameId.textContent = gameId;
+    
+    // Обновляем отображение
+    document.getElementById('gameCodeDisplay').textContent = gameId;
     updatePlayersList(players);
-    showScreen('waiting');
-    playSound('join');
+    
+    // Переходим в лобби
+    document.getElementById('joinGameScreen').classList.add('hidden');
+    document.getElementById('lobbyScreen').classList.remove('hidden');
 });
 
 socket.on('playerJoined', ({ players }) => {

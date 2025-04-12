@@ -177,7 +177,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Начало игры
+    // Обработка начала игры
     socket.on('startGame', ({ gameId }) => {
         try {
             const game = games.get(gameId);
@@ -185,24 +185,48 @@ io.on('connection', (socket) => {
                 socket.emit('error', { message: 'Игра не найдена' });
                 return;
             }
-            if (game.players.length < 3) {
-                socket.emit('error', { message: 'Недостаточно игроков' });
+
+            // Проверяем, является ли игрок администратором
+            const player = game.players.find(p => p.id === socket.id);
+            if (!player || !player.isAdmin) {
+                socket.emit('error', { message: 'Только администратор может начать игру' });
                 return;
             }
 
-            game.status = 'playing';
-            game.location = getRandomLocation();
-            game.spy = game.players[Math.floor(Math.random() * game.players.length)].id;
+            // Проверяем количество игроков
+            if (game.players.length < 2) {
+                socket.emit('error', { message: 'Недостаточно игроков для начала игры' });
+                return;
+            }
 
+            // Выбираем случайную локацию
+            const locations = ['Аэропорт', 'Банк', 'Больница', 'Кафе', 'Кинотеатр', 'Магазин', 'Ресторан', 'Школа'];
+            const location = locations[Math.floor(Math.random() * locations.length)];
+
+            // Выбираем случайного шпиона
+            const spyIndex = Math.floor(Math.random() * game.players.length);
+            const spy = game.players[spyIndex];
+
+            // Обновляем состояние игры
+            game.status = 'playing';
+            game.location = location;
+            game.spy = spy.id;
+
+            // Отправляем информацию игрокам
             game.players.forEach(player => {
-                const role = player.id === game.spy ? 'spy' : 'civilian';
+                const role = player.id === spy.id ? 'spy' : 'civilian';
+                const playerLocation = role === 'spy' ? null : location;
+                
                 io.to(player.id).emit('gameStarted', {
-                    role,
-                    location: role === 'civilian' ? game.location : null
+                    role: role,
+                    location: playerLocation,
+                    players: game.players
                 });
             });
+
+            console.log(`Game started: ${gameId}`);
         } catch (error) {
-            console.error('Ошибка при начале игры:', error);
+            console.error('Error starting game:', error);
             socket.emit('error', { message: 'Ошибка при начале игры' });
         }
     });
