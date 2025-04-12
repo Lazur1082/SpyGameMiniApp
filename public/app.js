@@ -88,7 +88,8 @@ const state = {
     playerName: null,
     role: null,
     players: [],
-    messages: []
+    messages: [],
+    isInGame: false
 };
 
 // Звуковые эффекты
@@ -206,6 +207,12 @@ function updateTheme(theme) {
 function showScreen(screenId) {
     console.log('Showing screen:', screenId);
     
+    // Если мы в игре, разрешаем показывать только игровые экраны
+    if (state.isInGame && !['gameScreen', 'waitingScreen'].includes(screenId)) {
+        console.log('Navigation blocked during gameplay');
+        return;
+    }
+    
     // Скрываем все экраны
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.add('hidden');
@@ -296,13 +303,17 @@ function updatePlayersList(players) {
     });
 }
 
+// Функция добавления сообщения в чат
 function addChatMessage(message) {
     console.log('Adding chat message:', message);
     const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-    
+    if (!chatMessages) {
+        console.error('Chat messages container not found');
+        return;
+    }
+
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${message.sender === state.playerName ? 'own' : ''}`;
+    messageDiv.className = `message ${message.isOwn ? 'own' : ''}`;
     
     let messageContent = `
         <div class="message-sender">${message.sender}</div>
@@ -321,11 +332,17 @@ function addChatMessage(message) {
     `;
     
     messageDiv.innerHTML = messageContent;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
     
-    if (state.sound && message.sender !== state.playerName) {
-        sounds.message.play().catch(() => {});
+    try {
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Воспроизводим звук только для входящих сообщений
+        if (!message.isOwn && state.sound) {
+            playSound('message');
+        }
+    } catch (error) {
+        console.error('Error adding message to chat:', error);
     }
 }
 
@@ -544,7 +561,7 @@ function initializeEventListeners() {
 
 // Обработчики событий Socket.io
 socket.on('connect', () => {
-    console.log('Подключено к серверу');
+    console.log('Connected to server');
     showScreen('mainMenu');
     
     // Отправляем приветственное сообщение с изображением
@@ -562,17 +579,30 @@ socket.on('connect', () => {
 
 socket.on('connect_error', (error) => {
     console.error('Connection error:', error);
-    tg.showAlert('Ошибка подключения к серверу');
+    tg.showAlert('Ошибка подключения к серверу. Пожалуйста, проверьте интернет-соединение.');
 });
 
 socket.on('disconnect', () => {
-    console.log('Отключено от сервера');
+    console.log('Disconnected from server');
     tg.showAlert('Потеряно соединение с сервером. Пытаемся переподключиться...');
 });
 
 socket.on('error', (error) => {
     console.error('Socket error:', error);
     tg.showAlert(error.message || 'Произошла ошибка');
+});
+
+socket.on('gameJoined', (data) => {
+    console.log('Game joined:', data);
+    state.gameId = data.gameId;
+    showScreen('waitingScreen');
+    updatePlayersList(data.players);
+    document.getElementById('currentGameId').textContent = data.gameId;
+});
+
+socket.on('gameUpdated', (data) => {
+    console.log('Game updated:', data);
+    updatePlayersList(data.players);
 });
 
 socket.on('gameCreated', (data) => {
@@ -592,20 +622,29 @@ socket.on('playerJoined', (data) => {
 socket.on('gameStarted', (data) => {
     console.log('Game started:', data);
     state.role = data.role;
-    showScreen('game');
+    state.isInGame = true;
+    showScreen('gameScreen');
 });
 
-socket.on('chatMessage', ({ sender, text }) => {
-    addChatMessage({ sender, text });
+socket.on('chatMessage', (data) => {
+    console.log('Received chat message:', data);
+    if (data.sender !== userProfile.name) {
+        addChatMessage({
+            sender: data.sender,
+            text: data.text,
+            isOwn: false
+        });
+    }
 });
 
 socket.on('gameEnded', ({ spy, location }) => {
+    state.isInGame = false;
     elements.gameResults.innerHTML = `
         <h3>Игра завершена!</h3>
         <p>Шпион: ${spy}</p>
         <p>Локация: ${location}</p>
     `;
-    showScreen('end');
+    showScreen('endScreen');
     playSound('end');
 });
 
@@ -665,9 +704,17 @@ function joinGame() {
         updateProfile(defaultName, userProfile.avatar);
     }
     
+    console.log('Emitting joinGame event with:', {
+        gameId: gameId,
+        user: {
+            id: socket.id,
+            name: userProfile.name,
+            avatar: userProfile.avatar
+        }
+    });
+    
     socket.emit('joinGame', {
         gameId: gameId,
-        playerName: userProfile.name,
         user: {
             id: socket.id,
             name: userProfile.name,
@@ -708,6 +755,45 @@ function handleCommand(command) {
                 text: '📖 Доступные команды:\n/start - Начать игру\n/help - Показать это сообщение'
             });
             break;
+    }
+}
+
+// Функция отправки сообщения
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    if (!messageInput) {
+        console.error('Message input not found');
+        return;
+    }
+
+    const message = messageInput.value.trim();
+    if (!message) {
+        console.log('Empty message, not sending');
+        return;
+    }
+
+    console.log('Sending message:', message);
+    
+    try {
+        socket.emit('chatMessage', {
+            gameId: state.gameId,
+            sender: userProfile.name,
+            text: message,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Очищаем поле ввода только после успешной отправки
+        messageInput.value = '';
+        
+        // Добавляем сообщение в чат сразу
+        addChatMessage({
+            sender: userProfile.name,
+            text: message,
+            isOwn: true
+        });
+    } catch (error) {
+        console.error('Error sending message:', error);
+        tg.showAlert('Ошибка отправки сообщения. Попробуйте еще раз.');
     }
 }
 
