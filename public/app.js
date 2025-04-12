@@ -212,12 +212,12 @@ function showScreen(screenId) {
     });
     
     // Показываем нужный экран
-    const targetScreen = document.getElementById(screenId + 'Screen');
+    const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
         targetScreen.classList.remove('hidden');
-        console.log('Screen shown:', screenId + 'Screen');
+        console.log('Screen shown:', screenId);
     } else {
-        console.error('Screen not found:', screenId + 'Screen');
+        console.error('Screen not found:', screenId);
     }
 }
 
@@ -476,7 +476,7 @@ function initializeEventListeners() {
     // Создание игры
     document.getElementById('createGame').addEventListener('click', () => {
         console.log('Create game clicked');
-        createGame(userProfile.name);
+        createGame();
     });
 
     // Присоединение к игре
@@ -556,7 +556,7 @@ function initializeEventListeners() {
 // Обработчики событий Socket.io
 socket.on('connect', () => {
     console.log('Подключено к серверу');
-    showScreen('main');
+    showScreen('mainMenu');
     
     // Отправляем приветственное сообщение с изображением
     const welcomeMessage = {
@@ -593,9 +593,8 @@ socket.on('error', (error) => {
 socket.on('gameCreated', (data) => {
     console.log('Game created:', data);
     state.gameId = data.gameId;
-    state.playerName = data.playerName;
     showScreen('lobby');
-    updatePlayersList([{ name: data.playerName, role: 'host' }]);
+    updatePlayersList([{ name: userProfile.name, isAdmin: true }]);
 });
 
 socket.on('playerJoined', (data) => {
@@ -638,13 +637,16 @@ function initializeSound() {
 }
 
 // Функция создания игры
-function createGame(playerName) {
-    console.log('Creating game for player:', playerName);
-    if (!playerName) {
-        tg.showAlert('Пожалуйста, введите ваше имя');
+function createGame() {
+    console.log('Creating game...');
+    if (!userProfile.name) {
+        console.error('Player name is required');
         return;
     }
-    socket.emit('createGame', { playerName });
+    
+    socket.emit('createGame', {
+        playerName: userProfile.name
+    });
 }
 
 // Функция присоединения к игре
