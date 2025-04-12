@@ -46,66 +46,91 @@
 
         <!-- Главное меню -->
         <div id="mainMenu" class="screen main-menu">
-            <h2 class="menu-title">Игра "Шпион" 🕵️‍♂️</h2>
-            <div class="menu-buttons">
-                <button id="showCreateGame">Создать игру</button>
-                <button id="showJoinGame">Присоединиться к игре</button>
+            <div class="menu-content">
+                <h2 class="menu-title">Игра "Шпион" 🕵️‍♂️</h2>
+                <p class="menu-description">Увлекательная игра на внимательность и логику</p>
+                <div class="menu-buttons">
+                    <button id="showCreateGame" class="primary-button">
+                        <span class="button-icon">🎮</span>
+                        Создать игру
+                    </button>
+                    <button id="showJoinGame" class="primary-button">
+                        <span class="button-icon">🔗</span>
+                        Присоединиться
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Экран создания игры -->
         <div id="startScreen" class="screen hidden">
-            <h2>Создание игры</h2>
-            <div class="input-group">
-                <input type="text" id="playerName" placeholder="Ваше имя">
-                <button id="createGame">Создать</button>
+            <div class="screen-content">
+                <h2>Создание игры</h2>
+                <div class="input-group">
+                    <input type="text" id="playerName" placeholder="Ваше имя" class="input-field">
+                    <button id="createGame" class="primary-button">Создать</button>
+                </div>
+                <button id="backToMenu1" class="secondary-button">Назад</button>
             </div>
-            <button id="backToMenu1" class="secondary">Назад</button>
         </div>
 
         <!-- Экран присоединения к игре -->
         <div id="joinScreen" class="screen hidden">
-            <h2>Присоединиться к игре</h2>
-            <div class="input-group">
-                <input type="text" id="playerNameJoin" placeholder="Ваше имя">
-                <input type="text" id="gameId" placeholder="ID игры">
-                <button id="joinGame">Присоединиться</button>
+            <div class="screen-content">
+                <h2>Присоединиться к игре</h2>
+                <div class="input-group">
+                    <input type="text" id="playerNameJoin" placeholder="Ваше имя" class="input-field">
+                    <input type="text" id="gameId" placeholder="ID игры" class="input-field">
+                    <button id="joinGame" class="primary-button">Присоединиться</button>
+                </div>
+                <button id="backToMenu2" class="secondary-button">Назад</button>
             </div>
-            <button id="backToMenu2" class="secondary">Назад</button>
         </div>
 
         <!-- Экран ожидания -->
         <div id="waitingScreen" class="screen lobby hidden">
-            <div class="lobby-info">
-                <h3>Лобби</h3>
-                <div class="game-id">ID: <span id="currentGameId"></span></div>
+            <div class="lobby-content">
+                <div class="lobby-info">
+                    <h3>Лобби</h3>
+                    <div class="game-id">
+                        <span>ID игры:</span>
+                        <span id="currentGameId" class="game-id-value"></span>
+                        <button class="copy-button" onclick="copyGameId()">📋</button>
+                    </div>
+                </div>
+                <div class="players-container">
+                    <h3>Игроки:</h3>
+                    <div id="playersList" class="players-list"></div>
+                </div>
+                <div class="lobby-actions">
+                    <button id="startGame" class="primary-button">Начать игру</button>
+                    <button id="backToMenu3" class="secondary-button">Покинуть игру</button>
+                </div>
             </div>
-            <div class="players-container">
-                <h3>Игроки:</h3>
-                <div id="playersList" class="players-list"></div>
-            </div>
-            <button id="startGame">Начать игру</button>
-            <button id="backToMenu3" class="secondary">Покинуть игру</button>
         </div>
 
         <!-- Игровой экран -->
         <div id="gameScreen" class="screen hidden">
-            <div id="roleInfo" class="role-info"></div>
-            <div class="chat-container">
-                <div id="chatMessages" class="chat-messages"></div>
-                <div class="chat-input">
-                    <input type="text" id="messageInput" placeholder="Введите сообщение...">
-                    <button id="sendMessage">Отправить</button>
+            <div class="game-content">
+                <div id="roleInfo" class="role-info"></div>
+                <div class="chat-container">
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Введите сообщение..." class="input-field">
+                        <button id="sendMessage" class="send-button">Отправить</button>
+                    </div>
                 </div>
+                <button id="endGame" class="secondary-button">Завершить игру</button>
             </div>
-            <button id="endGame">Завершить игру</button>
         </div>
 
         <!-- Экран завершения -->
         <div id="endScreen" class="screen hidden">
-            <h2>Игра завершена!</h2>
-            <div id="gameResults"></div>
-            <button id="newGame">Новая игра</button>
+            <div class="end-content">
+                <h2>Игра завершена!</h2>
+                <div id="gameResults" class="game-results"></div>
+                <button id="newGame" class="primary-button">Новая игра</button>
+            </div>
         </div>
     </div>
     <script src="app.js"></script>
