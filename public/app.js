@@ -83,6 +83,7 @@ const buttons = {
 
 // Состояние приложения
 const state = {
+    theme: localStorage.getItem('theme') || 'light',
     gameId: null,
     playerName: null,
     role: null,
@@ -178,6 +179,29 @@ let userProfile = {
     gamesWon: parseInt(localStorage.getItem('gamesWon')) || 0
 };
 
+// Функция обновления темы
+function updateTheme(theme) {
+    console.log('Updating theme to:', theme);
+    state.theme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    
+    // Обновляем иконку в хедере
+    const themeButton = document.getElementById('themeButton');
+    if (themeButton) {
+        themeButton.querySelector('.button-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+    
+    // Обновляем цвета в Telegram WebApp
+    if (theme === 'dark') {
+        tg.setHeaderColor('#212121');
+        tg.setBackgroundColor('#212121');
+    } else {
+        tg.setHeaderColor('#2481cc');
+        tg.setBackgroundColor('#ffffff');
+    }
+}
+
 function updateProfile(name, avatar) {
     userProfile.name = name;
     userProfile.avatar = avatar;
@@ -189,11 +213,13 @@ function updateProfile(name, avatar) {
 function updateProfileUI() {
     const profileName = document.getElementById('profileName');
     const profileAvatar = document.getElementById('profileAvatar');
+    const headerAvatar = document.getElementById('headerAvatar');
     const gamesPlayed = document.getElementById('gamesPlayed');
     const gamesWon = document.getElementById('gamesWon');
     
     if (profileName) profileName.value = userProfile.name;
     if (profileAvatar) profileAvatar.src = userProfile.avatar;
+    if (headerAvatar) headerAvatar.src = userProfile.avatar;
     if (gamesPlayed) gamesPlayed.textContent = userProfile.gamesPlayed;
     if (gamesWon) gamesWon.textContent = userProfile.gamesWon;
 }
@@ -276,6 +302,12 @@ function playSound(soundName) {
 function initializeEventListeners() {
     console.log('Initializing event listeners...');
 
+    // Тема
+    document.getElementById('themeButton').addEventListener('click', () => {
+        const newTheme = state.theme === 'light' ? 'dark' : 'light';
+        updateTheme(newTheme);
+    });
+
     // Профиль
     document.getElementById('profileButton').addEventListener('click', () => {
         console.log('Profile button clicked');
@@ -292,10 +324,18 @@ function initializeEventListeners() {
         showScreen('main');
     });
 
-    document.getElementById('changeAvatar').addEventListener('click', () => {
-        console.log('Change avatar clicked');
-        // Здесь будет логика загрузки аватарки
-        tg.showAlert('Функция изменения аватара будет добавлена позже');
+    // Выбор аватара
+    document.querySelectorAll('.avatar-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const avatar = option.dataset.avatar;
+            updateProfile(userProfile.name, avatar);
+            
+            // Обновляем выбранный аватар
+            document.querySelectorAll('.avatar-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            option.classList.add('selected');
+        });
     });
 
     document.getElementById('profileName').addEventListener('change', (e) => {
@@ -304,6 +344,11 @@ function initializeEventListeners() {
     });
 
     // Навигационные кнопки
+    document.getElementById('mainMenuNav').addEventListener('click', () => {
+        console.log('Main menu nav clicked');
+        showScreen('main');
+    });
+
     document.getElementById('settingsButton').addEventListener('click', () => {
         console.log('Settings button clicked');
         showScreen('settings');
@@ -353,22 +398,16 @@ function initializeEventListeners() {
     // Кнопки игры
     document.getElementById('createGame').addEventListener('click', () => {
         console.log('Create game clicked');
-        const playerName = document.getElementById('playerName').value.trim() || userProfile.name;
-        if (playerName) {
-            createGame(playerName);
-        } else {
-            tg.showAlert('Пожалуйста, введите ваше имя');
-        }
+        createGame(userProfile.name);
     });
 
     document.getElementById('joinGame').addEventListener('click', () => {
         console.log('Join game clicked');
-        const playerName = document.getElementById('playerNameJoin').value.trim() || userProfile.name;
         const gameId = document.getElementById('gameId').value.trim();
-        if (playerName && gameId) {
-            joinGame(gameId, playerName);
+        if (gameId) {
+            joinGame(gameId, userProfile.name);
         } else {
-            tg.showAlert('Пожалуйста, введите имя и ID игры');
+            tg.showAlert('Пожалуйста, введите ID игры');
         }
     });
 
@@ -414,21 +453,11 @@ function initializeEventListeners() {
         }
     });
 
-    document.getElementById('playerName').addEventListener('keypress', (e) => {
+    document.getElementById('gameId').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            const playerName = e.target.value.trim() || userProfile.name;
-            if (playerName) {
-                createGame(playerName);
-            }
-        }
-    });
-
-    document.getElementById('playerNameJoin').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const playerName = e.target.value.trim() || userProfile.name;
-            const gameId = document.getElementById('gameId').value.trim();
-            if (playerName && gameId) {
-                joinGame(gameId, playerName);
+            const gameId = e.target.value.trim();
+            if (gameId) {
+                joinGame(gameId, userProfile.name);
             }
         }
     });
@@ -550,6 +579,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Установка начального языка
     const savedLanguage = localStorage.getItem('language') || 'ru';
     updateLanguage(savedLanguage);
+    
+    // Установка начальной темы
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    updateTheme(savedTheme);
     
     // Обновление профиля
     updateProfileUI();
