@@ -7,11 +7,17 @@ const socket = io();
 
 // Application state
 const state = {
-    currentScreen: 'home',
+    currentSection: 'home',
+    currentTheme: localStorage.getItem('theme') || 'dark',
+    currentLanguage: localStorage.getItem('language') || 'ru',
     gameId: null,
     isAdmin: false,
     players: [],
-    playerName: tg.initDataUnsafe?.user?.first_name || 'Player'
+    playerName: tg.initDataUnsafe.user?.first_name || 'Player',
+    settings: {
+        sound: true,
+        notifications: true
+    }
 };
 
 // DOM Elements
@@ -92,6 +98,30 @@ function addChatMessage(message) {
     }
 }
 
+function createGame() {
+    const playersCount = parseInt(document.getElementById('playersCount').value);
+    const roundTime = parseInt(document.getElementById('roundTime').value);
+    
+    socket.emit('createGame', { 
+        playersCount, 
+        roundTime,
+        playerName: state.playerName
+    });
+}
+
+function joinGame() {
+    const gameCode = document.getElementById('gameCode').value.trim();
+    if (!gameCode) {
+        alert(translations[state.currentLanguage].enterGameCode);
+        return;
+    }
+    
+    socket.emit('joinGame', { 
+        gameId: gameCode,
+        playerName: state.playerName
+    });
+}
+
 // Event Listeners
 if (elements.buttons.createGame) {
     elements.buttons.createGame.addEventListener('click', () => showScreen('create'));
@@ -115,29 +145,13 @@ if (elements.buttons.backFromLobby) {
 
 if (elements.buttons.confirmCreate) {
     elements.buttons.confirmCreate.addEventListener('click', () => {
-        const playersCount = parseInt(elements.inputs.playersCount.value);
-        const roundTime = parseInt(elements.inputs.roundTime.value);
-        
-        socket.emit('createGame', {
-            playersCount,
-            roundTime,
-            playerName: state.playerName
-        });
+        createGame();
     });
 }
 
 if (elements.buttons.confirmJoin) {
     elements.buttons.confirmJoin.addEventListener('click', () => {
-        const gameCode = elements.inputs.gameCode.value.trim();
-        if (!gameCode) {
-            alert('Пожалуйста, введите код игры');
-            return;
-        }
-        
-        socket.emit('joinGame', {
-            gameId: gameCode,
-            playerName: state.playerName
-        });
+        joinGame();
     });
 }
 
@@ -177,22 +191,26 @@ socket.on('connect', () => {
 });
 
 socket.on('gameCreated', (data) => {
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    
     state.gameId = data.gameId;
     state.isAdmin = true;
-    if (elements.gameId) {
-        elements.gameId.textContent = data.gameId;
-    }
-    updatePlayersList(data.players);
+    elements.gameId.textContent = data.gameId;
     showScreen('lobby');
 });
 
 socket.on('gameJoined', (data) => {
-    state.gameId = data.gameId;
-    state.isAdmin = data.isAdmin;
-    if (elements.gameId) {
-        elements.gameId.textContent = data.gameId;
+    if (data.error) {
+        alert(data.error);
+        return;
     }
-    updatePlayersList(data.players);
+    
+    state.gameId = data.gameId;
+    state.isAdmin = false;
+    elements.gameId.textContent = data.gameId;
     showScreen('lobby');
 });
 
@@ -220,6 +238,24 @@ socket.on('gameStarted', (data) => {
 
 socket.on('gameError', (error) => {
     alert(error.message);
+});
+
+socket.on('error', (error) => {
+    alert(error.message || translations[state.currentLanguage].error);
+});
+
+socket.on('updatePlayers', (data) => {
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    
+    state.players = data.players;
+    updatePlayersList(data.players);
+    
+    // Show/hide start game button based on admin status
+    const startGameBtn = document.getElementById('startGameBtn');
+    startGameBtn.style.display = state.isAdmin ? 'block' : 'none';
 });
 
 // Initialize

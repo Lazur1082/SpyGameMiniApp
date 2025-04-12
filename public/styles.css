@@ -1,3 +1,48 @@
+:root {
+    /* Light theme variables */
+    --light-bg-color: #ffffff;
+    --light-text-color: #000000;
+    --light-secondary-bg: #f5f5f5;
+    --light-accent-color: #0088cc;
+    --light-border-color: #e0e0e0;
+    --light-hover-color: #f0f0f0;
+    --light-shadow-color: rgba(0, 0, 0, 0.1);
+    --light-disabled-color: #cccccc;
+    
+    /* Dark theme variables */
+    --dark-bg-color: #17212b;
+    --dark-text-color: #ffffff;
+    --dark-secondary-bg: #232e3c;
+    --dark-accent-color: #2ea6ff;
+    --dark-border-color: #2a3a4d;
+    --dark-hover-color: #2a3a4d;
+    --dark-shadow-color: rgba(0, 0, 0, 0.3);
+    --dark-disabled-color: #4a4a4a;
+}
+
+/* Theme variables */
+[data-theme="light"] {
+    --bg-color: var(--light-bg-color);
+    --text-color: var(--light-text-color);
+    --secondary-bg: var(--light-secondary-bg);
+    --accent-color: var(--light-accent-color);
+    --border-color: var(--light-border-color);
+    --hover-color: var(--light-hover-color);
+    --shadow-color: var(--light-shadow-color);
+    --disabled-color: var(--light-disabled-color);
+}
+
+[data-theme="dark"] {
+    --bg-color: var(--dark-bg-color);
+    --text-color: var(--dark-text-color);
+    --secondary-bg: var(--dark-secondary-bg);
+    --accent-color: var(--dark-accent-color);
+    --border-color: var(--dark-border-color);
+    --hover-color: var(--dark-hover-color);
+    --shadow-color: var(--dark-shadow-color);
+    --disabled-color: var(--dark-disabled-color);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,8 +51,8 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #ffffff;
-    color: #000000;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     line-height: 1.6;
 }
 
@@ -19,9 +64,9 @@ body {
 
 /* Header */
 .header {
-    background-color: #ffffff;
+    background-color: var(--bg-color);
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .header-content {
@@ -56,7 +101,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ffffff;
+    background-color: var(--bg-color);
     padding: 16px;
     padding-top: 60px;
     overflow-y: auto;
@@ -68,56 +113,77 @@ body {
 
 /* Buttons */
 .button {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
+    width: 100%;
+    padding: 12px 16px;
+    margin: 8px 0;
     border: none;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    width: 100%;
-    margin: 8px 0;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .button.primary {
-    background-color: #2481cc;
-    color: #ffffff;
+    background-color: var(--accent-color);
+    color: white;
 }
 
 .button.secondary {
-    background-color: #f1f1f1;
-    color: #000000;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 /* Inputs */
 .input-field {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 16px;
-    background-color: #f1f1f1;
-    color: #000000;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .input-field:focus {
     outline: none;
-    border-color: #2481cc;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 136, 204, 0.2);
+}
+
+.input-field::placeholder {
+    color: var(--text-color);
+    opacity: 0.5;
 }
 
 /* Game elements */
 .game-info {
-    background-color: #f1f1f1;
+    background-color: var(--secondary-bg);
     padding: 16px;
     border-radius: 8px;
     margin-bottom: 16px;
 }
 
 .players-list {
-    background-color: #f1f1f1;
+    background-color: var(--secondary-bg);
     border-radius: 8px;
     padding: 16px;
     margin-bottom: 16px;
@@ -134,7 +200,7 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: #2481cc;
+    background-color: var(--accent-color);
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -144,7 +210,7 @@ body {
 
 /* Chat */
 .chat-container {
-    background-color: #f1f1f1;
+    background-color: var(--secondary-bg);
     border-radius: 8px;
     padding: 16px;
     margin-top: 16px;
@@ -167,24 +233,24 @@ body {
 .chat-input input {
     flex: 1;
     padding: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 16px;
-    background-color: #ffffff;
+    background-color: var(--bg-color);
 }
 
 .chat-input button {
     padding: 12px;
     border: none;
     border-radius: 8px;
-    background-color: #2481cc;
+    background-color: var(--accent-color);
     color: #ffffff;
     cursor: pointer;
 }
 
 /* Game Status */
 .game-status {
-    background-color: #f1f1f1;
+    background-color: var(--secondary-bg);
     padding: 16px;
     border-radius: 8px;
     margin-bottom: 16px;
@@ -205,4 +271,174 @@ body {
 h2 {
     margin-bottom: 24px;
     text-align: center;
+}
+
+/* Settings styles */
+.settings-group {
+    background-color: var(--secondary-bg);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item:hover {
+    background-color: var(--hover-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 0 -16px;
+}
+
+.setting-item span {
+    font-size: 16px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* Switch styles */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+input:checked + .slider {
+    background-color: var(--accent-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Select styles */
+.language-select, .theme-select {
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 120px;
+}
+
+.language-select:hover, .theme-select:hover {
+    border-color: var(--accent-color);
+}
+
+.language-select:focus, .theme-select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 136, 204, 0.2);
+}
+
+/* Game settings */
+.game-settings {
+    background-color: var(--secondary-bg);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.setting-group {
+    margin-bottom: 20px;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.setting-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.setting-group input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 136, 204, 0.2);
+}
+
+/* Responsive styles */
+@media (max-width: 480px) {
+    .settings-group, .game-settings {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .setting-item {
+        padding: 12px 0;
+    }
+    
+    .setting-item:hover {
+        padding: 12px;
+        margin: 0 -12px;
+    }
+    
+    .button, .input-field, .setting-group input {
+        font-size: 14px;
+        padding: 10px 14px;
+    }
+    
+    .language-select, .theme-select {
+        font-size: 12px;
+        padding: 6px 10px;
+        min-width: 100px;
+    }
 }
