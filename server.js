@@ -28,6 +28,118 @@ app.use(express.static('public'));
 // Инициализация бота
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 
+// Обработка команды /start
+bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    const welcomeMessage = `👋 Привет! Я бот для игры "Шпион".\n\n` +
+        `🎮 Чтобы начать игру, используйте команду /game\n` +
+        `📝 Правила игры: /rules\n` +
+        `❓ Помощь: /help`;
+    
+    bot.sendMessage(chatId, welcomeMessage);
+});
+
+// Обработка команды /game
+bot.onText(/\/game/, (msg) => {
+    const chatId = msg.chat.id;
+    const gameMessage = `🎮 Начать игру:\n\n` +
+        `1. Создайте игру: /create\n` +
+        `2. Присоединитесь к игре: /join <ID игры>`;
+    
+    bot.sendMessage(chatId, gameMessage);
+});
+
+// Обработка команды /rules
+bot.onText(/\/rules/, (msg) => {
+    const chatId = msg.chat.id;
+    const rulesMessage = `📝 Правила игры "Шпион":\n\n` +
+        `1. В игре участвуют от 3 до 8 игроков\n` +
+        `2. Один из игроков становится шпионом\n` +
+        `3. Остальные игроки получают одинаковую локацию\n` +
+        `4. Игроки обсуждают локацию, не называя её напрямую\n` +
+        `5. Шпион должен угадать локацию\n` +
+        `6. Если шпион угадывает - он побеждает\n` +
+        `7. Если игроки разоблачают шпиона - побеждают они`;
+    
+    bot.sendMessage(chatId, rulesMessage);
+});
+
+// Обработка команды /help
+bot.onText(/\/help/, (msg) => {
+    const chatId = msg.chat.id;
+    const helpMessage = `❓ Помощь по командам:\n\n` +
+        `/start - Начать работу с ботом\n` +
+        `/game - Начать новую игру\n` +
+        `/rules - Правила игры\n` +
+        `/help - Показать это сообщение\n\n` +
+        `Для создания игры:\n` +
+        `/create - Создать новую игру\n` +
+        `/join <ID> - Присоединиться к игре`;
+    
+    bot.sendMessage(chatId, helpMessage);
+});
+
+// Обработка команды /create
+bot.onText(/\/create/, (msg) => {
+    const chatId = msg.chat.id;
+    const gameId = generateGameId();
+    const game = {
+        id: gameId,
+        players: [{ id: chatId, name: msg.from.first_name, isAdmin: true }],
+        status: 'waiting',
+        location: null,
+        spy: null
+    };
+    games.set(gameId, game);
+    
+    const createMessage = `🎮 Игра создана!\n\n` +
+        `ID игры: ${gameId}\n` +
+        `Отправьте этот ID другим игрокам, чтобы они могли присоединиться\n\n` +
+        `Игроки:\n` +
+        `- ${msg.from.first_name} (Администратор)`;
+    
+    bot.sendMessage(chatId, createMessage);
+});
+
+// Обработка команды /join
+bot.onText(/\/join (.+)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const gameId = match[1].toUpperCase();
+    const game = games.get(gameId);
+    
+    if (!game) {
+        bot.sendMessage(chatId, '❌ Игра не найдена. Проверьте ID игры.');
+        return;
+    }
+    
+    if (game.status !== 'waiting') {
+        bot.sendMessage(chatId, '❌ Игра уже началась.');
+        return;
+    }
+    
+    if (game.players.length >= 8) {
+        bot.sendMessage(chatId, '❌ Игра заполнена (максимум 8 игроков).');
+        return;
+    }
+    
+    const player = { id: chatId, name: msg.from.first_name, isAdmin: false };
+    game.players.push(player);
+    
+    const playersList = game.players.map(p => `- ${p.name}${p.isAdmin ? ' (Администратор)' : ''}`).join('\n');
+    const joinMessage = `✅ Вы присоединились к игре!\n\n` +
+        `ID игры: ${gameId}\n\n` +
+        `Игроки:\n${playersList}`;
+    
+    bot.sendMessage(chatId, joinMessage);
+    
+    // Уведомляем других игроков
+    game.players.forEach(p => {
+        if (p.id !== chatId) {
+            bot.sendMessage(p.id, `🆕 ${msg.from.first_name} присоединился к игре!`);
+        }
+    });
+});
+
 // Хранение игр
 const games = new Map();
 

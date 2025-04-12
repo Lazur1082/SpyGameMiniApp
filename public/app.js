@@ -210,11 +210,26 @@ buttons.newGame.addEventListener('click', () => {
 // Обработчики событий Socket.io
 socket.on('connect', () => {
     console.log('Подключено к серверу');
+    showScreen('main');
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Ошибка подключения:', error);
+    tg.showAlert('Ошибка подключения к серверу. Пожалуйста, попробуйте позже.');
 });
 
 socket.on('disconnect', () => {
     console.log('Отключено от сервера');
     tg.showAlert('Потеряно соединение с сервером. Пытаемся переподключиться...');
+});
+
+socket.on('error', (error) => {
+    console.error('Ошибка:', error);
+    tg.showPopup({
+        title: 'Ошибка',
+        message: error.message || 'Произошла ошибка',
+        buttons: [{type: 'ok'}]
+    });
 });
 
 socket.on('gameCreated', (data) => {
@@ -263,27 +278,17 @@ socket.on('gameStarted', (data) => {
     showScreen('game');
 });
 
-socket.on('chatMessage', (message) => {
-    addChatMessage(message);
+socket.on('chatMessage', (data) => {
+    addChatMessage(data);
 });
 
 socket.on('gameEnded', (data) => {
     elements.gameResults.innerHTML = `
-        <div class="role-info">
-            <h3 class="role-title">Игра завершена!</h3>
-            <p>Шпионом был: <strong>${data.spy}</strong></p>
-            <p>Локация была: <strong>${data.location}</strong></p>
-        </div>
+        <h3>Игра завершена!</h3>
+        <p>Шпион: ${data.spy}</p>
+        <p>Локация: ${data.location}</p>
     `;
     showScreen('end');
-});
-
-socket.on('error', (error) => {
-    tg.showPopup({
-        title: 'Ошибка',
-        message: error.message,
-        buttons: [{type: 'ok'}]
-    });
 });
 
 // Инициализация
@@ -300,5 +305,9 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.playerNameJoin.value = name;
     }
     
+    // Показываем главное меню
     showScreen('main');
+    
+    // Подключаемся к серверу
+    socket.connect();
 }); 
