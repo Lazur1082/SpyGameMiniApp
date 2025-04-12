@@ -62,11 +62,32 @@ const sounds = {
     leave: new Audio('/sounds/leave.mp3')
 };
 
-// Утилиты
-function showScreen(screenId) {
-    lastScreen = screenId;
-    Object.values(screens).forEach(screen => screen.classList.add('hidden'));
-    screens[screenId].classList.remove('hidden');
+// Функции
+function showScreen(screenName) {
+    // Скрываем все экраны
+    const screens = [
+        'settingsScreen',
+        'mainMenu',
+        'startScreen',
+        'joinScreen',
+        'waitingScreen',
+        'gameScreen',
+        'endScreen'
+    ];
+
+    screens.forEach(screenId => {
+        const screen = document.getElementById(screenId);
+        if (screen) {
+            screen.classList.add('hidden');
+        }
+    });
+
+    // Показываем нужный экран
+    const targetScreen = document.getElementById(screenName + 'Screen') || 
+                        document.getElementById(screenName + 'Menu');
+    if (targetScreen) {
+        targetScreen.classList.remove('hidden');
+    }
 }
 
 function updatePlayersList(players) {
