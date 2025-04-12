@@ -564,7 +564,7 @@ socket.on('connect', () => {
     console.log('Connected to server');
     showScreen('mainMenu');
     
-    // Отправляем приветственное сообщение с изображением
+    // Отправляем приветственное сообщение
     const welcomeMessage = {
         text: '🎮 Добро пожаловать в игру "Шпион"!\n\n🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n📱 Для начала игры нажмите кнопку ниже:',
         image: '/images/SpyGameBannerWelcome.png'
@@ -595,9 +595,16 @@ socket.on('error', (error) => {
 socket.on('gameJoined', (data) => {
     console.log('Game joined:', data);
     state.gameId = data.gameId;
+    state.players = data.players;
     showScreen('waitingScreen');
     updatePlayersList(data.players);
     document.getElementById('currentGameId').textContent = data.gameId;
+    
+    // Добавляем системное сообщение
+    addChatMessage({
+        sender: 'Система',
+        text: `Вы присоединились к игре ${data.gameId}`
+    });
 });
 
 socket.on('gameUpdated', (data) => {
@@ -608,15 +615,29 @@ socket.on('gameUpdated', (data) => {
 socket.on('gameCreated', (data) => {
     console.log('Game created:', data);
     state.gameId = data.gameId;
+    state.players = [{ name: userProfile.name, isAdmin: true }];
     showScreen('waitingScreen');
-    updatePlayersList([{ name: userProfile.name, isAdmin: true }]);
+    updatePlayersList(state.players);
     document.getElementById('currentGameId').textContent = data.gameId;
+    
+    // Добавляем системное сообщение
+    addChatMessage({
+        sender: 'Система',
+        text: `Игра ${data.gameId} создана. Ожидаем игроков...`
+    });
 });
 
 socket.on('playerJoined', (data) => {
     console.log('Player joined:', data);
-    const players = [...state.players, { name: data.playerName, isAdmin: false }];
-    updatePlayersList(players);
+    if (!state.players) state.players = [];
+    state.players.push({ name: data.playerName, isAdmin: false });
+    updatePlayersList(state.players);
+    
+    // Добавляем системное сообщение
+    addChatMessage({
+        sender: 'Система',
+        text: `${data.playerName} присоединился к игре`
+    });
 });
 
 socket.on('gameStarted', (data) => {
@@ -639,13 +660,11 @@ socket.on('gameStarted', (data) => {
 
 socket.on('chatMessage', (data) => {
     console.log('Received chat message:', data);
-    if (data.sender !== userProfile.name) {
-        addChatMessage({
-            sender: data.sender,
-            text: data.text,
-            isOwn: false
-        });
-    }
+    addChatMessage({
+        sender: data.sender,
+        text: data.text,
+        isOwn: data.sender === userProfile.name
+    });
 });
 
 socket.on('gameEnded', ({ spy, location }) => {
@@ -673,6 +692,7 @@ socket.on('gameEnded', ({ spy, location }) => {
 socket.on('joinError', (error) => {
     console.error('Join error:', error);
     tg.showAlert(error.message || 'Ошибка присоединения к игре');
+    showScreen('joinScreen');
 });
 
 // Sound handling
@@ -721,6 +741,12 @@ function sendMessage() {
         return;
     }
 
+    if (!state.gameId) {
+        console.error('No active game');
+        tg.showAlert('Вы не находитесь в игре');
+        return;
+    }
+
     console.log('Sending message:', message);
     
     try {
@@ -730,13 +756,6 @@ function sendMessage() {
             sender: userProfile.name,
             text: message,
             timestamp: new Date().toISOString()
-        });
-        
-        // Добавляем сообщение в чат
-        addChatMessage({
-            sender: userProfile.name,
-            text: message,
-            isOwn: true
         });
         
         // Очищаем поле ввода
@@ -763,15 +782,7 @@ function joinGame() {
         updateProfile(defaultName, userProfile.avatar);
     }
     
-    console.log('Emitting joinGame event with:', {
-        gameId: gameId,
-        playerName: userProfile.name,
-        user: {
-            id: socket.id,
-            name: userProfile.name,
-            avatar: userProfile.avatar
-        }
-    });
+    console.log('Joining game with ID:', gameId);
     
     socket.emit('joinGame', {
         gameId: gameId,
