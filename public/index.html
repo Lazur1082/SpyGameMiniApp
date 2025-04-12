@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spy Game</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <!-- Menu Screen -->
-    <div id="menu" class="screen">
+    <div id="menu" class="screen active">
         <h1>Spy Game</h1>
         <div class="menu-buttons">
             <button id="createGameBtn" class="btn">
@@ -37,22 +38,26 @@
 
     <!-- Lobby Screen -->
     <div id="lobby" class="screen">
-        <h2>Ожидание игроков</h2>
+        <h2>Лобби</h2>
         <div class="game-info">
             <p>ID игры: <span id="gameIdDisplay"></span></p>
         </div>
-        <div id="playerList" class="player-list"></div>
+        <div class="player-list">
+            <h3>Игроки:</h3>
+            <div id="playerList"></div>
+        </div>
+        <button id="startGameBtn" class="btn">
+            <i class="fas fa-play"></i> Начать игру
+        </button>
     </div>
 
     <!-- Game Screen -->
     <div id="game" class="screen">
         <div class="game-info">
-            <p id="roleDisplay"></p>
-            <p id="locationDisplay"></p>
+            <p>Ваша роль: <span id="roleDisplay"></span></p>
+            <p>Локация: <span id="locationDisplay"></span></p>
         </div>
-        <div class="timer">
-            <span id="timerDisplay">5:00</span>
-        </div>
+        <div class="timer" id="timer">00:00</div>
         <div class="chat-container">
             <div id="chatMessages" class="chat-messages"></div>
             <div class="chat-input">
@@ -64,7 +69,7 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
     <script src="app.js"></script>
 </body>
 </html> 
