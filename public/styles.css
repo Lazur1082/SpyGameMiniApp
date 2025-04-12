@@ -193,7 +193,7 @@ body {
     justify-content: center;
     padding: 16px 32px;
     border-radius: 12px;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -201,7 +201,7 @@ body {
     outline: none;
     text-decoration: none;
     margin: 12px;
-    min-width: 240px;
+    min-width: 280px;
     box-shadow: 0 4px 6px var(--shadow-color);
 }
 
@@ -562,8 +562,8 @@ body {
 .toggle-switch {
     position: relative;
     display: inline-block;
-    width: 60px;
-    height: 34px;
+    width: 80px;
+    height: 40px;
 }
 
 .toggle-switch input {
@@ -581,14 +581,14 @@ body {
     bottom: 0;
     background-color: var(--border-color);
     transition: .4s;
-    border-radius: 34px;
+    border-radius: 40px;
 }
 
 .toggle-slider:before {
     position: absolute;
     content: "";
-    height: 26px;
-    width: 26px;
+    height: 32px;
+    width: 32px;
     left: 4px;
     bottom: 4px;
     background-color: white;
@@ -601,7 +601,7 @@ input:checked + .toggle-slider {
 }
 
 input:checked + .toggle-slider:before {
-    transform: translateX(26px);
+    transform: translateX(40px);
 }
 
 .hidden {
@@ -632,8 +632,9 @@ input:checked + .toggle-slider:before {
     }
 
     .button {
-        min-width: 200px;
+        min-width: 240px;
         padding: 14px 28px;
+        font-size: 1.1rem;
     }
 
     .players-list {
@@ -642,6 +643,20 @@ input:checked + .toggle-slider:before {
 
     .message {
         max-width: 90%;
+    }
+
+    .toggle-switch {
+        width: 70px;
+        height: 35px;
+    }
+
+    .toggle-slider:before {
+        height: 27px;
+        width: 27px;
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(35px);
     }
 }
 
@@ -655,8 +670,9 @@ input:checked + .toggle-slider:before {
     }
 
     .button {
-        min-width: 180px;
+        min-width: 200px;
         padding: 12px 24px;
+        font-size: 1rem;
     }
 
     .settings-content {
@@ -669,6 +685,20 @@ input:checked + .toggle-slider:before {
     
     .settings-button {
         padding: 8px;
+    }
+
+    .toggle-switch {
+        width: 60px;
+        height: 30px;
+    }
+
+    .toggle-slider:before {
+        height: 22px;
+        width: 22px;
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(30px);
     }
 }
 
@@ -754,4 +784,12 @@ input:checked + .slider:before {
 .admin-badge {
     color: var(--warning-color);
     font-size: 1.2rem;
+}
+
+/* Метатег для масштабирования */
+@viewport {
+    width: device-width;
+    initial-scale: 1.0;
+    maximum-scale: 1.0;
+    user-scalable: no;
 }

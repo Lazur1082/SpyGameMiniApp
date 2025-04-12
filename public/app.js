@@ -14,7 +14,9 @@ try {
         },
         close: () => console.log('Closing app'),
         expand: () => console.log('Expanding app'),
-        enableClosingConfirmation: () => console.log('Enabling closing confirmation')
+        enableClosingConfirmation: () => console.log('Enabling closing confirmation'),
+        setHeaderColor: (color) => console.log('Setting header color:', color),
+        setBackgroundColor: (color) => console.log('Setting background color:', color)
     };
 }
 
@@ -152,6 +154,7 @@ function playSound(soundName) {
 }
 
 function updateTheme(theme) {
+    settings.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
     
@@ -159,6 +162,15 @@ function updateTheme(theme) {
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.checked = theme === 'dark';
+    }
+    
+    // Обновляем цвета в Telegram WebApp
+    if (theme === 'dark') {
+        tg.setHeaderColor('#212121');
+        tg.setBackgroundColor('#212121');
+    } else {
+        tg.setHeaderColor('#2481cc');
+        tg.setBackgroundColor('#ffffff');
     }
 }
 
@@ -175,6 +187,7 @@ function initializeEventListeners() {
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.addEventListener('change', (e) => {
+            console.log('Theme toggle changed:', e.target.checked);
             const isDark = e.target.checked;
             updateTheme(isDark ? 'dark' : 'light');
         });
@@ -402,12 +415,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded');
     try {
         // Загружаем сохраненные настройки
-        const savedTheme = localStorage.getItem('theme');
-        const savedSound = localStorage.getItem('sound');
-        
-        if (savedTheme) {
-            updateTheme(savedTheme);
-        }
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        updateTheme(savedTheme);
         
         if (savedSound !== null) {
             updateSound(savedSound === 'true');
