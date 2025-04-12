@@ -364,6 +364,20 @@ function updateGameScreen(game) {
 function initializeEventListeners() {
     console.log('Initializing event listeners');
     
+    // Кнопка создания игры в главном меню
+    document.getElementById('createGameButton').onclick = function() {
+        console.log('Create game button clicked');
+        document.getElementById('mainMenuScreen').classList.add('hidden');
+        document.getElementById('createGameScreen').classList.remove('hidden');
+    };
+    
+    // Кнопка присоединения к игре в главном меню
+    document.getElementById('joinGameButton').onclick = function() {
+        console.log('Join game button clicked');
+        document.getElementById('mainMenuScreen').classList.add('hidden');
+        document.getElementById('joinGameScreen').classList.remove('hidden');
+    };
+    
     // Кнопка темы в хедере
     const themeButton = document.getElementById('themeButton');
     if (themeButton) {
@@ -387,24 +401,6 @@ function initializeEventListeners() {
     if (backFromSettings) {
         backFromSettings.addEventListener('click', () => {
             showScreen('main');
-        });
-    }
-    
-    // Кнопка создания игры в главном меню
-    const createGameButton = document.getElementById('createGameButton');
-    if (createGameButton) {
-        createGameButton.addEventListener('click', () => {
-            console.log('Create game button clicked');
-            showScreen('createGame');
-        });
-    }
-    
-    // Кнопка присоединения к игре в главном меню
-    const joinGameButton = document.getElementById('joinGameButton');
-    if (joinGameButton) {
-        joinGameButton.addEventListener('click', () => {
-            console.log('Join game button clicked');
-            showScreen('joinGame');
         });
     }
     
