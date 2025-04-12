@@ -142,14 +142,19 @@ const setupEventListeners = () => {
                 return;
             }
 
-            socket.emit('chatMessage', {
-                gameId: state.gameId,
-                sender: userProfile.name,
-                text: message,
-                timestamp: new Date().toISOString()
-            });
-            
-            messageInput.value = '';
+            try {
+                socket.emit('chatMessage', {
+                    gameId: state.gameId,
+                    sender: userProfile.name,
+                    text: message
+                });
+                
+                // Очищаем поле ввода
+                messageInput.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+                tg.showAlert('Ошибка отправки сообщения');
+            }
         });
     }
 

@@ -237,11 +237,15 @@ io.on('connection', (socket) => {
                 throw new Error('Игра не найдена');
             }
 
-            io.to(gameId).emit('chatMessage', {
+            // Создаем объект сообщения
+            const message = {
                 sender,
                 text,
                 timestamp: new Date().toISOString()
-            });
+            };
+
+            // Отправляем сообщение всем игрокам в игре
+            io.to(gameId).emit('chatMessage', message);
         } catch (error) {
             console.error('Error sending message:', error);
             socket.emit('error', { message: 'Ошибка отправки сообщения' });
