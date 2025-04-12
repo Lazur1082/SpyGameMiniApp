@@ -202,7 +202,27 @@ function updateTheme(theme) {
     }
 }
 
+// Функция показа экрана
+function showScreen(screenId) {
+    console.log('Showing screen:', screenId);
+    
+    // Скрываем все экраны
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.add('hidden');
+    });
+    
+    // Показываем нужный экран
+    const targetScreen = document.getElementById(screenId + 'Screen');
+    if (targetScreen) {
+        targetScreen.classList.remove('hidden');
+    } else {
+        console.error('Screen not found:', screenId);
+    }
+}
+
+// Функция обновления профиля
 function updateProfile(name, avatar) {
+    console.log('Updating profile:', { name, avatar });
     userProfile.name = name;
     userProfile.avatar = avatar;
     localStorage.setItem('userName', name);
@@ -211,17 +231,33 @@ function updateProfile(name, avatar) {
 }
 
 function updateProfileUI() {
+    console.log('Updating profile UI');
     const profileName = document.getElementById('profileName');
     const profileAvatar = document.getElementById('profileAvatar');
     const headerAvatar = document.getElementById('headerAvatar');
     const gamesPlayed = document.getElementById('gamesPlayed');
     const gamesWon = document.getElementById('gamesWon');
     
-    if (profileName) profileName.value = userProfile.name;
-    if (profileAvatar) profileAvatar.src = userProfile.avatar;
-    if (headerAvatar) headerAvatar.src = userProfile.avatar;
-    if (gamesPlayed) gamesPlayed.textContent = userProfile.gamesPlayed;
-    if (gamesWon) gamesWon.textContent = userProfile.gamesWon;
+    if (profileName) {
+        profileName.value = userProfile.name;
+        console.log('Updated profile name:', userProfile.name);
+    }
+    if (profileAvatar) {
+        profileAvatar.src = userProfile.avatar;
+        console.log('Updated profile avatar:', userProfile.avatar);
+    }
+    if (headerAvatar) {
+        headerAvatar.src = userProfile.avatar;
+        console.log('Updated header avatar:', userProfile.avatar);
+    }
+    if (gamesPlayed) {
+        gamesPlayed.textContent = userProfile.gamesPlayed;
+        console.log('Updated games played:', userProfile.gamesPlayed);
+    }
+    if (gamesWon) {
+        gamesWon.textContent = userProfile.gamesWon;
+        console.log('Updated games won:', userProfile.gamesWon);
+    }
 }
 
 function updateGameStats(played, won) {
@@ -230,23 +266,6 @@ function updateGameStats(played, won) {
     localStorage.setItem('gamesPlayed', played);
     localStorage.setItem('gamesWon', won);
     updateProfileUI();
-}
-
-// Функции
-function showScreen(screenName) {
-    console.log('Showing screen:', screenName);
-    
-    // Скрываем все экраны
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.add('hidden');
-    });
-
-    // Показываем нужный экран
-    const targetScreen = document.getElementById(screenName + 'Screen') || 
-                        document.getElementById(screenName + 'Menu');
-    if (targetScreen) {
-        targetScreen.classList.remove('hidden');
-    }
 }
 
 function updatePlayersList(players) {
@@ -332,6 +351,22 @@ function handleAvatarUpload(event) {
 function initializeEventListeners() {
     console.log('Initializing event listeners...');
 
+    // Профиль
+    document.getElementById('profileButton').addEventListener('click', () => {
+        console.log('Profile button clicked');
+        showScreen('profile');
+    });
+
+    document.getElementById('profileNav').addEventListener('click', () => {
+        console.log('Profile nav clicked');
+        showScreen('profile');
+    });
+
+    document.getElementById('backFromProfile').addEventListener('click', () => {
+        console.log('Back from profile clicked');
+        showScreen('main');
+    });
+
     // Загрузка аватара
     const uploadAvatar = document.getElementById('uploadAvatar');
     const avatarInput = document.getElementById('avatarInput');
@@ -358,31 +393,16 @@ function initializeEventListeners() {
         });
     });
 
+    // Имя профиля
+    document.getElementById('profileName').addEventListener('input', (e) => {
+        console.log('Profile name changed:', e.target.value);
+        updateProfile(e.target.value, userProfile.avatar);
+    });
+
     // Тема
     document.getElementById('themeButton').addEventListener('click', () => {
         const newTheme = state.theme === 'light' ? 'dark' : 'light';
         updateTheme(newTheme);
-    });
-
-    // Профиль
-    document.getElementById('profileButton').addEventListener('click', () => {
-        console.log('Profile button clicked');
-        showScreen('profile');
-    });
-
-    document.getElementById('profileNav').addEventListener('click', () => {
-        console.log('Profile nav clicked');
-        showScreen('profile');
-    });
-
-    document.getElementById('backFromProfile').addEventListener('click', () => {
-        console.log('Back from profile clicked');
-        showScreen('main');
-    });
-
-    document.getElementById('profileName').addEventListener('change', (e) => {
-        console.log('Profile name changed:', e.target.value);
-        updateProfile(e.target.value, userProfile.avatar);
     });
 
     // Навигационные кнопки
