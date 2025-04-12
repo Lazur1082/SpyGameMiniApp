@@ -152,15 +152,13 @@ function playSound(soundName) {
 }
 
 function updateTheme(theme) {
-    settings.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-    if (theme === 'dark') {
-        tg.setHeaderColor('#212121');
-        tg.setBackgroundColor('#212121');
-    } else {
-        tg.setHeaderColor('#2481cc');
-        tg.setBackgroundColor('#ffffff');
+    
+    // Обновляем состояние переключателя
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.checked = theme === 'dark';
     }
 }
 
@@ -173,10 +171,19 @@ function updateSound(sound) {
 function initializeEventListeners() {
     console.log('Initializing event listeners');
     
-    // Кнопки навигации
-    if (elements.settingsButton) {
-        elements.settingsButton.addEventListener('click', () => {
-            console.log('Settings button clicked');
+    // Переключатель темы
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('change', (e) => {
+            const isDark = e.target.checked;
+            updateTheme(isDark ? 'dark' : 'light');
+        });
+    }
+
+    // Кнопка настроек
+    const settingsButton = document.getElementById('settingsButton');
+    if (settingsButton) {
+        settingsButton.addEventListener('click', () => {
             showScreen('settings');
         });
     }
@@ -298,13 +305,6 @@ function initializeEventListeners() {
     }
 
     // Настройки
-    if (elements.themeToggle) {
-        elements.themeToggle.addEventListener('change', (e) => {
-            console.log('Theme toggle changed');
-            updateTheme(e.target.checked ? 'dark' : 'light');
-        });
-    }
-
     if (elements.soundToggle) {
         elements.soundToggle.addEventListener('change', (e) => {
             console.log('Sound toggle changed');

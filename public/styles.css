@@ -6,7 +6,7 @@
 }
 
 :root {
-    /* Light theme */
+    /* Light theme (голубые цвета) */
     --tg-theme-bg-color: #ffffff;
     --tg-theme-text-color: #000000;
     --tg-theme-hint-color: #999999;
@@ -21,18 +21,18 @@
     --header-height: 56px;
     --safe-area-top: env(safe-area-inset-top);
     --safe-area-bottom: env(safe-area-inset-bottom);
-    --primary-color: #4a90e2;
-    --primary-dark: #357abd;
-    --secondary-color: #2ecc71;
-    --danger-color: #e74c3c;
-    --text-color: #2c3e50;
-    --text-light: #7f8c8d;
-    --background-color: #f5f6fa;
+    --primary-color: #2196f3;
+    --primary-dark: #1976d2;
+    --secondary-color: #64b5f6;
+    --danger-color: #f44336;
+    --text-color: #333333;
+    --text-light: #666666;
+    --background-color: #f5f9ff;
     --card-background: #ffffff;
-    --border-color: #dcdde1;
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    --success-color: #27ae60;
-    --warning-color: #f39c12;
+    --border-color: #e3f2fd;
+    --shadow-color: rgba(33, 150, 243, 0.1);
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
     --hover-color: #f8f9fa;
     --active-color: #e9ecef;
     --border-radius: 8px;
@@ -40,6 +40,7 @@
 }
 
 [data-theme="dark"] {
+    /* Dark theme (красные цвета) */
     --tg-theme-bg-color: #212121;
     --tg-theme-text-color: #ffffff;
     --tg-theme-hint-color: #aaaaaa;
@@ -49,16 +50,16 @@
     --tg-theme-secondary-bg-color: #2c2c2c;
     --tg-theme-header-bg-color: #212121;
     --tg-theme-accent-color: #3390ec;
-    --primary-color: #3498db;
-    --primary-dark: #2980b9;
-    --secondary-color: #2ecc71;
-    --danger-color: #e74c3c;
-    --text-color: #ecf0f1;
-    --text-light: #bdc3c7;
-    --background-color: #2c3e50;
-    --card-background: #34495e;
-    --border-color: #2c3e50;
-    --shadow-color: rgba(0, 0, 0, 0.3);
+    --primary-color: #f44336;
+    --primary-dark: #d32f2f;
+    --secondary-color: #ef5350;
+    --danger-color: #d32f2f;
+    --text-color: #ffffff;
+    --text-light: #b0bec5;
+    --background-color: #1a0000;
+    --card-background: #2c0000;
+    --border-color: #3d0000;
+    --shadow-color: rgba(244, 67, 54, 0.2);
     --hover-color: #2a2a2a;
     --active-color: #333333;
 }
@@ -190,17 +191,17 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 1rem;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     border: none;
     outline: none;
     text-decoration: none;
-    margin: 10px;
-    min-width: 200px;
+    margin: 12px;
+    min-width: 240px;
     box-shadow: 0 4px 6px var(--shadow-color);
 }
 
@@ -229,7 +230,7 @@ body {
 }
 
 .secondary-button:hover {
-    background-color: #27ae60;
+    background-color: var(--primary-dark);
 }
 
 .danger-button {
@@ -238,7 +239,7 @@ body {
 }
 
 .danger-button:hover {
-    background-color: #c0392b;
+    background-color: var(--primary-dark);
 }
 
 .input-group {
@@ -287,9 +288,10 @@ body {
 }
 
 .menu-content {
-    max-width: 600px;
+    max-width: 800px;
     margin: 40px auto;
     text-align: center;
+    padding: 24px;
     animation: slideUp 0.5s ease;
 }
 
@@ -306,9 +308,9 @@ body {
 }
 
 .menu-content p {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: var(--text-light);
-    margin-bottom: 40px;
+    margin-bottom: 32px;
     line-height: 1.6;
 }
 
@@ -622,7 +624,7 @@ input:checked + .toggle-slider:before {
 @media (max-width: 768px) {
     .menu-content {
         margin: 20px auto;
-        padding: 0 20px;
+        padding: 16px;
     }
 
     .menu-content h2 {
@@ -630,7 +632,8 @@ input:checked + .toggle-slider:before {
     }
 
     .button {
-        min-width: 160px;
+        min-width: 200px;
+        padding: 14px 28px;
     }
 
     .players-list {
@@ -652,12 +655,20 @@ input:checked + .toggle-slider:before {
     }
 
     .button {
-        min-width: 140px;
-        padding: 10px 20px;
+        min-width: 180px;
+        padding: 12px 24px;
     }
 
     .settings-content {
         padding: 20px;
+    }
+
+    .header {
+        padding: 12px 16px;
+    }
+    
+    .settings-button {
+        padding: 8px;
     }
 }
 
@@ -698,8 +709,8 @@ input:checked + .toggle-slider:before {
 .switch {
     position: relative;
     display: inline-block;
-    width: 50px;
-    height: 24px;
+    width: 60px;
+    height: 34px;
 }
 
 .switch input {
@@ -715,16 +726,16 @@ input:checked + .toggle-slider:before {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--secondary-color);
+    background-color: var(--border-color);
     transition: .4s;
-    border-radius: 24px;
+    border-radius: 34px;
 }
 
 .slider:before {
     position: absolute;
     content: "";
-    height: 16px;
-    width: 16px;
+    height: 26px;
+    width: 26px;
     left: 4px;
     bottom: 4px;
     background-color: white;
