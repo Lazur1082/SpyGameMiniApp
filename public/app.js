@@ -391,7 +391,7 @@ function initializeEventListeners() {
     }
     
     // Кнопка создания игры в главном меню
-    const createGameButton = document.getElementById('showCreateGame');
+    const createGameButton = document.getElementById('createGameButton');
     if (createGameButton) {
         createGameButton.addEventListener('click', () => {
             console.log('Create game button clicked');
@@ -400,7 +400,7 @@ function initializeEventListeners() {
     }
     
     // Кнопка присоединения к игре в главном меню
-    const joinGameButton = document.getElementById('showJoinGame');
+    const joinGameButton = document.getElementById('joinGameButton');
     if (joinGameButton) {
         joinGameButton.addEventListener('click', () => {
             console.log('Join game button clicked');
