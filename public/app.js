@@ -549,8 +549,8 @@ socket.on('connect', () => {
 });
 
 socket.on('connect_error', (error) => {
-    console.error('Ошибка подключения:', error);
-    tg.showAlert('Ошибка подключения к серверу. Пожалуйста, попробуйте позже.');
+    console.error('Connection error:', error);
+    tg.showAlert('Ошибка подключения к серверу');
 });
 
 socket.on('disconnect', () => {
@@ -559,12 +559,8 @@ socket.on('disconnect', () => {
 });
 
 socket.on('error', (error) => {
-    console.error('Ошибка:', error);
-    tg.showPopup({
-        title: 'Ошибка',
-        message: error.message || 'Произошла ошибка',
-        buttons: [{type: 'ok'}]
-    });
+    console.error('Socket error:', error);
+    tg.showAlert(error.message || 'Произошла ошибка');
 });
 
 socket.on('gameCreated', (data) => {
@@ -633,7 +629,11 @@ function createGame() {
     
     socket.emit('createGame', {
         playerName: userProfile.name,
-        playerId: socket.id
+        user: {
+            id: socket.id,
+            name: userProfile.name,
+            avatar: userProfile.avatar
+        }
     });
 }
 
@@ -643,6 +643,7 @@ function joinGame() {
     const gameId = document.getElementById('gameId').value.trim();
     if (!gameId) {
         console.error('Game ID is required');
+        tg.showAlert('Введите ID игры');
         return;
     }
     
@@ -655,7 +656,11 @@ function joinGame() {
     socket.emit('joinGame', {
         gameId: gameId,
         playerName: userProfile.name,
-        playerId: socket.id
+        user: {
+            id: socket.id,
+            name: userProfile.name,
+            avatar: userProfile.avatar
+        }
     });
 }
 

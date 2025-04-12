@@ -230,56 +230,59 @@ io.on('connection', (socket) => {
     // Присоединение к игре
     socket.on('joinGame', async (data) => {
         try {
-            db.serialize(() => {
-                db.run('BEGIN TRANSACTION');
-                
-                // Проверяем существование игры
-                db.get(
-                    'SELECT * FROM games WHERE game_id = ? AND status = ?',
-                    [data.gameId, 'waiting'],
-                    (err, game) => {
-                        if (err || !game) {
-                            db.run('ROLLBACK');
-                            socket.emit('error', { message: 'Игра не найдена или уже началась' });
-                            return;
-                        }
-                        
-                        // Добавляем игрока
-                        db.run(
-                            'INSERT INTO players (game_id, user_id, role) VALUES (?, ?, ?)',
-                            [data.gameId, data.user.id, 'civilian'],
-                            function(err) {
-                                if (err) {
-                                    db.run('ROLLBACK');
-                                    socket.emit('error', { message: 'Ошибка присоединения к игре' });
-                                    return;
-                                }
-                                
-                                db.run('COMMIT');
-                                socket.join(data.gameId);
-                                
-                                // Получаем список игроков
-                                db.all(
-                                    'SELECT p.*, u.name, u.avatar FROM players p JOIN users u ON p.user_id = u.id WHERE p.game_id = ?',
-                                    [data.gameId],
-                                    (err, players) => {
-                                        if (err) {
-                                            socket.emit('error', { message: 'Ошибка получения списка игроков' });
-                                            return;
-                                        }
-                                        
-                                        socket.emit('gameJoined', { gameId: data.gameId, players });
-                                        io.to(data.gameId).emit('playerJoined', { players });
-                                    }
-                                );
-                            }
-                        );
-                    }
-                );
+            console.log('Joining game:', data);
+            const { gameId, user } = data;
+            
+            if (!gameId || !user || !user.id) {
+                throw new Error('Неверные данные для присоединения к игре');
+            }
+            
+            const game = games.get(gameId);
+            if (!game) {
+                throw new Error('Игра не найдена');
+            }
+            
+            if (game.players.length >= 4) {
+                throw new Error('Игра уже заполнена');
+            }
+            
+            // Добавляем игрока в игру
+            game.players.push({
+                id: user.id,
+                name: user.name,
+                avatar: user.avatar,
+                socketId: socket.id
             });
+            
+            // Обновляем игру в базе данных
+            const [result] = await pool.query(
+                'UPDATE games SET players = ? WHERE id = ?',
+                [JSON.stringify(game.players), gameId]
+            );
+            
+            if (result.affectedRows === 0) {
+                throw new Error('Не удалось обновить игру');
+            }
+            
+            // Присоединяем сокет к комнате игры
+            socket.join(gameId);
+            
+            // Отправляем обновление всем игрокам
+            io.to(gameId).emit('gameUpdated', {
+                gameId: gameId,
+                players: game.players
+            });
+            
+            // Отправляем подтверждение присоединения
+            socket.emit('gameJoined', {
+                gameId: gameId,
+                players: game.players
+            });
+            
+            console.log(`Player ${user.name} joined game ${gameId}`);
         } catch (error) {
             console.error('Error joining game:', error);
-            socket.emit('error', { message: 'Ошибка присоединения к игре' });
+            socket.emit('error', { message: error.message });
         }
     });
 
