@@ -190,7 +190,7 @@ function updateTheme(theme) {
     // Обновляем иконку в хедере
     const themeButton = document.getElementById('themeButton');
     if (themeButton) {
-        themeButton.querySelector('.button-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+        themeButton.querySelector('.button-icon').className = `fas fa-${theme === 'dark' ? 'sun' : 'moon'} button-icon`;
     }
     
     // Обновляем цвета в Telegram WebApp
@@ -595,6 +595,7 @@ socket.on('error', (error) => {
 socket.on('gameJoined', (data) => {
     console.log('Game joined:', data);
     state.gameId = data.gameId;
+    state.players = data.players;
     showScreen('waitingScreen');
     updatePlayersList(data.players);
     document.getElementById('currentGameId').textContent = data.gameId;
@@ -602,6 +603,7 @@ socket.on('gameJoined', (data) => {
 
 socket.on('gameUpdated', (data) => {
     console.log('Game updated:', data);
+    state.players = data.players;
     updatePlayersList(data.players);
 });
 
@@ -672,10 +674,7 @@ socket.on('gameEnded', ({ spy, location }) => {
 
 socket.on('joinError', (error) => {
     console.error('Join error:', error);
-    addChatMessage({
-        sender: 'Система',
-        text: `Ошибка: ${error.message}`
-    });
+    tg.showAlert(error.message || 'Ошибка присоединения к игре');
 });
 
 // Sound handling
@@ -811,8 +810,7 @@ function sendMessage() {
         socket.emit('chatMessage', {
             gameId: state.gameId,
             sender: userProfile.name,
-            text: message,
-            timestamp: new Date().toISOString()
+            text: message
         });
     } catch (error) {
         console.error('Error sending message:', error);
