@@ -60,6 +60,8 @@
     --border-color: #404040;
     --shadow-color: rgba(0, 0, 0, 0.3);
     --shadow-hover: rgba(0, 0, 0, 0.4);
+    --hover-color: rgba(244, 67, 54, 0.1);
+    --active-color: rgba(244, 67, 54, 0.2);
 }
 
 body {
@@ -190,6 +192,7 @@ body {
     border: none;
     border-radius: 7px;
     height: 40px;
+    width: 100%;
 }
 
 .primary-button:hover {
@@ -708,4 +711,59 @@ body {
         font-size: 1.2rem;
         padding: 16px;
     }
+}
+
+[data-theme="dark"] .primary-button {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+    border: none;
+}
+
+[data-theme="dark"] .primary-button:hover {
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+}
+
+[data-theme="dark"] .secondary-button {
+    background: #2c0000;
+    color: #f44336;
+    border: 2px solid #f44336;
+}
+
+[data-theme="dark"] .secondary-button:hover {
+    background: #1a0000;
+    color: #ff5252;
+    border-color: #ff5252;
+}
+
+[data-theme="dark"] .send-button {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+}
+
+[data-theme="dark"] .send-button:hover {
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+}
+
+[data-theme="dark"] .copy-button {
+    color: #f44336;
+}
+
+[data-theme="dark"] .copy-button:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+[data-theme="dark"] .settings-button {
+    color: #f44336;
+}
+
+[data-theme="dark"] .settings-button:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+[data-theme="dark"] .theme-button {
+    color: #f44336;
+}
+
+[data-theme="dark"] .theme-button:hover {
+    background-color: rgba(244, 67, 54, 0.1);
 }
