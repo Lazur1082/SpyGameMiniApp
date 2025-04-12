@@ -3,24 +3,18 @@ let tg;
 try {
     tg = window.Telegram.WebApp;
     tg.expand();
-} catch (error) {
-    console.log('Not running in Telegram WebApp, initializing for PC');
-    // Создаем заглушку для tg
+    tg.enableClosingConfirmation();
+} catch (e) {
+    console.log('Not running in Telegram');
     tg = {
-        initDataUnsafe: {
-            user: {
-                first_name: 'Игрок',
-                last_name: ''
-            }
+        showAlert: (text) => alert(text),
+        showPopup: (params) => {
+            alert(params.message);
+            if (params.callback) params.callback();
         },
-        showPopup: (options) => {
-            alert(options.message);
-        },
-        showAlert: (message) => {
-            alert(message);
-        },
-        setHeaderColor: () => {},
-        setBackgroundColor: () => {}
+        close: () => console.log('Closing app'),
+        expand: () => console.log('Expanding app'),
+        enableClosingConfirmation: () => console.log('Enabling closing confirmation')
     };
 }
 
@@ -160,6 +154,7 @@ function playSound(soundName) {
 function updateTheme(theme) {
     settings.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
     if (theme === 'dark') {
         tg.setHeaderColor('#212121');
         tg.setBackgroundColor('#212121');
@@ -171,6 +166,7 @@ function updateTheme(theme) {
 
 function updateSound(sound) {
     settings.sound = sound;
+    localStorage.setItem('sound', sound);
 }
 
 // Обработчики событий
@@ -317,13 +313,105 @@ function initializeEventListeners() {
     }
 }
 
+// Обработчики событий Socket.io
+socket.on('connect', () => {
+    console.log('Подключено к серверу');
+    showScreen('main');
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Ошибка подключения:', error);
+    tg.showAlert('Ошибка подключения к серверу. Пожалуйста, попробуйте позже.');
+});
+
+socket.on('disconnect', () => {
+    console.log('Отключено от сервера');
+    tg.showAlert('Потеряно соединение с сервером. Пытаемся переподключиться...');
+});
+
+socket.on('error', (error) => {
+    console.error('Ошибка:', error);
+    tg.showPopup({
+        title: 'Ошибка',
+        message: error.message || 'Произошла ошибка',
+        buttons: [{type: 'ok'}]
+    });
+});
+
+socket.on('gameCreated', ({ gameId, player, players }) => {
+    currentPlayer = player;
+    isAdmin = true;
+    elements.currentGameId.textContent = gameId;
+    updatePlayersList(players);
+    showScreen('waiting');
+    
+    // Копируем ID игры в буфер обмена
+    navigator.clipboard.writeText(gameId).catch(() => {});
+    tg.showPopup({
+        title: 'Игра создана',
+        message: `ID игры: ${gameId}\nID скопирован в буфер обмена`,
+        buttons: [{type: 'ok'}]
+    });
+});
+
+socket.on('joinedGame', ({ gameId, player, players }) => {
+    currentPlayer = player;
+    isAdmin = player.isAdmin;
+    elements.currentGameId.textContent = gameId;
+    updatePlayersList(players);
+    showScreen('waiting');
+    playSound('join');
+});
+
+socket.on('playerJoined', ({ players }) => {
+    updatePlayersList(players);
+    playSound('join');
+});
+
+socket.on('playerLeft', ({ players }) => {
+    updatePlayersList(players);
+    playSound('leave');
+});
+
+socket.on('gameStarted', ({ role, location }) => {
+    elements.roleInfo.innerHTML = `
+        <h3 class="role-title">${role === 'spy' ? 'Вы - Шпион! 🕵️‍♂️' : 'Ваша роль'}</h3>
+        <p>${role === 'spy' ? 
+            'Попытайтесь угадать локацию, слушая разговор других игроков' : 
+            `Локация: ${location}<br>Не дайте шпиону догадаться!`}</p>
+    `;
+    elements.chatMessages.innerHTML = '';
+    showScreen('game');
+});
+
+socket.on('chatMessage', ({ sender, text }) => {
+    addChatMessage({ sender, text });
+});
+
+socket.on('gameEnded', ({ spy, location }) => {
+    elements.gameResults.innerHTML = `
+        <h3>Игра завершена!</h3>
+        <p>Шпион: ${spy}</p>
+        <p>Локация: ${location}</p>
+    `;
+    showScreen('end');
+});
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded');
     try {
-        // Установка темы
-        updateTheme(settings.theme);
-        updateSound(settings.sound);
+        // Загружаем сохраненные настройки
+        const savedTheme = localStorage.getItem('theme');
+        const savedSound = localStorage.getItem('sound');
+        
+        if (savedTheme) {
+            updateTheme(savedTheme);
+        }
+        
+        if (savedSound !== null) {
+            updateSound(savedSound === 'true');
+        }
         
         // Установка имени из Telegram
         if (tg.initDataUnsafe?.user) {
