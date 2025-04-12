@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра "Шпион"</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div id="startScreen" class="screen">
+            <h1>Игра "Шпион"</h1>
+            <div class="input-group">
+                <input type="text" id="playerName" placeholder="Ваше имя">
+                <button id="createGame">Создать игру</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="gameId" placeholder="ID игры">
+                <button id="joinGame">Присоединиться</button>
+            </div>
+        </div>
+
+        <div id="waitingScreen" class="screen hidden">
+            <h2>Ожидание игроков</h2>
+            <p>ID игры: <span id="currentGameId"></span></p>
+            <div id="playersList"></div>
+            <button id="startGame">Начать игру</button>
+        </div>
+
+        <div id="gameScreen" class="screen hidden">
+            <div class="game-info">
+                <h2>Игра началась!</h2>
+                <div id="roleInfo"></div>
+            </div>
+            <div class="chat-container">
+                <div id="chatMessages"></div>
+                <div class="input-group">
+                    <input type="text" id="messageInput" placeholder="Введите сообщение">
+                    <button id="sendMessage">Отправить</button>
+                </div>
+            </div>
+            <button id="endGame">Завершить игру</button>
+        </div>
+
+        <div id="endScreen" class="screen hidden">
+            <h2>Игра окончена!</h2>
+            <div id="gameResults"></div>
+            <button id="newGame">Новая игра</button>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
