@@ -191,18 +191,21 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 16px 32px;
-    border-radius: 12px;
-    font-size: 1.2rem;
+    padding: 20px 40px;
+    border-radius: 16px;
+    font-size: 1.4rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     border: none;
     outline: none;
     text-decoration: none;
-    margin: 12px;
-    min-width: 280px;
+    margin: 16px;
+    min-width: 320px;
     box-shadow: 0 4px 6px var(--shadow-color);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .button:hover {
@@ -562,8 +565,9 @@ body {
 .toggle-switch {
     position: relative;
     display: inline-block;
-    width: 80px;
-    height: 40px;
+    width: 100px;
+    height: 50px;
+    margin: 20px 0;
 }
 
 .toggle-switch input {
@@ -581,19 +585,21 @@ body {
     bottom: 0;
     background-color: var(--border-color);
     transition: .4s;
-    border-radius: 40px;
+    border-radius: 50px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .toggle-slider:before {
     position: absolute;
     content: "";
-    height: 32px;
-    width: 32px;
+    height: 42px;
+    width: 42px;
     left: 4px;
     bottom: 4px;
     background-color: white;
     transition: .4s;
     border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 input:checked + .toggle-slider {
@@ -601,7 +607,7 @@ input:checked + .toggle-slider {
 }
 
 input:checked + .toggle-slider:before {
-    transform: translateX(40px);
+    transform: translateX(50px);
 }
 
 .hidden {
@@ -632,9 +638,10 @@ input:checked + .toggle-slider:before {
     }
 
     .button {
-        min-width: 240px;
-        padding: 14px 28px;
-        font-size: 1.1rem;
+        min-width: 280px;
+        padding: 18px 36px;
+        font-size: 1.3rem;
+        margin: 14px;
     }
 
     .players-list {
@@ -646,17 +653,17 @@ input:checked + .toggle-slider:before {
     }
 
     .toggle-switch {
-        width: 70px;
-        height: 35px;
+        width: 90px;
+        height: 45px;
     }
 
     .toggle-slider:before {
-        height: 27px;
-        width: 27px;
+        height: 37px;
+        width: 37px;
     }
 
     input:checked + .toggle-slider:before {
-        transform: translateX(35px);
+        transform: translateX(45px);
     }
 }
 
@@ -670,9 +677,10 @@ input:checked + .toggle-slider:before {
     }
 
     .button {
-        min-width: 200px;
-        padding: 12px 24px;
-        font-size: 1rem;
+        min-width: 260px;
+        padding: 16px 32px;
+        font-size: 1.2rem;
+        margin: 12px;
     }
 
     .settings-content {
@@ -688,17 +696,17 @@ input:checked + .toggle-slider:before {
     }
 
     .toggle-switch {
-        width: 60px;
-        height: 30px;
+        width: 80px;
+        height: 40px;
     }
 
     .toggle-slider:before {
-        height: 22px;
-        width: 22px;
+        height: 32px;
+        width: 32px;
     }
 
     input:checked + .toggle-slider:before {
-        transform: translateX(30px);
+        transform: translateX(40px);
     }
 }
 
@@ -792,4 +800,26 @@ input:checked + .slider:before {
     initial-scale: 1.0;
     maximum-scale: 1.0;
     user-scalable: no;
+}
+
+/* Специальные стили для iOS */
+@supports (-webkit-touch-callout: none) {
+    .button {
+        padding: 22px 44px;
+        font-size: 1.5rem;
+    }
+    
+    .toggle-switch {
+        width: 110px;
+        height: 55px;
+    }
+    
+    .toggle-slider:before {
+        height: 47px;
+        width: 47px;
+    }
+    
+    input:checked + .toggle-slider:before {
+        transform: translateX(55px);
+    }
 }

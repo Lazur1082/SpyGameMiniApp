@@ -159,7 +159,9 @@ function playSound(soundName) {
     }
 }
 
+// Функция обновления темы
 function updateTheme(theme) {
+    console.log('Updating theme to:', theme);
     settings.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -197,6 +199,10 @@ function initializeEventListeners() {
             const isDark = e.target.checked;
             updateTheme(isDark ? 'dark' : 'light');
         });
+        
+        // Устанавливаем начальное состояние
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        themeToggle.checked = savedTheme === 'dark';
     }
 
     // Кнопка настроек
