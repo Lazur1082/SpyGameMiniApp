@@ -125,7 +125,8 @@ const translations = {
         yourRole: 'Ваша роль',
         enterMessage: 'Введите сообщение...',
         send: 'Отправить',
-        language: 'Язык'
+        language: 'Язык',
+        sound: 'Звук'
     },
     en: {
         gameTitle: 'Spy',
@@ -144,7 +145,8 @@ const translations = {
         yourRole: 'Your Role',
         enterMessage: 'Enter message...',
         send: 'Send',
-        language: 'Language'
+        language: 'Language',
+        sound: 'Sound'
     },
     es: {
         gameTitle: 'Espía',
@@ -210,14 +212,12 @@ function showScreen(screenName) {
     console.log('Showing screen:', screenName);
     
     // Скрываем все экраны
-    Object.values(elements).forEach(element => {
-        if (element && element.classList && element.classList.contains('screen')) {
-            element.classList.add('hidden');
-        }
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.add('hidden');
     });
 
     // Показываем нужный экран
-    const targetScreen = elements[screenName + 'Screen'] || elements[screenName + 'Menu'];
+    const targetScreen = document.getElementById(screenName + 'Screen');
     if (targetScreen) {
         targetScreen.classList.remove('hidden');
     }
@@ -267,15 +267,8 @@ function addChatMessage(message) {
 }
 
 function playSound(soundName) {
-    if (!state.sound) return;
-    
-    try {
-        const audio = new Audio(`/sounds/${soundName}.mp3`);
-        audio.play().catch(error => {
-            console.error('Error playing sound:', error);
-        });
-    } catch (error) {
-        console.error('Error initializing sound:', error);
+    if (state.sound && sounds[soundName]) {
+        sounds[soundName].play().catch(e => console.log('Sound play error:', e));
     }
 }
 
@@ -283,8 +276,8 @@ function playSound(soundName) {
 function updateTheme(theme) {
     console.log('Updating theme to:', theme);
     state.theme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
+    document.body.className = theme;
     
     // Обновляем иконку в хедере
     const themeButton = document.getElementById('themeButton');
@@ -293,12 +286,11 @@ function updateTheme(theme) {
     }
     
     // Обновляем цвета в Telegram WebApp
-    if (theme === 'dark') {
-        tg.setHeaderColor('#212121');
-        tg.setBackgroundColor('#212121');
-    } else {
-        tg.setHeaderColor('#2481cc');
-        tg.setBackgroundColor('#ffffff');
+    if (tg.setHeaderColor) {
+        tg.setHeaderColor(theme === 'dark' ? '#1a1a1a' : '#ffffff');
+    }
+    if (tg.setBackgroundColor) {
+        tg.setBackgroundColor(theme === 'dark' ? '#000000' : '#ffffff');
     }
 }
 

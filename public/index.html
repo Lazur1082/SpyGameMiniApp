@@ -22,23 +22,6 @@
     </header>
 
     <main class="container">
-        <!-- Настройки -->
-        <section id="settingsScreen" class="screen settings-screen hidden">
-            <div class="settings-group">
-                <div class="settings-item">
-                    <label for="languageSelect">Язык</label>
-                    <select id="languageSelect" class="language-select">
-                        <option value="ru">Русский</option>
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                        <option value="fr">Français</option>
-                        <option value="de">Deutsch</option>
-                    </select>
-                </div>
-            </div>
-            <button id="backFromSettings" class="secondary-button">Назад</button>
-        </section>
-
         <!-- Главное меню -->
         <section id="mainMenuScreen" class="screen main-menu">
             <div class="menu-content">
@@ -57,9 +40,37 @@
             </div>
         </section>
 
+        <!-- Настройки -->
+        <section id="settingsScreen" class="screen settings-screen hidden">
+            <div class="settings-group">
+                <div class="settings-item">
+                    <label for="languageSelect">Язык</label>
+                    <select id="languageSelect" class="language-select">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                    </select>
+                </div>
+                <div class="settings-item">
+                    <label for="soundToggle">Звук</label>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <span class="theme-slider">
+                            <span class="theme-icon">🔊</span>
+                            <span class="theme-icon">🔇</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <button id="backFromSettings" class="secondary-button">Назад</button>
+        </section>
+
         <!-- Создание игры -->
         <section id="createGameScreen" class="screen hidden">
             <div class="input-group">
+                <h2>Создание игры</h2>
                 <input type="text" id="playerName" class="input-field" placeholder="Ваше имя">
                 <button id="createNewGameButton" class="primary-button">Создать игру</button>
                 <button id="backFromCreate" class="secondary-button">Назад</button>
@@ -69,6 +80,7 @@
         <!-- Присоединение к игре -->
         <section id="joinGameScreen" class="screen hidden">
             <div class="input-group">
+                <h2>Присоединение к игре</h2>
                 <input type="text" id="joinPlayerName" class="input-field" placeholder="Ваше имя">
                 <input type="text" id="gameCode" class="input-field" placeholder="Код игры">
                 <button id="joinExistingGameButton" class="primary-button">Присоединиться</button>
