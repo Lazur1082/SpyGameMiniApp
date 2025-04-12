@@ -447,76 +447,49 @@ function initializeEventListeners() {
         });
     }
 
-    // Кнопки действий
-    if (elements.createGame) {
-        elements.createGame.addEventListener('click', () => {
-            console.log('Create game clicked');
-            const name = elements.playerName.value.trim();
+    // Кнопка создания игры
+    const createGameButton = document.getElementById('createGameButton');
+    if (createGameButton) {
+        createGameButton.addEventListener('click', () => {
+            console.log('Create game button clicked');
+            showScreen('createGame');
+        });
+    }
+    
+    // Кнопка присоединения к игре
+    const joinGameButton = document.getElementById('joinGameButton');
+    if (joinGameButton) {
+        joinGameButton.addEventListener('click', () => {
+            console.log('Join game button clicked');
+            showScreen('joinGame');
+        });
+    }
+    
+    // Кнопка начала игры
+    const startGameButton = document.getElementById('startGameButton');
+    if (startGameButton) {
+        startGameButton.addEventListener('click', () => {
+            console.log('Start game button clicked');
+            const name = document.getElementById('playerName').value.trim();
             if (name) {
                 socket.emit('createGame', { name });
             } else {
-                tg.showPopup({
-                    title: 'Ошибка',
-                    message: 'Введите ваше имя',
-                    buttons: [{type: 'ok'}]
-                });
+                tg.showAlert('Введите ваше имя');
             }
         });
     }
-
-    if (elements.joinGame) {
-        elements.joinGame.addEventListener('click', () => {
-            console.log('Join game clicked');
-            const name = elements.playerNameJoin.value.trim();
-            const gameId = elements.gameId.value.trim().toUpperCase();
+    
+    // Кнопка присоединения к существующей игре
+    const joinExistingGameButton = document.getElementById('joinExistingGameButton');
+    if (joinExistingGameButton) {
+        joinExistingGameButton.addEventListener('click', () => {
+            console.log('Join existing game button clicked');
+            const name = document.getElementById('joinPlayerName').value.trim();
+            const gameId = document.getElementById('gameCode').value.trim();
             if (name && gameId) {
                 socket.emit('joinGame', { name, gameId });
             } else {
-                tg.showPopup({
-                    title: 'Ошибка',
-                    message: 'Заполните все поля',
-                    buttons: [{type: 'ok'}]
-                });
-            }
-        });
-    }
-
-    if (elements.startGame) {
-        elements.startGame.addEventListener('click', () => {
-            console.log('Start game clicked');
-            const gameId = elements.currentGameId.textContent;
-            if (gameId) {
-                socket.emit('startGame', { gameId });
-            }
-        });
-    }
-
-    if (elements.endGame) {
-        elements.endGame.addEventListener('click', () => {
-            console.log('End game clicked');
-            const gameId = elements.currentGameId.textContent;
-            if (gameId) {
-                socket.emit('endGame', { gameId });
-            }
-        });
-    }
-
-    if (elements.sendMessage) {
-        elements.sendMessage.addEventListener('click', () => {
-            console.log('Send message clicked');
-            const text = elements.messageInput.value.trim();
-            if (text) {
-                socket.emit('chatMessage', { text });
-                elements.messageInput.value = '';
-            }
-        });
-    }
-
-    if (elements.messageInput) {
-        elements.messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                console.log('Send message keypress');
-                elements.sendMessage.click();
+                tg.showAlert('Введите имя и код игры');
             }
         });
     }
