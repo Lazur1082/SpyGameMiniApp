@@ -1,6 +1,25 @@
-// Initialize Telegram WebApp
-const tg = window.Telegram.WebApp;
-tg.expand();
+// Initialize Telegram WebApp with fallback
+const WebApp = window.Telegram?.WebApp || {
+    initData: '',
+    initDataUnsafe: {
+        user: {
+            id: Math.floor(Math.random() * 1000000),
+            first_name: 'Guest',
+            last_name: 'User',
+            username: 'guest' + Math.floor(Math.random() * 1000)
+        }
+    },
+    ready: () => {},
+    expand: () => {},
+    close: () => {},
+    showAlert: (message) => alert(message),
+    showPopup: (params) => alert(params.message),
+    sendData: (data) => console.log('Data sent:', data)
+};
+
+// Initialize the WebApp
+WebApp.ready();
+WebApp.expand();
 
 // Initialize Socket.io
 const socket = io();
@@ -9,12 +28,17 @@ const socket = io();
 const state = {
     currentScreen: 'menu',
     gameId: null,
-    playerName: tg.initDataUnsafe?.user?.first_name || 'Игрок',
-    avatar: '👤',
+    players: [],
     role: null,
     location: null,
-    players: [],
-    messages: []
+    timer: null
+};
+
+// User profile
+const userProfile = {
+    id: WebApp.initDataUnsafe.user.id,
+    name: WebApp.initDataUnsafe.user.first_name + ' ' + (WebApp.initDataUnsafe.user.last_name || ''),
+    avatar: 'default'
 };
 
 // Translations
@@ -125,9 +149,9 @@ const elements = {
 // Functions
 function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(screen => {
-        screen.style.display = 'none';
+        screen.classList.remove('active');
     });
-    document.getElementById(screenId).style.display = 'block';
+    document.getElementById(screenId).classList.add('active');
     state.currentScreen = screenId;
 }
 
@@ -228,10 +252,7 @@ elements.notificationsToggle.addEventListener('change', (e) => {
 });
 
 document.getElementById('createGameBtn').addEventListener('click', () => {
-    socket.emit('createGame', {
-        playerName: state.playerName,
-        avatar: state.avatar
-    });
+    socket.emit('createGame', { player: userProfile });
 });
 
 document.getElementById('joinGameBtn').addEventListener('click', () => {
@@ -241,24 +262,27 @@ document.getElementById('joinGameBtn').addEventListener('click', () => {
 document.getElementById('confirmJoinBtn').addEventListener('click', () => {
     const gameId = document.getElementById('gameIdInput').value.trim();
     if (gameId) {
-        socket.emit('joinGame', {
-            gameId,
-            playerName: state.playerName,
-            avatar: state.avatar
-        });
+        socket.emit('joinGame', { gameId, player: userProfile });
+    } else {
+        WebApp.showAlert('Please enter a game ID');
     }
 });
 
 document.getElementById('sendMessageBtn').addEventListener('click', () => {
     const messageInput = document.getElementById('messageInput');
-    const text = messageInput.value.trim();
-    if (text && state.gameId) {
-        socket.emit('chatMessage', {
-            gameId: state.gameId,
-            sender: state.playerName,
-            text
-        });
-        messageInput.value = '';
+    const message = messageInput.value.trim();
+    if (message) {
+        try {
+            socket.emit('chatMessage', {
+                gameId: state.gameId,
+                sender: userProfile.name,
+                text: message
+            });
+            messageInput.value = '';
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Error sending message');
+        }
     }
 });
 
@@ -287,8 +311,9 @@ socket.on('connect', () => {
 
 socket.on('gameCreated', (data) => {
     state.gameId = data.gameId;
-    showScreen('lobby');
     document.getElementById('gameIdDisplay').textContent = data.gameId;
+    updatePlayerList(data.players);
+    showScreen('lobby');
 });
 
 socket.on('playerJoined', (data) => {
@@ -306,13 +331,13 @@ socket.on('chatMessage', (message) => {
 socket.on('gameStarted', (data) => {
     state.role = data.role;
     state.location = data.location;
+    document.getElementById('roleDisplay').textContent = data.role;
+    document.getElementById('locationDisplay').textContent = data.location;
     showScreen('game');
-    document.getElementById('roleDisplay').textContent = `Ваша роль: ${data.role}`;
-    document.getElementById('locationDisplay').textContent = `Локация: ${data.location}`;
 });
 
-socket.on('error', (data) => {
-    alert(data.message);
+socket.on('error', (error) => {
+    WebApp.showAlert(error.message);
 });
 
 // Initialize
