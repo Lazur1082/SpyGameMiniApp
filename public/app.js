@@ -438,9 +438,12 @@ function initializeEventListeners() {
     if (startGameButton) {
         startGameButton.onclick = function() {
             console.log('Start game button clicked');
+            console.log('Current state:', state);
             if (state.isAdmin) {
+                console.log('Starting game as admin');
                 socket.emit('startGame', { gameId: state.gameId });
             } else {
+                console.log('Not an admin, cannot start game');
                 tg.showAlert('Только администратор может начать игру');
             }
         };
@@ -543,6 +546,9 @@ socket.on('gameCreated', (data) => {
     // Переходим в лобби
     document.getElementById('createGameScreen').classList.add('hidden');
     document.getElementById('lobbyScreen').classList.remove('hidden');
+    
+    // Проверяем статус администратора
+    console.log('Player is admin:', state.isAdmin);
 });
 
 socket.on('joinedGame', (data) => {

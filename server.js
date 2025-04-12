@@ -142,7 +142,7 @@ io.on('connection', (socket) => {
                 players: game.players
             });
 
-            console.log(`Game created: ${gameId} by ${name}`);
+            console.log(`Game created: ${gameId} by ${name} (admin)`);
         } catch (error) {
             console.error('Error creating game:', error);
             socket.emit('error', { message: 'Ошибка при создании игры' });
