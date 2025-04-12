@@ -27,11 +27,16 @@
         <div id="settingsScreen" class="screen settings-screen hidden">
             <div class="settings-group">
                 <div class="settings-item">
-                    <span>Тёмная тема</span>
-                    <label class="switch">
-                        <input type="checkbox" id="themeToggle">
-                        <span class="slider"></span>
-                    </label>
+                    <label for="themeToggle">Темная тема</label>
+                    <div class="theme-switch">
+                        <input type="checkbox" id="themeToggle" class="theme-checkbox">
+                        <div class="theme-slider">
+                            <div class="theme-icon">
+                                <span class="sun">☀️</span>
+                                <span class="moon">🌙</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="settings-item">
                     <span>Звуковые эффекты</span>

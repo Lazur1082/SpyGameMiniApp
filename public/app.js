@@ -170,6 +170,14 @@ function updateTheme(theme) {
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.checked = theme === 'dark';
+        
+        // Обновляем иконки
+        const sun = themeToggle.parentElement.querySelector('.sun');
+        const moon = themeToggle.parentElement.querySelector('.moon');
+        if (sun && moon) {
+            sun.style.opacity = theme === 'light' ? '1' : '0';
+            moon.style.opacity = theme === 'dark' ? '1' : '0';
+        }
     }
     
     // Обновляем цвета в Telegram WebApp
