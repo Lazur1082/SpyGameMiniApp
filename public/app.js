@@ -2,7 +2,13 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// Инициализация Socket.io
+// Настройки
+const settings = {
+    theme: 'light',
+    sound: true
+};
+
+// Socket.io
 const socket = io();
 
 // DOM элементы
@@ -63,10 +69,6 @@ const buttons = {
 let currentPlayer = null;
 let isAdmin = false;
 let lastScreen = 'main';
-let settings = {
-    theme: localStorage.getItem('theme') || 'light',
-    sound: localStorage.getItem('sound') === 'true' || false
-};
 
 // Звуковые эффекты
 const sounds = {
@@ -77,6 +79,7 @@ const sounds = {
 
 // Функции
 function showScreen(screenName) {
+    console.log('Showing screen:', screenName);
     // Скрываем все экраны
     const screens = [
         'settingsScreen',
@@ -140,10 +143,8 @@ function playSound(soundName) {
 }
 
 function updateTheme(theme) {
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
     settings.theme = theme;
-    elements.themeToggle.checked = theme === 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
     if (theme === 'dark') {
         tg.setHeaderColor('#212121');
         tg.setBackgroundColor('#212121');
@@ -153,73 +154,96 @@ function updateTheme(theme) {
     }
 }
 
-function updateSound(enabled) {
-    localStorage.setItem('sound', enabled);
-    settings.sound = enabled;
-    elements.soundToggle.checked = enabled;
+function updateSound(sound) {
+    settings.sound = sound;
 }
 
 // Обработчики настроек
 elements.themeToggle.addEventListener('change', (e) => {
+    console.log('Theme toggle changed');
     updateTheme(e.target.checked ? 'dark' : 'light');
 });
 
 elements.soundToggle.addEventListener('change', (e) => {
+    console.log('Sound toggle changed');
     updateSound(e.target.checked);
 });
 
 // Обработчики событий UI
 buttons.settings.addEventListener('click', () => {
+    console.log('Settings button clicked');
     showScreen('settings');
 });
 
 buttons.backFromSettings.addEventListener('click', () => {
-    showScreen(lastScreen);
+    console.log('Back from settings clicked');
+    showScreen('main');
 });
 
-buttons.showCreate.addEventListener('click', () => showScreen('start'));
-buttons.showJoin.addEventListener('click', () => showScreen('join'));
-buttons.backToMenu1.addEventListener('click', () => showScreen('main'));
-buttons.backToMenu2.addEventListener('click', () => showScreen('main'));
+buttons.showCreate.addEventListener('click', () => {
+    console.log('Show create game clicked');
+    showScreen('start');
+});
+
+buttons.showJoin.addEventListener('click', () => {
+    console.log('Show join game clicked');
+    showScreen('join');
+});
+
+buttons.backToMenu1.addEventListener('click', () => {
+    console.log('Back to menu 1 clicked');
+    showScreen('main');
+});
+
+buttons.backToMenu2.addEventListener('click', () => {
+    console.log('Back to menu 2 clicked');
+    showScreen('main');
+});
+
 buttons.backToMenu3.addEventListener('click', () => {
-    socket.emit('leaveGame');
+    console.log('Back to menu 3 clicked');
     showScreen('main');
 });
 
 buttons.create.addEventListener('click', () => {
+    console.log('Create game clicked');
     const name = elements.playerName.value.trim();
     if (name) {
         socket.emit('createGame', { name });
     } else {
         tg.showPopup({
             title: 'Ошибка',
-            message: 'Пожалуйста, введите ваше имя',
+            message: 'Введите ваше имя',
             buttons: [{type: 'ok'}]
         });
     }
 });
 
 buttons.join.addEventListener('click', () => {
+    console.log('Join game clicked');
     const name = elements.playerNameJoin.value.trim();
-    const gameId = elements.gameId.value.trim();
+    const gameId = elements.gameId.value.trim().toUpperCase();
     if (name && gameId) {
         socket.emit('joinGame', { name, gameId });
     } else {
         tg.showPopup({
             title: 'Ошибка',
-            message: 'Пожалуйста, введите ваше имя и ID игры',
+            message: 'Заполните все поля',
             buttons: [{type: 'ok'}]
         });
     }
 });
 
 buttons.start.addEventListener('click', () => {
-    if (isAdmin) {
-        socket.emit('startGame');
+    console.log('Start game clicked');
+    const gameId = elements.currentGameId.textContent;
+    if (gameId) {
+        socket.emit('startGame', { gameId });
     }
 });
 
 buttons.send.addEventListener('click', () => {
+    console.log('Send message clicked');
     const message = elements.messageInput.value.trim();
     if (message) {
         socket.emit('chatMessage', { text: message });
@@ -228,19 +252,18 @@ buttons.send.addEventListener('click', () => {
 });
 
 elements.messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter') {
+        console.log('Send message keypress');
         e.preventDefault();
         buttons.send.click();
     }
 });
 
 buttons.end.addEventListener('click', () => {
-    if (isAdmin) {
-        tg.showConfirm('Вы уверены, что хотите завершить игру?', (confirmed) => {
-            if (confirmed) {
-                socket.emit('endGame');
-            }
-        });
+    console.log('End game clicked');
+    const gameId = elements.currentGameId.textContent;
+    if (gameId) {
+        socket.emit('endGame', { gameId });
     }
 });
 
@@ -273,61 +296,61 @@ socket.on('error', (error) => {
     });
 });
 
-socket.on('gameCreated', (data) => {
-    currentPlayer = data.player;
+socket.on('gameCreated', ({ gameId, player, players }) => {
+    currentPlayer = player;
     isAdmin = true;
-    elements.currentGameId.textContent = data.gameId;
-    updatePlayersList(data.players);
+    elements.currentGameId.textContent = gameId;
+    updatePlayersList(players);
     showScreen('waiting');
     
     // Копируем ID игры в буфер обмена
-    navigator.clipboard.writeText(data.gameId).catch(() => {});
+    navigator.clipboard.writeText(gameId).catch(() => {});
     tg.showPopup({
         title: 'Игра создана',
-        message: `ID игры: ${data.gameId}\nID скопирован в буфер обмена`,
+        message: `ID игры: ${gameId}\nID скопирован в буфер обмена`,
         buttons: [{type: 'ok'}]
     });
 });
 
-socket.on('joinedGame', (data) => {
-    currentPlayer = data.player;
-    isAdmin = data.player.isAdmin;
-    elements.currentGameId.textContent = data.gameId;
-    updatePlayersList(data.players);
+socket.on('joinedGame', ({ gameId, player, players }) => {
+    currentPlayer = player;
+    isAdmin = player.isAdmin;
+    elements.currentGameId.textContent = gameId;
+    updatePlayersList(players);
     showScreen('waiting');
     playSound('join');
 });
 
-socket.on('playerJoined', (data) => {
-    updatePlayersList(data.players);
+socket.on('playerJoined', ({ players }) => {
+    updatePlayersList(players);
     playSound('join');
 });
 
-socket.on('playerLeft', (data) => {
-    updatePlayersList(data.players);
+socket.on('playerLeft', ({ players }) => {
+    updatePlayersList(players);
     playSound('leave');
 });
 
-socket.on('gameStarted', (data) => {
+socket.on('gameStarted', ({ role, location }) => {
     elements.roleInfo.innerHTML = `
-        <h3 class="role-title">${data.role === 'spy' ? 'Вы - ШПИОН! 🕵️‍♂️' : 'Ваша роль'}</h3>
-        <p>${data.role === 'spy' ? 
+        <h3 class="role-title">${role === 'spy' ? 'Вы - Шпион! 🕵️‍♂️' : 'Ваша роль'}</h3>
+        <p>${role === 'spy' ? 
             'Попытайтесь угадать локацию, слушая разговор других игроков' : 
-            `Локация: ${data.location}<br>Не дайте шпиону догадаться!`}</p>
+            `Локация: ${location}<br>Не дайте шпиону догадаться!`}</p>
     `;
     elements.chatMessages.innerHTML = '';
     showScreen('game');
 });
 
-socket.on('chatMessage', (data) => {
-    addChatMessage(data);
+socket.on('chatMessage', ({ sender, text }) => {
+    addChatMessage({ sender, text });
 });
 
-socket.on('gameEnded', (data) => {
+socket.on('gameEnded', ({ spy, location }) => {
     elements.gameResults.innerHTML = `
         <h3>Игра завершена!</h3>
-        <p>Шпион: ${data.spy}</p>
-        <p>Локация: ${data.location}</p>
+        <p>Шпион: ${spy}</p>
+        <p>Локация: ${location}</p>
     `;
     showScreen('end');
 });
@@ -356,60 +379,92 @@ function copyGameId() {
 
 // Обработчики событий
 function initializeEventListeners() {
+    console.log('Initializing event listeners');
+    
     // Кнопки навигации
-    elements.settingsButton.addEventListener('click', () => showScreen('settings'));
-    elements.backFromSettings.addEventListener('click', () => showScreen('main'));
-    elements.showCreateGame.addEventListener('click', () => showScreen('start'));
-    elements.showJoinGame.addEventListener('click', () => showScreen('join'));
-    elements.backToMenu1.addEventListener('click', () => showScreen('main'));
-    elements.backToMenu2.addEventListener('click', () => showScreen('main'));
-    elements.backToMenu3.addEventListener('click', () => showScreen('main'));
+    elements.settingsButton.addEventListener('click', () => {
+        console.log('Settings button clicked');
+        showScreen('settings');
+    });
+    
+    elements.backFromSettings.addEventListener('click', () => {
+        console.log('Back from settings clicked');
+        showScreen('main');
+    });
+    
+    elements.showCreateGame.addEventListener('click', () => {
+        console.log('Show create game clicked');
+        showScreen('start');
+    });
+    
+    elements.showJoinGame.addEventListener('click', () => {
+        console.log('Show join game clicked');
+        showScreen('join');
+    });
+    
+    elements.backToMenu1.addEventListener('click', () => {
+        console.log('Back to menu 1 clicked');
+        showScreen('main');
+    });
+    
+    elements.backToMenu2.addEventListener('click', () => {
+        console.log('Back to menu 2 clicked');
+        showScreen('main');
+    });
+    
+    elements.backToMenu3.addEventListener('click', () => {
+        console.log('Back to menu 3 clicked');
+        showScreen('main');
+    });
 
     // Кнопки действий
     elements.createGame.addEventListener('click', () => {
+        console.log('Create game clicked');
         const name = elements.playerName.value.trim();
         if (name) {
             socket.emit('createGame', { name });
         } else {
             tg.showPopup({
                 title: 'Ошибка',
-                message: 'Пожалуйста, введите ваше имя',
+                message: 'Введите ваше имя',
                 buttons: [{type: 'ok'}]
             });
         }
     });
 
     elements.joinGame.addEventListener('click', () => {
+        console.log('Join game clicked');
         const name = elements.playerNameJoin.value.trim();
-        const gameId = elements.gameId.value.trim();
+        const gameId = elements.gameId.value.trim().toUpperCase();
         if (name && gameId) {
             socket.emit('joinGame', { name, gameId });
         } else {
             tg.showPopup({
                 title: 'Ошибка',
-                message: 'Пожалуйста, введите ваше имя и ID игры',
+                message: 'Заполните все поля',
                 buttons: [{type: 'ok'}]
             });
         }
     });
 
     elements.startGame.addEventListener('click', () => {
-        if (isAdmin) {
-            socket.emit('startGame');
+        console.log('Start game clicked');
+        const gameId = elements.currentGameId.textContent;
+        if (gameId) {
+            socket.emit('startGame', { gameId });
         }
     });
 
     elements.endGame.addEventListener('click', () => {
-        if (isAdmin) {
-            tg.showConfirm('Вы уверены, что хотите завершить игру?', (confirmed) => {
-                if (confirmed) {
-                    socket.emit('endGame');
-                }
-            });
+        console.log('End game clicked');
+        const gameId = elements.currentGameId.textContent;
+        if (gameId) {
+            socket.emit('endGame', { gameId });
         }
     });
 
     elements.sendMessage.addEventListener('click', () => {
+        console.log('Send message clicked');
         const message = elements.messageInput.value.trim();
         if (message) {
             socket.emit('chatMessage', { text: message });
@@ -418,15 +473,28 @@ function initializeEventListeners() {
     });
 
     elements.messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter') {
+            console.log('Send message keypress');
             e.preventDefault();
             elements.sendMessage.click();
         }
+    });
+
+    // Настройки
+    elements.themeToggle.addEventListener('change', (e) => {
+        console.log('Theme toggle changed');
+        updateTheme(e.target.checked ? 'dark' : 'light');
+    });
+
+    elements.soundToggle.addEventListener('change', (e) => {
+        console.log('Sound toggle changed');
+        updateSound(e.target.checked);
     });
 }
 
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded');
     try {
         // Установка темы
         updateTheme(settings.theme);
