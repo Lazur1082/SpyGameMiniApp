@@ -43,7 +43,7 @@ bot.onText(/\/start/, async (msg) => {
         const username = msg.from.username || msg.from.first_name;
         
         // Отправляем приветственное сообщение с фото
-        await bot.sendPhoto(chatId, 'https://example.com/welcome.jpg', {
+        await bot.sendPhoto(chatId, 'public/images/SpyGameBanner.png', {
             caption: `Привет, ${username}! Добро пожаловать в игру "Шпион".\n\n` +
                     'Чтобы начать игру, перейдите по ссылке ниже:\n' +
                     'https://t.me/your_bot_username?start=game',
