@@ -27,7 +27,14 @@ app.use(compression());
 app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('public', {
+    maxAge: '1d',
+    setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    }
+}));
 
 // Инициализация бота Telegram
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {

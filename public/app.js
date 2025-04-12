@@ -218,6 +218,11 @@ function showScreen(screenId) {
         console.log('Screen shown:', screenId);
     } else {
         console.error('Screen not found:', screenId);
+        // Если экран не найден, показываем главное меню
+        const mainMenu = document.getElementById('mainMenu');
+        if (mainMenu) {
+            mainMenu.classList.remove('hidden');
+        }
     }
 }
 
@@ -411,7 +416,8 @@ function initializeEventListeners() {
     // Навигация
     const mainMenuNav = document.getElementById('mainMenuNav');
     if (mainMenuNav) {
-        mainMenuNav.addEventListener('click', () => {
+        mainMenuNav.addEventListener('click', (e) => {
+            e.preventDefault();
             console.log('Main menu nav clicked');
             showScreen('mainMenu');
         });
@@ -419,7 +425,8 @@ function initializeEventListeners() {
 
     const createGameNav = document.getElementById('createGameNav');
     if (createGameNav) {
-        createGameNav.addEventListener('click', () => {
+        createGameNav.addEventListener('click', (e) => {
+            e.preventDefault();
             console.log('Create game nav clicked');
             showScreen('startScreen');
         });
@@ -427,7 +434,8 @@ function initializeEventListeners() {
 
     const joinGameNav = document.getElementById('joinGameNav');
     if (joinGameNav) {
-        joinGameNav.addEventListener('click', () => {
+        joinGameNav.addEventListener('click', (e) => {
+            e.preventDefault();
             console.log('Join game nav clicked');
             showScreen('joinScreen');
         });
@@ -436,7 +444,8 @@ function initializeEventListeners() {
     // Профиль
     const profileButton = document.getElementById('profileButton');
     if (profileButton) {
-        profileButton.addEventListener('click', () => {
+        profileButton.addEventListener('click', (e) => {
+            e.preventDefault();
             console.log('Profile button clicked');
             showScreen('profileScreen');
         });
@@ -444,7 +453,8 @@ function initializeEventListeners() {
 
     const profileNav = document.getElementById('profileNav');
     if (profileNav) {
-        profileNav.addEventListener('click', () => {
+        profileNav.addEventListener('click', (e) => {
+            e.preventDefault();
             console.log('Profile nav clicked');
             showScreen('profileScreen');
         });
@@ -453,7 +463,8 @@ function initializeEventListeners() {
     // Настройки
     const settingsButton = document.getElementById('settingsButton');
     if (settingsButton) {
-        settingsButton.addEventListener('click', () => {
+        settingsButton.addEventListener('click', (e) => {
+            e.preventDefault();
             console.log('Settings button clicked');
             showScreen('settingsScreen');
         });
@@ -471,7 +482,8 @@ function initializeEventListeners() {
     backButtons.forEach(button => {
         const element = document.getElementById(button.id);
         if (element) {
-            element.addEventListener('click', () => {
+            element.addEventListener('click', (e) => {
+                e.preventDefault();
                 console.log(`${button.id} clicked`);
                 showScreen(button.screen);
             });
