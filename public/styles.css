@@ -47,17 +47,17 @@
 }
 
 [data-theme="dark"] {
-    --primary-color: #2196f3;
+    --primary-color: #90caf9;
     --primary-dark: #1976d2;
-    --primary-light: #bbdefb;
-    --secondary-color: #64b5f6;
+    --primary-light: rgba(144, 202, 249, 0.1);
+    --secondary-color: #f48fb1;
     --accent-color: #82b1ff;
     --background-primary: #121212;
     --background-secondary: #1e1e1e;
     --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --border-color: #333333;
-    --shadow-color: rgba(0, 0, 0, 0.3);
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow-color: rgba(0, 0, 0, 0.5);
     --shadow-hover: rgba(0, 0, 0, 0.4);
 }
 
@@ -118,6 +118,12 @@ body {
     color: var(--text-primary);
     cursor: pointer;
     padding: var(--spacing-small);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .theme-button:hover {
@@ -789,6 +795,7 @@ body {
     object-fit: cover;
     border: 3px solid var(--primary-color);
     box-shadow: 0 4px 12px var(--shadow-color);
+    background-color: var(--background-primary);
 }
 
 .profile-info {
@@ -901,11 +908,12 @@ body {
 
 /* Header Avatar */
 .header-avatar {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--primary-color);
+    background-color: var(--background-primary);
 }
 
 /* Avatar Options */
@@ -922,6 +930,8 @@ body {
     padding: 0;
     cursor: pointer;
     transition: transform var(--transition-fast);
+    border-radius: 50%;
+    overflow: hidden;
 }
 
 .avatar-option:hover {
@@ -934,6 +944,7 @@ body {
     border-radius: 50%;
     border: 2px solid var(--border-color);
     transition: border-color var(--transition-fast);
+    background-color: var(--background-primary);
 }
 
 .avatar-option:hover img {
@@ -966,6 +977,7 @@ body {
     object-fit: cover;
     border: 3px solid var(--primary-color);
     box-shadow: 0 4px 12px var(--shadow-color);
+    background-color: var(--background-primary);
 }
 
 /* Responsive styles */

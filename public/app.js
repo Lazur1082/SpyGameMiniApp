@@ -631,6 +631,36 @@ function initializeSound() {
     }
 }
 
+// Функция создания игры
+function createGame(playerName) {
+    console.log('Creating game for player:', playerName);
+    socket.emit('createGame', { playerName });
+}
+
+// Функция присоединения к игре
+function joinGame(gameId, playerName) {
+    console.log('Joining game:', gameId, 'as player:', playerName);
+    socket.emit('joinGame', { gameId, playerName });
+}
+
+// Функция начала игры
+function startGame() {
+    console.log('Starting game');
+    socket.emit('startGame');
+}
+
+// Функция завершения игры
+function endGame() {
+    console.log('Ending game');
+    socket.emit('endGame');
+}
+
+// Функция отправки сообщения
+function sendMessage(message) {
+    console.log('Sending message:', message);
+    socket.emit('chatMessage', { message });
+}
+
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing app...');
