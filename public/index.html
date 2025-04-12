@@ -2,54 +2,112 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра "Шпион"</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Шпион - Игра</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1 class="header-title">Шпион</h1>
+        <div class="header-actions">
+            <button id="settingsButton" class="settings-button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
     <div class="container">
-        <div id="startScreen" class="screen">
-            <h1>Игра "Шпион"</h1>
+        <!-- Настройки -->
+        <div id="settingsScreen" class="screen settings-screen hidden">
+            <div class="settings-group">
+                <div class="settings-item">
+                    <span>Тёмная тема</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item">
+                    <span>Звуковые эффекты</span>
+                    <label class="switch">
+                        <input type="checkbox" id="soundToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <button id="backFromSettings" class="secondary">Назад</button>
+        </div>
+
+        <!-- Главное меню -->
+        <div id="mainMenu" class="screen main-menu">
+            <h2 class="menu-title">Игра "Шпион" 🕵️‍♂️</h2>
+            <div class="menu-buttons">
+                <button id="showCreateGame">Создать игру</button>
+                <button id="showJoinGame">Присоединиться к игре</button>
+            </div>
+        </div>
+
+        <!-- Экран создания игры -->
+        <div id="startScreen" class="screen hidden">
+            <h2>Создание игры</h2>
             <div class="input-group">
                 <input type="text" id="playerName" placeholder="Ваше имя">
-                <button id="createGame">Создать игру</button>
+                <button id="createGame">Создать</button>
             </div>
+            <button id="backToMenu1" class="secondary">Назад</button>
+        </div>
+
+        <!-- Экран присоединения к игре -->
+        <div id="joinScreen" class="screen hidden">
+            <h2>Присоединиться к игре</h2>
             <div class="input-group">
+                <input type="text" id="playerNameJoin" placeholder="Ваше имя">
                 <input type="text" id="gameId" placeholder="ID игры">
                 <button id="joinGame">Присоединиться</button>
             </div>
+            <button id="backToMenu2" class="secondary">Назад</button>
         </div>
 
-        <div id="waitingScreen" class="screen hidden">
-            <h2>Ожидание игроков</h2>
-            <p>ID игры: <span id="currentGameId"></span></p>
-            <div id="playersList"></div>
-            <button id="startGame">Начать игру</button>
-        </div>
-
-        <div id="gameScreen" class="screen hidden">
-            <div class="game-info">
-                <h2>Игра началась!</h2>
-                <div id="roleInfo"></div>
+        <!-- Экран ожидания -->
+        <div id="waitingScreen" class="screen lobby hidden">
+            <div class="lobby-info">
+                <h3>Лобби</h3>
+                <div class="game-id">ID: <span id="currentGameId"></span></div>
             </div>
+            <div class="players-container">
+                <h3>Игроки:</h3>
+                <div id="playersList" class="players-list"></div>
+            </div>
+            <button id="startGame">Начать игру</button>
+            <button id="backToMenu3" class="secondary">Покинуть игру</button>
+        </div>
+
+        <!-- Игровой экран -->
+        <div id="gameScreen" class="screen hidden">
+            <div id="roleInfo" class="role-info"></div>
             <div class="chat-container">
-                <div id="chatMessages"></div>
-                <div class="input-group">
-                    <input type="text" id="messageInput" placeholder="Введите сообщение">
+                <div id="chatMessages" class="chat-messages"></div>
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Введите сообщение...">
                     <button id="sendMessage">Отправить</button>
                 </div>
             </div>
             <button id="endGame">Завершить игру</button>
         </div>
 
+        <!-- Экран завершения -->
         <div id="endScreen" class="screen hidden">
-            <h2>Игра окончена!</h2>
+            <h2>Игра завершена!</h2>
             <div id="gameResults"></div>
             <button id="newGame">Новая игра</button>
         </div>
     </div>
-    <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>
 </body>
 </html> 

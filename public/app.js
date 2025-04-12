@@ -1,241 +1,304 @@
-const socket = io({
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000
-});
-
+// Инициализация Telegram WebApp
 const tg = window.Telegram.WebApp;
+tg.expand();
 
-// Инициализация Telegram Web App
-try {
-    tg.ready();
-    tg.expand();
-} catch (error) {
-    console.error('Ошибка инициализации Telegram Web App:', error);
-}
+// Инициализация Socket.io
+const socket = io();
 
 // DOM элементы
-const startScreen = document.getElementById('startScreen');
-const waitingScreen = document.getElementById('waitingScreen');
-const gameScreen = document.getElementById('gameScreen');
-const endScreen = document.getElementById('endScreen');
+const screens = {
+    settings: document.getElementById('settingsScreen'),
+    main: document.getElementById('mainMenu'),
+    start: document.getElementById('startScreen'),
+    join: document.getElementById('joinScreen'),
+    waiting: document.getElementById('waitingScreen'),
+    game: document.getElementById('gameScreen'),
+    end: document.getElementById('endScreen')
+};
 
-const playerNameInput = document.getElementById('playerName');
-const gameIdInput = document.getElementById('gameId');
-const currentGameIdSpan = document.getElementById('currentGameId');
-const playersList = document.getElementById('playersList');
-const roleInfo = document.getElementById('roleInfo');
-const chatMessages = document.getElementById('chatMessages');
-const messageInput = document.getElementById('messageInput');
-const gameResults = document.getElementById('gameResults');
+const elements = {
+    playerName: document.getElementById('playerName'),
+    playerNameJoin: document.getElementById('playerNameJoin'),
+    gameId: document.getElementById('gameId'),
+    currentGameId: document.getElementById('currentGameId'),
+    playersList: document.getElementById('playersList'),
+    roleInfo: document.getElementById('roleInfo'),
+    chatMessages: document.getElementById('chatMessages'),
+    messageInput: document.getElementById('messageInput'),
+    gameResults: document.getElementById('gameResults'),
+    themeToggle: document.getElementById('themeToggle'),
+    soundToggle: document.getElementById('soundToggle')
+};
 
-// Кнопки
-const createGameBtn = document.getElementById('createGame');
-const joinGameBtn = document.getElementById('joinGame');
-const startGameBtn = document.getElementById('startGame');
-const sendMessageBtn = document.getElementById('sendMessage');
-const endGameBtn = document.getElementById('endGame');
-const newGameBtn = document.getElementById('newGame');
+const buttons = {
+    settings: document.getElementById('settingsButton'),
+    backFromSettings: document.getElementById('backFromSettings'),
+    showCreate: document.getElementById('showCreateGame'),
+    showJoin: document.getElementById('showJoinGame'),
+    create: document.getElementById('createGame'),
+    join: document.getElementById('joinGame'),
+    start: document.getElementById('startGame'),
+    send: document.getElementById('sendMessage'),
+    end: document.getElementById('endGame'),
+    newGame: document.getElementById('newGame'),
+    backToMenu1: document.getElementById('backToMenu1'),
+    backToMenu2: document.getElementById('backToMenu2'),
+    backToMenu3: document.getElementById('backToMenu3')
+};
 
-let currentGameId = null;
+// Состояние приложения
+let currentPlayer = null;
+let isAdmin = false;
+let lastScreen = 'main';
+let settings = {
+    theme: localStorage.getItem('theme') || 'light',
+    sound: localStorage.getItem('sound') === 'true' || false
+};
 
-// Установка имени пользователя из Telegram
-try {
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
-        playerNameInput.value = user.first_name || 'Игрок';
-        if (user.last_name) {
-            playerNameInput.value += ' ' + user.last_name;
-        }
-    }
-} catch (error) {
-    console.error('Ошибка при получении данных пользователя:', error);
+// Звуковые эффекты
+const sounds = {
+    message: new Audio('/sounds/message.mp3'),
+    join: new Audio('/sounds/join.mp3'),
+    leave: new Audio('/sounds/leave.mp3')
+};
+
+// Утилиты
+function showScreen(screenId) {
+    lastScreen = screenId;
+    Object.values(screens).forEach(screen => screen.classList.add('hidden'));
+    screens[screenId].classList.remove('hidden');
 }
 
-// Обработка состояния подключения
+function updatePlayersList(players) {
+    elements.playersList.innerHTML = '';
+    players.forEach(player => {
+        const playerItem = document.createElement('div');
+        playerItem.className = 'player-item';
+        const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        playerItem.innerHTML = `
+            <div class="player-avatar">${initials}</div>
+            <span class="player-name">${player.name}</span>
+            ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
+        `;
+        elements.playersList.appendChild(playerItem);
+    });
+}
+
+function addChatMessage(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${message.sender === currentPlayer?.name ? 'own' : ''}`;
+    messageDiv.innerHTML = `
+        <div class="message-sender">${message.sender}</div>
+        <div class="message-text">${message.text}</div>
+    `;
+    elements.chatMessages.appendChild(messageDiv);
+    elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+    
+    if (settings.sound && message.sender !== currentPlayer?.name) {
+        sounds.message.play().catch(() => {});
+    }
+}
+
+function playSound(soundName) {
+    if (settings.sound && sounds[soundName]) {
+        sounds[soundName].play().catch(() => {});
+    }
+}
+
+function updateTheme(theme) {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    settings.theme = theme;
+    elements.themeToggle.checked = theme === 'dark';
+}
+
+function updateSound(enabled) {
+    localStorage.setItem('sound', enabled);
+    settings.sound = enabled;
+    elements.soundToggle.checked = enabled;
+}
+
+// Обработчики настроек
+elements.themeToggle.addEventListener('change', (e) => {
+    updateTheme(e.target.checked ? 'dark' : 'light');
+});
+
+elements.soundToggle.addEventListener('change', (e) => {
+    updateSound(e.target.checked);
+});
+
+// Обработчики событий UI
+buttons.settings.addEventListener('click', () => {
+    showScreen('settings');
+});
+
+buttons.backFromSettings.addEventListener('click', () => {
+    showScreen(lastScreen);
+});
+
+buttons.showCreate.addEventListener('click', () => showScreen('start'));
+buttons.showJoin.addEventListener('click', () => showScreen('join'));
+buttons.backToMenu1.addEventListener('click', () => showScreen('main'));
+buttons.backToMenu2.addEventListener('click', () => showScreen('main'));
+buttons.backToMenu3.addEventListener('click', () => {
+    socket.emit('leaveGame');
+    showScreen('main');
+});
+
+buttons.create.addEventListener('click', () => {
+    const name = elements.playerName.value.trim();
+    if (name) {
+        socket.emit('createGame', { name });
+    } else {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: 'Пожалуйста, введите ваше имя',
+            buttons: [{type: 'ok'}]
+        });
+    }
+});
+
+buttons.join.addEventListener('click', () => {
+    const name = elements.playerNameJoin.value.trim();
+    const gameId = elements.gameId.value.trim();
+    if (name && gameId) {
+        socket.emit('joinGame', { name, gameId });
+    } else {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: 'Пожалуйста, введите ваше имя и ID игры',
+            buttons: [{type: 'ok'}]
+        });
+    }
+});
+
+buttons.start.addEventListener('click', () => {
+    if (isAdmin) {
+        socket.emit('startGame');
+    }
+});
+
+buttons.send.addEventListener('click', () => {
+    const message = elements.messageInput.value.trim();
+    if (message) {
+        socket.emit('chatMessage', { text: message });
+        elements.messageInput.value = '';
+    }
+});
+
+elements.messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        buttons.send.click();
+    }
+});
+
+buttons.end.addEventListener('click', () => {
+    if (isAdmin) {
+        tg.showConfirm('Вы уверены, что хотите завершить игру?', (confirmed) => {
+            if (confirmed) {
+                socket.emit('endGame');
+            }
+        });
+    }
+});
+
+buttons.newGame.addEventListener('click', () => {
+    showScreen('main');
+});
+
+// Обработчики событий Socket.io
 socket.on('connect', () => {
     console.log('Подключено к серверу');
-    document.body.classList.remove('disconnected');
 });
 
 socket.on('disconnect', () => {
     console.log('Отключено от сервера');
-    document.body.classList.add('disconnected');
     tg.showAlert('Потеряно соединение с сервером. Пытаемся переподключиться...');
 });
 
-socket.on('connect_error', (error) => {
-    console.error('Ошибка подключения:', error);
-    tg.showAlert('Ошибка подключения к серверу');
+socket.on('gameCreated', (data) => {
+    currentPlayer = data.player;
+    isAdmin = true;
+    elements.currentGameId.textContent = data.gameId;
+    updatePlayersList(data.players);
+    showScreen('waiting');
+    
+    // Копируем ID игры в буфер обмена
+    navigator.clipboard.writeText(data.gameId).catch(() => {});
+    tg.showPopup({
+        title: 'Игра создана',
+        message: `ID игры: ${data.gameId}\nID скопирован в буфер обмена`,
+        buttons: [{type: 'ok'}]
+    });
 });
 
-// Создание новой игры
-createGameBtn.addEventListener('click', () => {
-    try {
-        const playerName = playerNameInput.value.trim();
-        if (!playerName) {
-            tg.showAlert('Введите ваше имя');
-            return;
-        }
-        socket.emit('createGame', playerName);
-    } catch (error) {
-        console.error('Ошибка при создании игры:', error);
-        tg.showAlert('Ошибка при создании игры');
-    }
+socket.on('joinedGame', (data) => {
+    currentPlayer = data.player;
+    isAdmin = data.player.isAdmin;
+    elements.currentGameId.textContent = data.gameId;
+    updatePlayersList(data.players);
+    showScreen('waiting');
+    playSound('join');
 });
 
-// Присоединение к игре
-joinGameBtn.addEventListener('click', () => {
-    try {
-        const playerName = playerNameInput.value.trim();
-        const gameId = gameIdInput.value.trim();
-        if (!playerName || !gameId) {
-            tg.showAlert('Введите ваше имя и ID игры');
-            return;
-        }
-        socket.emit('joinGame', { gameId, playerName });
-    } catch (error) {
-        console.error('Ошибка при присоединении к игре:', error);
-        tg.showAlert('Ошибка при присоединении к игре');
-    }
+socket.on('playerJoined', (data) => {
+    updatePlayersList(data.players);
+    playSound('join');
 });
 
-// Начало игры
-startGameBtn.addEventListener('click', () => {
-    try {
-        socket.emit('startGame', currentGameId);
-    } catch (error) {
-        console.error('Ошибка при начале игры:', error);
-        tg.showAlert('Ошибка при начале игры');
-    }
-});
-
-// Отправка сообщения
-sendMessageBtn.addEventListener('click', () => {
-    try {
-        const message = messageInput.value.trim();
-        if (message) {
-            socket.emit('chatMessage', { gameId: currentGameId, message });
-            messageInput.value = '';
-        }
-    } catch (error) {
-        console.error('Ошибка при отправке сообщения:', error);
-        tg.showAlert('Ошибка при отправке сообщения');
-    }
-});
-
-// Завершение игры
-endGameBtn.addEventListener('click', () => {
-    try {
-        socket.emit('endGame', currentGameId);
-    } catch (error) {
-        console.error('Ошибка при завершении игры:', error);
-        tg.showAlert('Ошибка при завершении игры');
-    }
-});
-
-// Новая игра
-newGameBtn.addEventListener('click', () => {
-    try {
-        location.reload();
-    } catch (error) {
-        console.error('Ошибка при перезагрузке страницы:', error);
-        tg.showAlert('Ошибка при начале новой игры');
-    }
-});
-
-// Обработка нажатия Enter в поле сообщения
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        sendMessageBtn.click();
-    }
-});
-
-// Сокет события
-socket.on('gameCreated', (gameId) => {
-    try {
-        currentGameId = gameId;
-        currentGameIdSpan.textContent = gameId;
-        startScreen.classList.add('hidden');
-        waitingScreen.classList.remove('hidden');
-    } catch (error) {
-        console.error('Ошибка при обработке создания игры:', error);
-        tg.showAlert('Ошибка при создании игры');
-    }
-});
-
-socket.on('error', (message) => {
-    console.error('Ошибка от сервера:', message);
-    tg.showAlert(message);
-});
-
-socket.on('playerJoined', (players) => {
-    try {
-        playersList.innerHTML = players.map(player => 
-            `<div class="player-item">${player.name}</div>`
-        ).join('');
-    } catch (error) {
-        console.error('Ошибка при обновлении списка игроков:', error);
-    }
+socket.on('playerLeft', (data) => {
+    updatePlayersList(data.players);
+    playSound('leave');
 });
 
 socket.on('gameStarted', (data) => {
-    try {
-        waitingScreen.classList.add('hidden');
-        gameScreen.classList.remove('hidden');
-        
-        if (data.role === 'spy') {
-            roleInfo.innerHTML = `
-                <h3>Вы - ШПИОН! 🕵️‍♂️</h3>
-                <p>Ваша задача - угадать место, о котором говорят другие игроки.</p>
-            `;
-        } else {
-            roleInfo.innerHTML = `
-                <h3>Ваше место: ${data.location}</h3>
-                <p>Ваша задача - не дать шпиону догадаться о месте.</p>
-            `;
-        }
-    } catch (error) {
-        console.error('Ошибка при начале игры:', error);
-        tg.showAlert('Ошибка при начале игры');
-    }
+    elements.roleInfo.innerHTML = `
+        <h3 class="role-title">${data.role === 'spy' ? 'Вы - ШПИОН! 🕵️‍♂️' : 'Ваша роль'}</h3>
+        <p>${data.role === 'spy' ? 
+            'Попытайтесь угадать локацию, слушая разговор других игроков' : 
+            `Локация: ${data.location}<br>Не дайте шпиону догадаться!`}</p>
+    `;
+    elements.chatMessages.innerHTML = '';
+    showScreen('game');
 });
 
-socket.on('newMessage', (data) => {
-    try {
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message';
-        messageElement.innerHTML = `
-            <span class="player">${data.player}:</span> ${data.message}
-        `;
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    } catch (error) {
-        console.error('Ошибка при отображении сообщения:', error);
-    }
+socket.on('chatMessage', (message) => {
+    addChatMessage(message);
 });
 
 socket.on('gameEnded', (data) => {
-    try {
-        gameScreen.classList.add('hidden');
-        endScreen.classList.remove('hidden');
-        gameResults.innerHTML = `
-            <p>Место было: <strong>${data.location}</strong></p>
+    elements.gameResults.innerHTML = `
+        <div class="role-info">
+            <h3 class="role-title">Игра завершена!</h3>
             <p>Шпионом был: <strong>${data.spy}</strong></p>
-        `;
-    } catch (error) {
-        console.error('Ошибка при завершении игры:', error);
-        tg.showAlert('Ошибка при завершении игры');
-    }
+            <p>Локация была: <strong>${data.location}</strong></p>
+        </div>
+    `;
+    showScreen('end');
 });
 
-socket.on('playerLeft', (players) => {
-    try {
-        playersList.innerHTML = players.map(player => 
-            `<div class="player-item">${player.name}</div>`
-        ).join('');
-    } catch (error) {
-        console.error('Ошибка при обновлении списка игроков:', error);
+socket.on('error', (error) => {
+    tg.showPopup({
+        title: 'Ошибка',
+        message: error.message,
+        buttons: [{type: 'ok'}]
+    });
+});
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+    // Установка темы
+    updateTheme(settings.theme);
+    updateSound(settings.sound);
+    
+    // Установка имени из Telegram
+    if (tg.initDataUnsafe?.user) {
+        const user = tg.initDataUnsafe.user;
+        const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
+        elements.playerName.value = name;
+        elements.playerNameJoin.value = name;
     }
+    
+    showScreen('main');
 }); 
