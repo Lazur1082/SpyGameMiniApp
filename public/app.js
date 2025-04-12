@@ -298,9 +298,65 @@ function playSound(soundName) {
     }
 }
 
+// Функция для загрузки аватара
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Проверяем тип файла
+    if (!file.type.startsWith('image/')) {
+        tg.showAlert('Пожалуйста, выберите изображение');
+        return;
+    }
+
+    // Проверяем размер файла (максимум 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        tg.showAlert('Размер файла не должен превышать 2MB');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Image = e.target.result;
+        updateProfile(userProfile.name, base64Image);
+        
+        // Обновляем выбранный аватар
+        document.querySelectorAll('.avatar-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
 // Инициализация обработчиков событий
 function initializeEventListeners() {
     console.log('Initializing event listeners...');
+
+    // Загрузка аватара
+    const uploadAvatar = document.getElementById('uploadAvatar');
+    const avatarInput = document.getElementById('avatarInput');
+    
+    if (uploadAvatar && avatarInput) {
+        uploadAvatar.addEventListener('click', () => {
+            avatarInput.click();
+        });
+        
+        avatarInput.addEventListener('change', handleAvatarUpload);
+    }
+
+    // Выбор аватара
+    document.querySelectorAll('.avatar-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const avatar = option.dataset.avatar;
+            updateProfile(userProfile.name, avatar);
+            
+            // Обновляем выбранный аватар
+            document.querySelectorAll('.avatar-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            option.classList.add('selected');
+        });
+    });
 
     // Тема
     document.getElementById('themeButton').addEventListener('click', () => {
@@ -322,20 +378,6 @@ function initializeEventListeners() {
     document.getElementById('backFromProfile').addEventListener('click', () => {
         console.log('Back from profile clicked');
         showScreen('main');
-    });
-
-    // Выбор аватара
-    document.querySelectorAll('.avatar-option').forEach(option => {
-        option.addEventListener('click', () => {
-            const avatar = option.dataset.avatar;
-            updateProfile(userProfile.name, avatar);
-            
-            // Обновляем выбранный аватар
-            document.querySelectorAll('.avatar-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            option.classList.add('selected');
-        });
     });
 
     document.getElementById('profileName').addEventListener('change', (e) => {

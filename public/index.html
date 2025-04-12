@@ -26,40 +26,48 @@
 
     <main class="container">
         <!-- Профиль -->
-        <section id="profileScreen" class="screen profile-screen hidden">
+        <section id="profile" class="screen hidden">
             <div class="profile-content">
                 <div class="profile-avatar">
-                    <img id="profileAvatar" src="/images/default-avatar.png" alt="Аватар">
+                    <img id="profileAvatar" src="/images/default-avatar.png" alt="Profile Avatar">
                     <div class="avatar-options">
                         <button class="avatar-option" data-avatar="/images/avatar1.png">
-                            <img src="/images/avatar1.png" alt="Аватар 1">
+                            <img src="/images/avatar1.png" alt="Avatar 1">
                         </button>
                         <button class="avatar-option" data-avatar="/images/avatar2.png">
-                            <img src="/images/avatar2.png" alt="Аватар 2">
+                            <img src="/images/avatar2.png" alt="Avatar 2">
                         </button>
                         <button class="avatar-option" data-avatar="/images/avatar3.png">
-                            <img src="/images/avatar3.png" alt="Аватар 3">
+                            <img src="/images/avatar3.png" alt="Avatar 3">
                         </button>
                         <button class="avatar-option" data-avatar="/images/avatar4.png">
-                            <img src="/images/avatar4.png" alt="Аватар 4">
+                            <img src="/images/avatar4.png" alt="Avatar 4">
                         </button>
                     </div>
+                    <button id="uploadAvatar" class="secondary-button">
+                        <span class="button-icon">📤</span>
+                        Загрузить аватар
+                    </button>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
                 </div>
                 <div class="profile-info">
                     <input type="text" id="profileName" class="input-field" placeholder="Ваше имя">
                     <div class="profile-stats">
                         <div class="stat-item">
-                            <span class="stat-label">Игр сыграно:</span>
+                            <span class="stat-label">Игр сыграно</span>
                             <span id="gamesPlayed" class="stat-value">0</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Побед:</span>
+                            <span class="stat-label">Побед</span>
                             <span id="gamesWon" class="stat-value">0</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <button id="backFromProfile" class="secondary-button">Назад</button>
+            <button id="backFromProfile" class="secondary-button">
+                <span class="button-icon">←</span>
+                Назад
+            </button>
         </section>
 
         <!-- Настройки -->

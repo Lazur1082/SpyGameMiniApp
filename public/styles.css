@@ -913,7 +913,7 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-medium);
-    margin-top: var(--spacing-medium);
+    margin: var(--spacing-medium) 0;
 }
 
 .avatar-option {
@@ -943,4 +943,50 @@ body {
 .avatar-option.selected img {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Upload Button */
+#uploadAvatar {
+    margin-top: var(--spacing-medium);
+    width: 100%;
+}
+
+/* Profile Avatar */
+.profile-avatar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-medium);
+}
+
+.profile-avatar img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-color);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .avatar-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .profile-avatar img {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .avatar-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .profile-avatar img {
+        width: 80px;
+        height: 80px;
+    }
 }
