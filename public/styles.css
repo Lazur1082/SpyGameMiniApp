@@ -226,6 +226,7 @@ body {
     color: white;
     border: none;
     border-radius: 7px;
+    width: 100%;
 }
 
 .primary-button:hover {
@@ -233,14 +234,20 @@ body {
 }
 
 .secondary-button {
+    height: 40px;
     background-color: var(--secondary-color);
     color: white;
     border: none;
     border-radius: 7px;
+    width: 100%;
 }
 
 .secondary-button:hover {
     background-color: var(--primary-dark);
+}
+
+.button-create {
+    width: 100px;
 }
 
 .danger-button {
@@ -253,6 +260,7 @@ body {
 }
 
 .input-group {
+    margin-top: 30px;
     width: 100%;
     max-width: 400px;
     margin-bottom: 20px;
@@ -274,6 +282,8 @@ body {
     color: var(--text-color);
     font-size: 1.2rem;
     transition: all 0.3s ease;
+    margin-bottom: 20px;
+    margin-top: 10px;
 }
 
 .input-group input:focus {
