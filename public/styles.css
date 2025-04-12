@@ -111,6 +111,36 @@ body {
     gap: var(--spacing-medium);
 }
 
+/* Theme Button */
+.theme-button {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 12px;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+.theme-button:hover {
+    background-color: var(--hover-color);
+    transform: rotate(180deg);
+}
+
+.theme-button:active {
+    transform: rotate(180deg) scale(0.95);
+}
+
+.theme-button .button-icon {
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
 /* Buttons */
 .button {
     display: inline-flex;
@@ -157,6 +187,9 @@ body {
 .primary-button {
     background: linear-gradient(135deg, #2196f3, #1976d2);
     color: white;
+    border: none;
+    border-radius: 7px;
+    height: 40px;
 }
 
 .primary-button:hover {
@@ -164,9 +197,12 @@ body {
 }
 
 .secondary-button {
+    height: 40px;
     background: white;
     color: #2196f3;
     border: 2px solid #2196f3;
+    width: 100%;
+    margin-top: 20px;
 }
 
 .secondary-button:hover {
@@ -630,6 +666,7 @@ body {
     }
 
     .settings-screen {
+        margin-top: 100px;
         padding: var(--spacing-medium);
     }
 

@@ -173,22 +173,8 @@ function updateTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
     
-    // Обновляем состояние переключателя
-    const themeToggle = document.getElementById('themeToggle');
+    // Обновляем иконку в хедере
     const themeButton = document.getElementById('themeButton');
-    
-    if (themeToggle) {
-        themeToggle.checked = theme === 'dark';
-        
-        // Обновляем иконки
-        const sun = themeToggle.parentElement.querySelector('.sun');
-        const moon = themeToggle.parentElement.querySelector('.moon');
-        if (sun && moon) {
-            sun.style.opacity = theme === 'light' ? '1' : '0';
-            moon.style.opacity = theme === 'dark' ? '1' : '0';
-        }
-    }
-    
     if (themeButton) {
         themeButton.querySelector('.button-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
     }
