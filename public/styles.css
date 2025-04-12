@@ -3,133 +3,242 @@
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-}
-
-:root {
-    /* Light theme */
-    --primary-color: #2196f3;
-    --primary-dark: #1976d2;
-    --primary-light: #bbdefb;
-    --secondary-color: #64b5f6;
-    --accent-color: #82b1ff;
-    --background-primary: #f5f9ff;
-    --background-secondary: #ffffff;
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --border-color: #e0e0e0;
-    --success-color: #4caf50;
-    --warning-color: #ff9800;
-    --error-color: #f44336;
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    --shadow-hover: rgba(0, 0, 0, 0.15);
-    --border-radius: 16px;
-    --border-radius-small: 8px;
-    --spacing-unit: 8px;
-    --spacing-small: 12px;
-    --spacing-medium: 16px;
-    --spacing-large: 24px;
-    --transition-fast: 0.2s ease;
-    --transition-medium: 0.3s ease;
-    --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    
-    /* Custom vars */
-    --header-height: 50px;
-    --safe-area-top: env(safe-area-inset-top);
-    --safe-area-bottom: env(safe-area-inset-bottom);
-    --danger-color: #f44336;
-    --text-color: #ffffff;
-    --text-light: #78909c;
-    --background-color: #f5f9ff;
-    --card-background: #ffffff;
-    --hover-color: #f8f9fa;
-    --active-color: #e9ecef;
-    --primary-bg: transparent;
-    --secondary-bg: rgba(255, 255, 255, 0.1);
-    --nav-height: 50px;
-    --tg-theme-bg-color: #17212b;
-    --tg-theme-text-color: #ffffff;
-    --tg-theme-hint-color: #7d8b99;
-    --tg-theme-link-color: #2ea6ff;
-    --tg-theme-button-color: #2ea6ff;
-    --tg-theme-button-text-color: #ffffff;
-    --tg-theme-secondary-bg-color: #232e3c;
-    --tg-theme-accent-color: #2ea6ff;
-    --tg-theme-section-bg-color: #17212b;
-    --tg-theme-section-header-text-color: #ffffff;
-    --tg-theme-subtitle-text-color: #7d8b99;
-    --tg-theme-destructive-text-color: #ff3b30;
-    
-    /* Light theme variables */
-    --light-bg-color: #ffffff;
-    --light-text-color: #000000;
-    --light-secondary-bg: #f5f5f5;
-    --light-accent-color: #0088cc;
-    --light-border-color: #e0e0e0;
-    --light-hover-color: #f0f0f0;
-    --light-placeholder-color: rgba(0, 0, 0, 0.5);
-    --light-shadow-color: rgba(0, 0, 0, 0.1);
-    
-    /* Dark theme variables */
-    --dark-bg-color: #17212b;
-    --dark-text-color: #ffffff;
-    --dark-secondary-bg: #232e3c;
-    --dark-accent-color: #2ea6ff;
-    --dark-border-color: #2a3a4d;
-    --dark-hover-color: #2a3a4d;
-    --dark-placeholder-color: rgba(255, 255, 255, 0.5);
-    --dark-shadow-color: rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="dark"] {
-    --primary-color: #90caf9;
-    --primary-dark: #1976d2;
-    --primary-light: rgba(144, 202, 249, 0.1);
-    --secondary-color: #f48fb1;
-    --accent-color: #82b1ff;
-    --background-primary: #121212;
-    --background-secondary: #1e1e1e;
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --shadow-color: rgba(0, 0, 0, 0.5);
-    --shadow-hover: rgba(0, 0, 0, 0.4);
-    --primary-bg: #121212;
-    --secondary-bg: #1e1e1e;
-    --text-color: #ffffff;
-    --error-color: #e74c3c;
-    --success-color: #2ecc71;
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #000000);
     line-height: 1.6;
-    overflow-x: hidden;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding-bottom: 60px;
+}
+
+/* Layout */
+.main-content {
+    flex: 1;
+    padding: 16px;
+    padding-bottom: 60px; /* Space for bottom nav */
 }
 
 .container {
-    max-width: 100%;
-    padding: 16px;
+    max-width: 600px;
     margin: 0 auto;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    width: 100%;
 }
 
+/* Screens */
 .screen {
     display: none;
-    flex-direction: column;
-    min-height: 100vh;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .screen.active {
     display: block;
+    opacity: 1;
+}
+
+/* Header */
+.header {
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.header-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--tg-theme-text-color, #000000);
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Buttons */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    margin: 8px 0;
+}
+
+.button.primary {
+    background-color: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #ffffff);
+}
+
+.button.secondary {
+    background-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    color: var(--tg-theme-text-color, #000000);
+}
+
+.button:active {
+    transform: scale(0.98);
+}
+
+/* Inputs */
+.input-field {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    color: var(--tg-theme-text-color, #000000);
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--tg-theme-button-color, #2481cc);
+}
+
+/* Game elements */
+.game-info {
+    background-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.players-list {
+    background-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #ffffff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+/* Chat */
+.chat-container {
+    background-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    height: 400px;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+.chat-input {
+    display: flex;
+    gap: 8px;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: var(--tg-theme-bg-color, #ffffff);
+}
+
+.chat-input button {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #ffffff);
+    cursor: pointer;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    border-top: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--tg-theme-hint-color, rgba(0, 0, 0, 0.5));
+    font-size: 12px;
+    padding: 4px 16px;
+}
+
+.nav-item.active {
+    color: var(--tg-theme-button-color, #2481cc);
+}
+
+.nav-item i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+/* Game Status */
+.game-status {
+    background-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.timer {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.role-info {
+    font-size: 18px;
+    font-weight: 500;
 }
 
 h1, h2 {
@@ -138,46 +247,12 @@ h1, h2 {
     text-align: center;
 }
 
-.button {
-    display: block;
-    width: 100%;
-    padding: 12px 16px;
-    margin: 8px 0;
-    background-color: var(--tg-theme-button-color);
-    color: var(--tg-theme-button-text-color);
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
 .button:hover {
     background-color: var(--tg-theme-accent-color);
 }
 
-.button.secondary {
-    background-color: var(--tg-theme-secondary-bg-color);
-    color: var(--tg-theme-text-color);
-}
-
 .button.secondary:hover {
     background-color: var(--tg-theme-hint-color);
-}
-
-.input-group {
-    margin: 16px 0;
-}
-
-.input-field {
-    width: 100%;
-    padding: 12px 16px;
-    background-color: var(--secondary-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 16px;
 }
 
 .input-field::placeholder {

@@ -29,8 +29,8 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Home Section -->
-        <section id="homeSection" class="section active">
+        <!-- Home Screen -->
+        <div id="homeScreen" class="screen active">
             <div class="container">
                 <h2 data-i18n="welcome">Добро пожаловать в Spy Game!</h2>
                 <p data-i18n="welcomeDescription">Выберите действие для начала игры</p>
@@ -45,10 +45,10 @@
                     </button>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- Create Game Section -->
-        <section id="createGameSection" class="section">
+        <!-- Create Game Screen -->
+        <div id="createGameScreen" class="screen">
             <div class="container">
                 <h2 data-i18n="createGame">Создать игру</h2>
                 <div class="game-settings">
@@ -61,71 +61,37 @@
                         <input type="number" id="roundTime" min="1" max="10" value="5">
                     </div>
                 </div>
-                <button id="startGameBtn" class="button primary">
+                <button id="confirmCreateBtn" class="button primary">
                     <i class="fas fa-play"></i>
                     <span data-i18n="startGame">Начать игру</span>
                 </button>
-                <button id="backToHomeBtn" class="button secondary">
+                <button id="backFromCreateBtn" class="button secondary">
                     <i class="fas fa-arrow-left"></i>
                     <span data-i18n="back">Назад</span>
                 </button>
             </div>
-        </section>
+        </div>
 
-        <!-- Join Game Section -->
-        <section id="joinGameSection" class="section">
+        <!-- Join Game Screen -->
+        <div id="joinGameScreen" class="screen">
             <div class="container">
                 <h2 data-i18n="joinGame">Присоединиться к игре</h2>
                 <div class="input-group">
                     <input type="text" id="gameCode" class="input-field" placeholder="Введите код игры" data-i18n-placeholder="enterGameCode">
                 </div>
-                <button id="joinGameConfirmBtn" class="button primary">
+                <button id="confirmJoinBtn" class="button primary">
                     <i class="fas fa-sign-in-alt"></i>
                     <span data-i18n="join">Присоединиться</span>
                 </button>
-                <button id="backToHomeBtn2" class="button secondary">
+                <button id="backFromJoinBtn" class="button secondary">
                     <i class="fas fa-arrow-left"></i>
                     <span data-i18n="back">Назад</span>
                 </button>
             </div>
-        </section>
+        </div>
 
-        <!-- Settings Section -->
-        <section id="settingsSection" class="section">
-            <div class="container">
-                <h2 data-i18n="settings">Настройки</h2>
-                <div class="settings-group">
-                    <div class="setting-item">
-                        <span data-i18n="soundEffects">Звуковые эффекты</span>
-                        <label class="switch">
-                            <input type="checkbox" id="soundToggle" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <span data-i18n="notifications">Уведомления</span>
-                        <label class="switch">
-                            <input type="checkbox" id="notificationsToggle" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <span data-i18n="theme">Тема</span>
-                        <select id="themeSelect" class="theme-select">
-                            <option value="dark" data-i18n="darkTheme">Темная</option>
-                            <option value="light" data-i18n="lightTheme">Светлая</option>
-                        </select>
-                    </div>
-                </div>
-                <button id="backToHomeBtn3" class="button secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    <span data-i18n="back">Назад</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Lobby Section -->
-        <section id="lobbySection" class="section">
+        <!-- Lobby Screen -->
+        <div id="lobbyScreen" class="screen">
             <div class="container">
                 <div class="game-info">
                     <h2 data-i18n="lobby">Лобби</h2>
@@ -140,31 +106,46 @@
                     <i class="fas fa-play"></i>
                     <span data-i18n="startGame">Начать игру</span>
                 </button>
-                <button id="backToHomeBtn4" class="button secondary">
+                <button id="backFromLobbyBtn" class="button secondary">
                     <i class="fas fa-arrow-left"></i>
                     <span data-i18n="back">Назад</span>
                 </button>
             </div>
-        </section>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="container">
+                <div class="game-status">
+                    <div class="timer" id="gameTimer">05:00</div>
+                    <div class="role-info" id="roleInfo"></div>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Введите сообщение...">
+                        <button id="sendMessageBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
-        <a href="#" class="nav-item active" data-section="home">
-            <i class="fas fa-home nav-icon"></i>
+        <a href="#" class="nav-item active" data-screen="home">
+            <i class="fas fa-home"></i>
             <span data-i18n="home">Главная</span>
         </a>
-        <a href="#" class="nav-item" data-section="create">
-            <i class="fas fa-plus nav-icon"></i>
+        <a href="#" class="nav-item" data-screen="create">
+            <i class="fas fa-plus"></i>
             <span data-i18n="createGame">Создать</span>
         </a>
-        <a href="#" class="nav-item" data-section="join">
-            <i class="fas fa-sign-in-alt nav-icon"></i>
+        <a href="#" class="nav-item" data-screen="join">
+            <i class="fas fa-sign-in-alt"></i>
             <span data-i18n="joinGame">Присоединиться</span>
-        </a>
-        <a href="#" class="nav-item" data-section="settings">
-            <i class="fas fa-cog nav-icon"></i>
-            <span data-i18n="settings">Настройки</span>
         </a>
     </nav>
 

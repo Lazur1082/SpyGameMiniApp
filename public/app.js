@@ -7,356 +7,189 @@ const socket = io();
 
 // Application state
 const state = {
-    currentSection: 'home',
-    currentTheme: localStorage.getItem('theme') || 'dark',
-    currentLanguage: localStorage.getItem('language') || 'ru',
+    currentScreen: 'homeScreen',
     gameId: null,
     isAdmin: false,
     players: [],
-    playerName: tg.initDataUnsafe.user?.first_name || 'Player',
-    settings: {
-        sound: true,
-        notifications: true
-    }
-};
-
-// Translations
-const translations = {
-    ru: {
-        welcome: 'Добро пожаловать в Spy Game!',
-        welcomeDescription: 'Выберите действие для начала игры',
-        createGame: 'Создать игру',
-        joinGame: 'Присоединиться',
-        settings: 'Настройки',
-        back: 'Назад',
-        home: 'Главная',
-        playersCount: 'Количество игроков',
-        roundTime: 'Время раунда (минуты)',
-        startGame: 'Начать игру',
-        enterGameCode: 'Введите код игры',
-        join: 'Присоединиться',
-        soundEffects: 'Звуковые эффекты',
-        notifications: 'Уведомления',
-        theme: 'Тема',
-        darkTheme: 'Темная',
-        lightTheme: 'Светлая',
-        lobby: 'Лобби',
-        copyGameId: 'Копировать ID',
-        waitingForPlayers: 'Ожидание игроков...',
-        playerJoined: 'присоединился к игре',
-        playerLeft: 'покинул игру',
-        admin: 'Админ',
-        gameIdCopied: 'ID игры скопирован',
-        error: 'Произошла ошибка'
-    },
-    en: {
-        welcome: 'Welcome to Spy Game!',
-        welcomeDescription: 'Choose an action to start the game',
-        createGame: 'Create Game',
-        joinGame: 'Join Game',
-        settings: 'Settings',
-        back: 'Back',
-        home: 'Home',
-        playersCount: 'Number of players',
-        roundTime: 'Round time (minutes)',
-        startGame: 'Start Game',
-        enterGameCode: 'Enter game code',
-        join: 'Join',
-        soundEffects: 'Sound Effects',
-        notifications: 'Notifications',
-        theme: 'Theme',
-        darkTheme: 'Dark',
-        lightTheme: 'Light',
-        lobby: 'Lobby',
-        copyGameId: 'Copy ID',
-        waitingForPlayers: 'Waiting for players...',
-        playerJoined: 'joined the game',
-        playerLeft: 'left the game',
-        admin: 'Admin',
-        gameIdCopied: 'Game ID copied',
-        error: 'An error occurred'
-    },
-    es: {
-        welcome: '¡Bienvenido a Spy Game!',
-        welcomeDescription: 'Elige una acción para comenzar el juego',
-        createGame: 'Crear Juego',
-        joinGame: 'Unirse',
-        settings: 'Configuración',
-        back: 'Atrás',
-        home: 'Inicio',
-        playersCount: 'Número de jugadores',
-        roundTime: 'Tiempo de ronda (minutos)',
-        startGame: 'Comenzar Juego',
-        enterGameCode: 'Ingresa el código del juego',
-        join: 'Unirse',
-        soundEffects: 'Efectos de sonido',
-        notifications: 'Notificaciones',
-        theme: 'Tema',
-        darkTheme: 'Oscuro',
-        lightTheme: 'Claro',
-        lobby: 'Sala de espera',
-        copyGameId: 'Copiar ID',
-        waitingForPlayers: 'Esperando jugadores...',
-        playerJoined: 'se unió al juego',
-        playerLeft: 'salió del juego',
-        admin: 'Admin',
-        gameIdCopied: 'ID del juego copiado',
-        error: 'Se produjo un error'
-    }
+    playerName: tg.initDataUnsafe?.user?.first_name || 'Player'
 };
 
 // DOM Elements
 const elements = {
-    sections: {
-        home: document.getElementById('homeSection'),
-        create: document.getElementById('createGameSection'),
-        join: document.getElementById('joinGameSection'),
-        settings: document.getElementById('settingsSection'),
-        lobby: document.getElementById('lobbySection')
+    screens: {
+        home: document.getElementById('homeScreen'),
+        create: document.getElementById('createGameScreen'),
+        join: document.getElementById('joinGameScreen'),
+        lobby: document.getElementById('lobbyScreen'),
+        game: document.getElementById('gameScreen')
     },
-    navItems: document.querySelectorAll('.nav-item'),
-    themeToggle: document.getElementById('themeToggle'),
-    languageSelect: document.getElementById('languageSelect'),
-    themeSelect: document.getElementById('themeSelect'),
-    soundToggle: document.getElementById('soundToggle'),
-    notificationsToggle: document.getElementById('notificationsToggle'),
+    buttons: {
+        createGame: document.getElementById('createGameBtn'),
+        joinGame: document.getElementById('joinGameBtn'),
+        confirmCreate: document.getElementById('confirmCreateBtn'),
+        confirmJoin: document.getElementById('confirmJoinBtn'),
+        backFromCreate: document.getElementById('backFromCreateBtn'),
+        backFromJoin: document.getElementById('backFromJoinBtn'),
+        backFromLobby: document.getElementById('backFromLobbyBtn'),
+        copyGameId: document.getElementById('copyGameIdBtn'),
+        startGame: document.getElementById('startGameBtn'),
+        sendMessage: document.getElementById('sendMessageBtn')
+    },
+    inputs: {
+        playersCount: document.getElementById('playersCount'),
+        roundTime: document.getElementById('roundTime'),
+        gameCode: document.getElementById('gameCode'),
+        message: document.getElementById('messageInput')
+    },
     gameId: document.getElementById('gameId'),
     playersList: document.getElementById('playersList'),
-    copyGameIdBtn: document.getElementById('copyGameIdBtn')
+    chatMessages: document.getElementById('chatMessages'),
+    roleInfo: document.getElementById('roleInfo'),
+    gameTimer: document.getElementById('gameTimer'),
+    navItems: document.querySelectorAll('.nav-item')
 };
 
 // Functions
-function showSection(sectionId) {
-    Object.values(elements.sections).forEach(section => {
-        section.classList.remove('active');
+function showScreen(screenId) {
+    Object.values(elements.screens).forEach(screen => {
+        screen.classList.remove('active');
     });
-    elements.sections[sectionId].classList.add('active');
-    state.currentSection = sectionId;
+    elements.screens[screenId].classList.add('active');
+    state.currentScreen = screenId;
     
+    // Update navigation
     elements.navItems.forEach(item => {
         item.classList.remove('active');
-        if (item.dataset.section === sectionId) {
+        if (item.dataset.screen === screenId) {
             item.classList.add('active');
         }
-    });
-}
-
-function updateTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    state.currentTheme = theme;
-    localStorage.setItem('theme', theme);
-    
-    const themeIcon = elements.themeToggle.querySelector('i');
-    themeIcon.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-}
-
-function updateLanguage(language) {
-    state.currentLanguage = language;
-    localStorage.setItem('language', language);
-    document.documentElement.lang = language;
-    
-    // Update all translatable elements
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.dataset.i18n;
-        element.textContent = translations[language][key];
-    });
-    
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
-        const key = element.dataset.i18nPlaceholder;
-        element.placeholder = translations[language][key];
-    });
-}
-
-function createGame() {
-    const playersCount = parseInt(document.getElementById('playersCount').value);
-    const roundTime = parseInt(document.getElementById('roundTime').value);
-    
-    socket.emit('createGame', { 
-        playersCount, 
-        roundTime,
-        playerName: state.playerName
-    });
-}
-
-function joinGame() {
-    const gameCode = document.getElementById('gameCode').value.trim();
-    if (!gameCode) {
-        alert(translations[state.currentLanguage].enterGameCode);
-        return;
-    }
-    
-    socket.emit('joinGame', { 
-        gameId: gameCode,
-        playerName: state.playerName
     });
 }
 
 function updatePlayersList(players) {
     elements.playersList.innerHTML = players.map(player => `
         <div class="player-item">
-            <div class="player-avatar">${player.name.charAt(0)}</div>
+            <div class="player-avatar">${player.name.charAt(0).toUpperCase()}</div>
             <span class="player-name">${player.name}</span>
-            ${player.isAdmin ? '<span class="admin-badge" data-i18n="admin">Админ</span>' : ''}
+            ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
         </div>
     `).join('');
-    
-    // Update translations for admin badges
-    document.querySelectorAll('.admin-badge').forEach(badge => {
-        badge.textContent = translations[state.currentLanguage].admin;
-    });
+}
+
+function addChatMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${message.sender === state.playerName ? 'sent' : 'received'}`;
+    messageElement.innerHTML = `
+        <div class="message-content">
+            <span class="message-sender">${message.sender}</span>
+            <span class="message-text">${message.text}</span>
+        </div>
+    `;
+    elements.chatMessages.appendChild(messageElement);
+    elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
 }
 
 // Event Listeners
-elements.navItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
-        showSection(item.dataset.section);
+elements.buttons.createGame.addEventListener('click', () => showScreen('create'));
+elements.buttons.joinGame.addEventListener('click', () => showScreen('join'));
+elements.buttons.backFromCreate.addEventListener('click', () => showScreen('home'));
+elements.buttons.backFromJoin.addEventListener('click', () => showScreen('home'));
+elements.buttons.backFromLobby.addEventListener('click', () => showScreen('home'));
+
+elements.buttons.confirmCreate.addEventListener('click', () => {
+    const playersCount = parseInt(elements.inputs.playersCount.value);
+    const roundTime = parseInt(elements.inputs.roundTime.value);
+    
+    socket.emit('createGame', {
+        playersCount,
+        roundTime,
+        playerName: state.playerName
     });
 });
 
-elements.themeToggle.addEventListener('click', () => {
-    const newTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
-    updateTheme(newTheme);
-});
-
-elements.languageSelect.addEventListener('change', (e) => {
-    updateLanguage(e.target.value);
-});
-
-elements.themeSelect.addEventListener('change', (e) => {
-    updateTheme(e.target.value);
-});
-
-elements.soundToggle.addEventListener('change', (e) => {
-    state.settings.sound = e.target.checked;
-    localStorage.setItem('sound', e.target.checked);
-});
-
-elements.notificationsToggle.addEventListener('change', (e) => {
-    state.settings.notifications = e.target.checked;
-    localStorage.setItem('notifications', e.target.checked);
-});
-
-document.getElementById('createGameBtn').addEventListener('click', () => {
-    showSection('create');
-});
-
-document.getElementById('joinGameBtn').addEventListener('click', () => {
-    showSection('join');
-});
-
-document.getElementById('startGameBtn').addEventListener('click', createGame);
-document.getElementById('joinGameConfirmBtn').addEventListener('click', joinGame);
-
-document.querySelectorAll('.back-to-home').forEach(button => {
-    button.addEventListener('click', () => {
-        showSection('home');
-    });
-});
-
-elements.copyGameIdBtn.addEventListener('click', () => {
-    if (state.gameId) {
-        navigator.clipboard.writeText(state.gameId)
-            .then(() => {
-                alert(translations[state.currentLanguage].gameIdCopied || 'ID игры скопирован');
-            })
-            .catch(err => {
-                console.error('Failed to copy game ID:', err);
-            });
+elements.buttons.confirmJoin.addEventListener('click', () => {
+    const gameCode = elements.inputs.gameCode.value.trim();
+    if (!gameCode) {
+        alert('Пожалуйста, введите код игры');
+        return;
     }
+    
+    socket.emit('joinGame', {
+        gameId: gameCode,
+        playerName: state.playerName
+    });
 });
 
-// Socket.io event handlers
+elements.buttons.copyGameId.addEventListener('click', () => {
+    navigator.clipboard.writeText(state.gameId).then(() => {
+        alert('ID игры скопирован');
+    });
+});
+
+elements.buttons.sendMessage.addEventListener('click', () => {
+    const text = elements.inputs.message.value.trim();
+    if (!text) return;
+    
+    socket.emit('chatMessage', {
+        gameId: state.gameId,
+        sender: state.playerName,
+        text
+    });
+    
+    elements.inputs.message.value = '';
+});
+
+elements.buttons.startGame.addEventListener('click', () => {
+    if (!state.isAdmin) return;
+    socket.emit('startGame', { gameId: state.gameId });
+});
+
+// Socket Events
 socket.on('connect', () => {
     console.log('Connected to server');
 });
 
 socket.on('gameCreated', (data) => {
-    if (data.error) {
-        alert(data.error);
-        return;
-    }
-    
     state.gameId = data.gameId;
     state.isAdmin = true;
     elements.gameId.textContent = data.gameId;
-    showSection('lobby');
+    updatePlayersList(data.players);
+    showScreen('lobby');
 });
 
 socket.on('gameJoined', (data) => {
-    if (data.error) {
-        alert(data.error);
-        return;
-    }
-    
     state.gameId = data.gameId;
-    state.isAdmin = false;
+    state.isAdmin = data.isAdmin;
     elements.gameId.textContent = data.gameId;
-    showSection('lobby');
-});
-
-socket.on('error', (error) => {
-    alert(error.message || translations[state.currentLanguage].error);
-});
-
-socket.on('updatePlayers', (data) => {
-    if (data.error) {
-        alert(data.error);
-        return;
-    }
-    
-    state.players = data.players;
     updatePlayersList(data.players);
-    
-    // Show/hide start game button based on admin status
-    const startGameBtn = document.getElementById('startGameBtn');
-    startGameBtn.style.display = state.isAdmin ? 'block' : 'none';
+    showScreen('lobby');
 });
 
 socket.on('playerJoined', (data) => {
-    if (state.settings.notifications) {
-        alert(`${data.playerName} ${translations[state.currentLanguage].playerJoined}`);
-    }
+    updatePlayersList(data.players);
 });
 
 socket.on('playerLeft', (data) => {
-    if (state.settings.notifications) {
-        alert(`${data.playerName} ${translations[state.currentLanguage].playerLeft}`);
+    updatePlayersList(data.players);
+});
+
+socket.on('chatMessage', (message) => {
+    addChatMessage(message);
+});
+
+socket.on('gameStarted', (data) => {
+    elements.roleInfo.textContent = `Ваша роль: ${data.role}`;
+    if (data.word) {
+        elements.roleInfo.textContent += ` | Слово: ${data.word}`;
     }
+    showScreen('game');
+});
+
+socket.on('gameError', (error) => {
+    alert(error.message);
 });
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    // Set initial theme
-    updateTheme(state.currentTheme);
-    
-    // Set initial language
-    updateLanguage(state.currentLanguage);
-    
-    // Load settings
-    const savedSound = localStorage.getItem('sound');
-    const savedNotifications = localStorage.getItem('notifications');
-    
-    if (savedSound !== null) {
-        state.settings.sound = savedSound === 'true';
-        elements.soundToggle.checked = state.settings.sound;
-    }
-    
-    if (savedNotifications !== null) {
-        state.settings.notifications = savedNotifications === 'true';
-        elements.notificationsToggle.checked = state.settings.notifications;
-    }
-    
-    // Show home section
-    showSection('home');
-    
-    // Add translations for admin badge
-    translations.ru.admin = 'Админ';
-    translations.en.admin = 'Admin';
-    translations.es.admin = 'Admin';
-    
-    // Add translation for game ID copied message
-    translations.ru.gameIdCopied = 'ID игры скопирован';
-    translations.en.gameIdCopied = 'Game ID copied';
-    translations.es.gameIdCopied = 'ID del juego copiado';
+    showScreen('home');
 });
