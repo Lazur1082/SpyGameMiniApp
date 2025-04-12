@@ -173,7 +173,9 @@ function translatePage() {
 // User Profile
 let userProfile = {
     name: localStorage.getItem('userName') || '',
-    avatar: localStorage.getItem('userAvatar') || '/images/default-avatar.png'
+    avatar: localStorage.getItem('userAvatar') || '/images/default-avatar.png',
+    gamesPlayed: parseInt(localStorage.getItem('gamesPlayed')) || 0,
+    gamesWon: parseInt(localStorage.getItem('gamesWon')) || 0
 };
 
 function updateProfile(name, avatar) {
@@ -187,9 +189,21 @@ function updateProfile(name, avatar) {
 function updateProfileUI() {
     const profileName = document.getElementById('profileName');
     const profileAvatar = document.getElementById('profileAvatar');
+    const gamesPlayed = document.getElementById('gamesPlayed');
+    const gamesWon = document.getElementById('gamesWon');
     
     if (profileName) profileName.value = userProfile.name;
     if (profileAvatar) profileAvatar.src = userProfile.avatar;
+    if (gamesPlayed) gamesPlayed.textContent = userProfile.gamesPlayed;
+    if (gamesWon) gamesWon.textContent = userProfile.gamesWon;
+}
+
+function updateGameStats(played, won) {
+    userProfile.gamesPlayed = played;
+    userProfile.gamesWon = won;
+    localStorage.setItem('gamesPlayed', played);
+    localStorage.setItem('gamesWon', won);
+    updateProfileUI();
 }
 
 // Функции
@@ -262,6 +276,33 @@ function playSound(soundName) {
 function initializeEventListeners() {
     console.log('Initializing event listeners...');
 
+    // Профиль
+    document.getElementById('profileButton').addEventListener('click', () => {
+        console.log('Profile button clicked');
+        showScreen('profile');
+    });
+
+    document.getElementById('profileNav').addEventListener('click', () => {
+        console.log('Profile nav clicked');
+        showScreen('profile');
+    });
+
+    document.getElementById('backFromProfile').addEventListener('click', () => {
+        console.log('Back from profile clicked');
+        showScreen('main');
+    });
+
+    document.getElementById('changeAvatar').addEventListener('click', () => {
+        console.log('Change avatar clicked');
+        // Здесь будет логика загрузки аватарки
+        tg.showAlert('Функция изменения аватара будет добавлена позже');
+    });
+
+    document.getElementById('profileName').addEventListener('change', (e) => {
+        console.log('Profile name changed:', e.target.value);
+        updateProfile(e.target.value, userProfile.avatar);
+    });
+
     // Навигационные кнопки
     document.getElementById('settingsButton').addEventListener('click', () => {
         console.log('Settings button clicked');
@@ -309,15 +350,10 @@ function initializeEventListeners() {
         showScreen('join');
     });
 
-    document.getElementById('settingsNav').addEventListener('click', () => {
-        console.log('Settings nav clicked');
-        showScreen('settings');
-    });
-
     // Кнопки игры
     document.getElementById('createGame').addEventListener('click', () => {
         console.log('Create game clicked');
-        const playerName = document.getElementById('playerName').value.trim();
+        const playerName = document.getElementById('playerName').value.trim() || userProfile.name;
         if (playerName) {
             createGame(playerName);
         } else {
@@ -327,7 +363,7 @@ function initializeEventListeners() {
 
     document.getElementById('joinGame').addEventListener('click', () => {
         console.log('Join game clicked');
-        const playerName = document.getElementById('playerNameJoin').value.trim();
+        const playerName = document.getElementById('playerNameJoin').value.trim() || userProfile.name;
         const gameId = document.getElementById('gameId').value.trim();
         if (playerName && gameId) {
             joinGame(gameId, playerName);
@@ -380,7 +416,7 @@ function initializeEventListeners() {
 
     document.getElementById('playerName').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            const playerName = e.target.value.trim();
+            const playerName = e.target.value.trim() || userProfile.name;
             if (playerName) {
                 createGame(playerName);
             }
@@ -389,7 +425,7 @@ function initializeEventListeners() {
 
     document.getElementById('playerNameJoin').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            const playerName = e.target.value.trim();
+            const playerName = e.target.value.trim() || userProfile.name;
             const gameId = document.getElementById('gameId').value.trim();
             if (playerName && gameId) {
                 joinGame(gameId, playerName);
@@ -514,6 +550,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Установка начального языка
     const savedLanguage = localStorage.getItem('language') || 'ru';
     updateLanguage(savedLanguage);
+    
+    // Обновление профиля
+    updateProfileUI();
     
     // Показываем главное меню
     showScreen('main');
