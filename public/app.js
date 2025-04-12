@@ -624,6 +624,17 @@ socket.on('gameStarted', (data) => {
     state.role = data.role;
     state.isInGame = true;
     showScreen('gameScreen');
+    
+    // Отключаем навигацию
+    const bottomNav = document.querySelector('.bottom-navigation');
+    if (bottomNav) {
+        bottomNav.style.display = 'none';
+    }
+    
+    const header = document.querySelector('.header');
+    if (header) {
+        header.style.display = 'none';
+    }
 });
 
 socket.on('chatMessage', (data) => {
@@ -646,6 +657,17 @@ socket.on('gameEnded', ({ spy, location }) => {
     `;
     showScreen('endScreen');
     playSound('end');
+    
+    // Включаем навигацию
+    const bottomNav = document.querySelector('.bottom-navigation');
+    if (bottomNav) {
+        bottomNav.style.display = 'flex';
+    }
+    
+    const header = document.querySelector('.header');
+    if (header) {
+        header.style.display = 'flex';
+    }
 });
 
 socket.on('joinError', (error) => {
@@ -775,21 +797,22 @@ function sendMessage() {
     console.log('Sending message:', message);
     
     try {
-        socket.emit('chatMessage', {
-            gameId: state.gameId,
-            sender: userProfile.name,
-            text: message,
-            timestamp: new Date().toISOString()
-        });
-        
-        // Очищаем поле ввода только после успешной отправки
-        messageInput.value = '';
-        
         // Добавляем сообщение в чат сразу
         addChatMessage({
             sender: userProfile.name,
             text: message,
             isOwn: true
+        });
+        
+        // Очищаем поле ввода
+        messageInput.value = '';
+        
+        // Отправляем сообщение на сервер
+        socket.emit('chatMessage', {
+            gameId: state.gameId,
+            sender: userProfile.name,
+            text: message,
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error('Error sending message:', error);
