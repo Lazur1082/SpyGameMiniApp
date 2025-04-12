@@ -215,8 +215,9 @@ function showScreen(screenId) {
     const targetScreen = document.getElementById(screenId + 'Screen');
     if (targetScreen) {
         targetScreen.classList.remove('hidden');
+        console.log('Screen shown:', screenId + 'Screen');
     } else {
-        console.error('Screen not found:', screenId);
+        console.error('Screen not found:', screenId + 'Screen');
     }
 }
 
@@ -287,15 +288,30 @@ function updatePlayersList(players) {
 }
 
 function addChatMessage(message) {
+    console.log('Adding chat message:', message);
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
     
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${message.sender === state.playerName ? 'own' : ''}`;
-    messageDiv.innerHTML = `
+    
+    let messageContent = `
         <div class="message-sender">${message.sender}</div>
+    `;
+    
+    if (message.image) {
+        messageContent += `
+            <div class="message-image">
+                <img src="${message.image}" alt="Message image">
+            </div>
+        `;
+    }
+    
+    messageContent += `
         <div class="message-text">${message.text}</div>
     `;
+    
+    messageDiv.innerHTML = messageContent;
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
@@ -457,12 +473,13 @@ function initializeEventListeners() {
         showScreen('join');
     });
 
-    // Кнопки игры
+    // Создание игры
     document.getElementById('createGame').addEventListener('click', () => {
         console.log('Create game clicked');
         createGame(userProfile.name);
     });
 
+    // Присоединение к игре
     document.getElementById('joinGame').addEventListener('click', () => {
         console.log('Join game clicked');
         const gameId = document.getElementById('gameId').value.trim();
@@ -490,11 +507,19 @@ function initializeEventListeners() {
 
     // Чат
     document.getElementById('sendMessage').addEventListener('click', () => {
-        console.log('Send message clicked');
-        const message = document.getElementById('messageInput').value.trim();
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+        
         if (message) {
-            sendMessage(message);
-            document.getElementById('messageInput').value = '';
+            if (message.startsWith('/')) {
+                handleCommand(message);
+            } else {
+                socket.emit('chatMessage', {
+                    sender: userProfile.name,
+                    text: message
+                });
+            }
+            messageInput.value = '';
         }
     });
 
@@ -509,7 +534,10 @@ function initializeEventListeners() {
         if (e.key === 'Enter') {
             const message = e.target.value.trim();
             if (message) {
-                sendMessage(message);
+                socket.emit('chatMessage', {
+                    sender: userProfile.name,
+                    text: message
+                });
                 e.target.value = '';
             }
         }
@@ -529,6 +557,18 @@ function initializeEventListeners() {
 socket.on('connect', () => {
     console.log('Подключено к серверу');
     showScreen('main');
+    
+    // Отправляем приветственное сообщение с изображением
+    const welcomeMessage = {
+        text: '🎮 Добро пожаловать в игру "Шпион"!\n\n🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n📱 Для начала игры нажмите кнопку ниже:',
+        image: '/images/SpyGameBannerWelcome.png'
+    };
+    
+    addChatMessage({
+        sender: 'Система',
+        text: welcomeMessage.text,
+        image: welcomeMessage.image
+    });
 });
 
 socket.on('connect_error', (error) => {
@@ -550,58 +590,24 @@ socket.on('error', (error) => {
     });
 });
 
-socket.on('gameCreated', ({ gameId, player, players }) => {
-    state.gameId = gameId;
-    state.playerName = player.name;
-    state.role = player.role;
-    state.players = players;
-    elements.currentGameId.textContent = gameId;
-    updatePlayersList(players);
-    showScreen('waiting');
-    
-    // Копируем ID игры в буфер обмена
-    navigator.clipboard.writeText(gameId).catch(() => {});
-    tg.showPopup({
-        title: 'Игра создана',
-        message: `ID игры: ${gameId}\nID скопирован в буфер обмена`,
-        buttons: [{type: 'ok'}]
-    });
+socket.on('gameCreated', (data) => {
+    console.log('Game created:', data);
+    state.gameId = data.gameId;
+    state.playerName = data.playerName;
+    showScreen('lobby');
+    updatePlayersList([{ name: data.playerName, role: 'host' }]);
 });
 
-socket.on('joinedGame', ({ gameId, player, players }) => {
-    state.gameId = gameId;
-    state.playerName = player.name;
-    state.role = player.role;
-    state.players = players;
-    elements.currentGameId.textContent = gameId;
+socket.on('playerJoined', (data) => {
+    console.log('Player joined:', data);
+    const players = [...state.players, { name: data.playerName, role: 'player' }];
     updatePlayersList(players);
-    showScreen('waiting');
-    playSound('join');
 });
 
-socket.on('playerJoined', ({ players }) => {
-    state.players = players;
-    updatePlayersList(players);
-    playSound('join');
-});
-
-socket.on('playerLeft', ({ players }) => {
-    state.players = players;
-    updatePlayersList(players);
-    playSound('leave');
-});
-
-socket.on('gameStarted', ({ role, location }) => {
-    state.role = role;
-    elements.roleInfo.innerHTML = `
-        <h3 class="role-title">${role === 'spy' ? 'Вы - Шпион! 🕵️‍♂️' : 'Ваша роль'}</h3>
-        <p>${role === 'spy' ? 
-            'Попытайтесь угадать локацию, слушая разговор других игроков' : 
-            `Локация: ${location}<br>Не дайте шпиону догадаться!`}</p>
-    `;
-    elements.chatMessages.innerHTML = '';
+socket.on('gameStarted', (data) => {
+    console.log('Game started:', data);
+    state.role = data.role;
     showScreen('game');
-    playSound('start');
 });
 
 socket.on('chatMessage', ({ sender, text }) => {
@@ -634,6 +640,10 @@ function initializeSound() {
 // Функция создания игры
 function createGame(playerName) {
     console.log('Creating game for player:', playerName);
+    if (!playerName) {
+        tg.showAlert('Пожалуйста, введите ваше имя');
+        return;
+    }
     socket.emit('createGame', { playerName });
 }
 
@@ -655,10 +665,27 @@ function endGame() {
     socket.emit('endGame');
 }
 
-// Функция отправки сообщения
-function sendMessage(message) {
-    console.log('Sending message:', message);
-    socket.emit('chatMessage', { message });
+// Обработка команд чата
+function handleCommand(command) {
+    switch(command) {
+        case '/start':
+            const startMessage = {
+                text: '🎮 Добро пожаловать в игру "Шпион"!\n\n🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n📱 Для начала игры нажмите кнопку ниже:',
+                image: '/images/welcome-image.png'
+            };
+            addChatMessage({
+                sender: 'Система',
+                text: startMessage.text,
+                image: startMessage.image
+            });
+            break;
+        case '/help':
+            addChatMessage({
+                sender: 'Система',
+                text: '📖 Доступные команды:\n/start - Начать игру\n/help - Показать это сообщение'
+            });
+            break;
+    }
 }
 
 // Инициализация приложения
@@ -681,6 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Показываем главное меню
     showScreen('main');
+    console.log('Main menu should be visible now');
     
     console.log('App initialized successfully');
 }); 

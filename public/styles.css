@@ -795,7 +795,7 @@ body {
     object-fit: cover;
     border: 3px solid var(--primary-color);
     box-shadow: 0 4px 12px var(--shadow-color);
-    background-color: var(--background-primary);
+    background-color: transparent;
 }
 
 .profile-info {
@@ -913,7 +913,7 @@ body {
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--primary-color);
-    background-color: var(--background-primary);
+    background-color: transparent;
 }
 
 /* Avatar Options */
@@ -932,6 +932,7 @@ body {
     transition: transform var(--transition-fast);
     border-radius: 50%;
     overflow: hidden;
+    background-color: transparent;
 }
 
 .avatar-option:hover {
@@ -944,7 +945,7 @@ body {
     border-radius: 50%;
     border: 2px solid var(--border-color);
     transition: border-color var(--transition-fast);
-    background-color: var(--background-primary);
+    background-color: transparent;
 }
 
 .avatar-option:hover img {
@@ -977,7 +978,7 @@ body {
     object-fit: cover;
     border: 3px solid var(--primary-color);
     box-shadow: 0 4px 12px var(--shadow-color);
-    background-color: var(--background-primary);
+    background-color: transparent;
 }
 
 /* Responsive styles */
@@ -1001,4 +1002,24 @@ body {
         width: 80px;
         height: 80px;
     }
+}
+
+/* Message Image */
+.message-image {
+    margin: var(--spacing-small) 0;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.message-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+/* Dark Theme Message Image */
+[data-theme="dark"] .message-image {
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
