@@ -27,7 +27,20 @@ const elements = {
     messageInput: document.getElementById('messageInput'),
     gameResults: document.getElementById('gameResults'),
     themeToggle: document.getElementById('themeToggle'),
-    soundToggle: document.getElementById('soundToggle')
+    soundToggle: document.getElementById('soundToggle'),
+    settingsButton: document.getElementById('settingsButton'),
+    backFromSettings: document.getElementById('backFromSettings'),
+    showCreateGame: document.getElementById('showCreateGame'),
+    showJoinGame: document.getElementById('showJoinGame'),
+    createGame: document.getElementById('createGame'),
+    joinGame: document.getElementById('joinGame'),
+    backToMenu1: document.getElementById('backToMenu1'),
+    backToMenu2: document.getElementById('backToMenu2'),
+    backToMenu3: document.getElementById('backToMenu3'),
+    startGame: document.getElementById('startGame'),
+    endGame: document.getElementById('endGame'),
+    newGame: document.getElementById('newGame'),
+    sendMessage: document.getElementById('sendMessage')
 };
 
 const buttons = {
@@ -131,6 +144,13 @@ function updateTheme(theme) {
     localStorage.setItem('theme', theme);
     settings.theme = theme;
     elements.themeToggle.checked = theme === 'dark';
+    if (theme === 'dark') {
+        tg.setHeaderColor('#212121');
+        tg.setBackgroundColor('#212121');
+    } else {
+        tg.setHeaderColor('#2481cc');
+        tg.setBackgroundColor('#ffffff');
+    }
 }
 
 function updateSound(enabled) {
@@ -334,6 +354,77 @@ function copyGameId() {
     }
 }
 
+// Обработчики событий
+function initializeEventListeners() {
+    // Кнопки навигации
+    elements.settingsButton.addEventListener('click', () => showScreen('settings'));
+    elements.backFromSettings.addEventListener('click', () => showScreen('main'));
+    elements.showCreateGame.addEventListener('click', () => showScreen('start'));
+    elements.showJoinGame.addEventListener('click', () => showScreen('join'));
+    elements.backToMenu1.addEventListener('click', () => showScreen('main'));
+    elements.backToMenu2.addEventListener('click', () => showScreen('main'));
+    elements.backToMenu3.addEventListener('click', () => showScreen('main'));
+
+    // Кнопки действий
+    elements.createGame.addEventListener('click', () => {
+        const name = elements.playerName.value.trim();
+        if (name) {
+            socket.emit('createGame', { name });
+        } else {
+            tg.showPopup({
+                title: 'Ошибка',
+                message: 'Пожалуйста, введите ваше имя',
+                buttons: [{type: 'ok'}]
+            });
+        }
+    });
+
+    elements.joinGame.addEventListener('click', () => {
+        const name = elements.playerNameJoin.value.trim();
+        const gameId = elements.gameId.value.trim();
+        if (name && gameId) {
+            socket.emit('joinGame', { name, gameId });
+        } else {
+            tg.showPopup({
+                title: 'Ошибка',
+                message: 'Пожалуйста, введите ваше имя и ID игры',
+                buttons: [{type: 'ok'}]
+            });
+        }
+    });
+
+    elements.startGame.addEventListener('click', () => {
+        if (isAdmin) {
+            socket.emit('startGame');
+        }
+    });
+
+    elements.endGame.addEventListener('click', () => {
+        if (isAdmin) {
+            tg.showConfirm('Вы уверены, что хотите завершить игру?', (confirmed) => {
+                if (confirmed) {
+                    socket.emit('endGame');
+                }
+            });
+        }
+    });
+
+    elements.sendMessage.addEventListener('click', () => {
+        const message = elements.messageInput.value.trim();
+        if (message) {
+            socket.emit('chatMessage', { text: message });
+            elements.messageInput.value = '';
+        }
+    });
+
+    elements.messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            elements.sendMessage.click();
+        }
+    });
+}
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -348,6 +439,9 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.playerName.value = name;
             elements.playerNameJoin.value = name;
         }
+        
+        // Инициализация обработчиков событий
+        initializeEventListeners();
         
         // Показываем главное меню
         showScreen('main');
