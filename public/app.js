@@ -13,6 +13,7 @@ const state = {
     gameId: null,
     isAdmin: false,
     players: [],
+    playerName: tg.initDataUnsafe.user?.first_name || 'Player',
     settings: {
         sound: true,
         notifications: true
@@ -45,7 +46,8 @@ const translations = {
         playerJoined: 'присоединился к игре',
         playerLeft: 'покинул игру',
         admin: 'Админ',
-        gameIdCopied: 'ID игры скопирован'
+        gameIdCopied: 'ID игры скопирован',
+        error: 'Произошла ошибка'
     },
     en: {
         welcome: 'Welcome to Spy Game!',
@@ -71,7 +73,8 @@ const translations = {
         playerJoined: 'joined the game',
         playerLeft: 'left the game',
         admin: 'Admin',
-        gameIdCopied: 'Game ID copied'
+        gameIdCopied: 'Game ID copied',
+        error: 'An error occurred'
     },
     es: {
         welcome: '¡Bienvenido a Spy Game!',
@@ -97,7 +100,8 @@ const translations = {
         playerJoined: 'se unió al juego',
         playerLeft: 'salió del juego',
         admin: 'Admin',
-        gameIdCopied: 'ID del juego copiado'
+        gameIdCopied: 'ID del juego copiado',
+        error: 'Se produjo un error'
     }
 };
 
@@ -167,12 +171,24 @@ function createGame() {
     const playersCount = parseInt(document.getElementById('playersCount').value);
     const roundTime = parseInt(document.getElementById('roundTime').value);
     
-    socket.emit('createGame', { playersCount, roundTime });
+    socket.emit('createGame', { 
+        playersCount, 
+        roundTime,
+        playerName: state.playerName
+    });
 }
 
 function joinGame() {
-    const gameCode = document.getElementById('gameCode').value;
-    socket.emit('joinGame', { gameCode });
+    const gameCode = document.getElementById('gameCode').value.trim();
+    if (!gameCode) {
+        alert(translations[state.currentLanguage].enterGameCode);
+        return;
+    }
+    
+    socket.emit('joinGame', { 
+        gameId: gameCode,
+        playerName: state.playerName
+    });
 }
 
 function updatePlayersList(players) {
@@ -256,6 +272,11 @@ socket.on('connect', () => {
 });
 
 socket.on('gameCreated', (data) => {
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    
     state.gameId = data.gameId;
     state.isAdmin = true;
     elements.gameId.textContent = data.gameId;
@@ -263,6 +284,11 @@ socket.on('gameCreated', (data) => {
 });
 
 socket.on('gameJoined', (data) => {
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    
     state.gameId = data.gameId;
     state.isAdmin = false;
     elements.gameId.textContent = data.gameId;
@@ -270,10 +296,15 @@ socket.on('gameJoined', (data) => {
 });
 
 socket.on('error', (error) => {
-    alert(error.message);
+    alert(error.message || translations[state.currentLanguage].error);
 });
 
 socket.on('updatePlayers', (data) => {
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
+    
     state.players = data.players;
     updatePlayersList(data.players);
     
