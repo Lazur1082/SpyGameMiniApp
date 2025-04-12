@@ -5,18 +5,18 @@ try {
     tg.expand();
     tg.enableClosingConfirmation();
 } catch (e) {
-    console.log('Not running in Telegram');
+    // Создаем заглушку для работы на ПК
     tg = {
-        showAlert: (text) => alert(text),
-        showPopup: (params) => {
-            alert(params.message);
-            if (params.callback) params.callback();
-        },
-        close: () => console.log('Closing app'),
-        expand: () => console.log('Expanding app'),
-        enableClosingConfirmation: () => console.log('Enabling closing confirmation'),
-        setHeaderColor: (color) => console.log('Setting header color:', color),
-        setBackgroundColor: (color) => console.log('Setting background color:', color)
+        initData: '',
+        initDataUnsafe: { user: { username: 'Player' } },
+        ready: () => {},
+        expand: () => {},
+        enableClosingConfirmation: () => {},
+        showAlert: (message) => alert(message),
+        showPopup: (params) => confirm(params.message),
+        close: () => {},
+        setHeaderColor: (color) => {},
+        setBackgroundColor: (color) => {}
     };
 }
 
@@ -88,9 +88,15 @@ const buttons = {
 };
 
 // Состояние приложения
-let currentPlayer = null;
-let isAdmin = false;
-let lastScreen = 'main';
+const state = {
+    theme: localStorage.getItem('theme') || 'light',
+    sound: localStorage.getItem('sound') === 'true',
+    gameId: null,
+    playerName: null,
+    role: null,
+    players: [],
+    messages: []
+};
 
 // Звуковые эффекты
 const sounds = {
@@ -134,7 +140,7 @@ function updatePlayersList(players) {
 
 function addChatMessage(message) {
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${message.sender === currentPlayer?.name ? 'own' : ''}`;
+    messageDiv.className = `message ${message.sender === state.playerName ? 'own' : ''}`;
     messageDiv.innerHTML = `
         <div class="message-sender">${message.sender}</div>
         <div class="message-text">${message.text}</div>
@@ -142,13 +148,13 @@ function addChatMessage(message) {
     elements.chatMessages.appendChild(messageDiv);
     elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
     
-    if (settings.sound && message.sender !== currentPlayer?.name) {
+    if (state.sound && message.sender !== state.playerName) {
         sounds.message.play().catch(() => {});
     }
 }
 
 function playSound(soundName) {
-    if (settings.sound && sounds[soundName]) {
+    if (state.sound && sounds[soundName]) {
         try {
             sounds[soundName].play().catch(error => {
                 console.warn('Ошибка воспроизведения звука:', error);
@@ -162,7 +168,7 @@ function playSound(soundName) {
 // Функция обновления темы
 function updateTheme(theme) {
     console.log('Updating theme to:', theme);
-    settings.theme = theme;
+    state.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
     
@@ -197,7 +203,7 @@ function updateTheme(theme) {
 }
 
 function updateSound(sound) {
-    settings.sound = sound;
+    state.sound = sound;
     localStorage.setItem('sound', sound);
 }
 
@@ -389,8 +395,10 @@ socket.on('error', (error) => {
 });
 
 socket.on('gameCreated', ({ gameId, player, players }) => {
-    currentPlayer = player;
-    isAdmin = true;
+    state.gameId = gameId;
+    state.playerName = player.name;
+    state.role = player.role;
+    state.players = players;
     elements.currentGameId.textContent = gameId;
     updatePlayersList(players);
     showScreen('waiting');
@@ -405,8 +413,10 @@ socket.on('gameCreated', ({ gameId, player, players }) => {
 });
 
 socket.on('joinedGame', ({ gameId, player, players }) => {
-    currentPlayer = player;
-    isAdmin = player.isAdmin;
+    state.gameId = gameId;
+    state.playerName = player.name;
+    state.role = player.role;
+    state.players = players;
     elements.currentGameId.textContent = gameId;
     updatePlayersList(players);
     showScreen('waiting');
@@ -414,16 +424,19 @@ socket.on('joinedGame', ({ gameId, player, players }) => {
 });
 
 socket.on('playerJoined', ({ players }) => {
+    state.players = players;
     updatePlayersList(players);
     playSound('join');
 });
 
 socket.on('playerLeft', ({ players }) => {
+    state.players = players;
     updatePlayersList(players);
     playSound('leave');
 });
 
 socket.on('gameStarted', ({ role, location }) => {
+    state.role = role;
     elements.roleInfo.innerHTML = `
         <h3 class="role-title">${role === 'spy' ? 'Вы - Шпион! 🕵️‍♂️' : 'Ваша роль'}</h3>
         <p>${role === 'spy' ? 
@@ -432,6 +445,7 @@ socket.on('gameStarted', ({ role, location }) => {
     `;
     elements.chatMessages.innerHTML = '';
     showScreen('game');
+    playSound('start');
 });
 
 socket.on('chatMessage', ({ sender, text }) => {
@@ -445,6 +459,7 @@ socket.on('gameEnded', ({ spy, location }) => {
         <p>Локация: ${location}</p>
     `;
     showScreen('end');
+    playSound('end');
 });
 
 // Инициализация при загрузке
