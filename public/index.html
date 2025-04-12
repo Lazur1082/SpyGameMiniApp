@@ -12,6 +12,9 @@
     <header class="header">
         <h1 class="header-title">Шпион</h1>
         <div class="header-actions">
+            <button id="profileButton" class="profile-button" aria-label="Профиль">
+                <span class="button-icon">👤</span>
+            </button>
             <button id="settingsButton" class="settings-button" aria-label="Настройки">
                 <span class="button-icon">⚙️</span>
             </button>
@@ -19,6 +22,30 @@
     </header>
 
     <main class="container">
+        <!-- Профиль -->
+        <section id="profileScreen" class="screen profile-screen hidden">
+            <div class="profile-content">
+                <div class="profile-avatar">
+                    <img id="profileAvatar" src="/images/default-avatar.png" alt="Аватар">
+                    <button id="changeAvatar" class="secondary-button">Изменить</button>
+                </div>
+                <div class="profile-info">
+                    <input type="text" id="profileName" class="input-field" placeholder="Ваше имя">
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Игр сыграно:</span>
+                            <span id="gamesPlayed" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Побед:</span>
+                            <span id="gamesWon" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button id="backFromProfile" class="secondary-button">Назад</button>
+        </section>
+
         <!-- Настройки -->
         <section id="settingsScreen" class="screen settings-screen hidden">
             <div class="settings-group">
@@ -37,8 +64,23 @@
         <!-- Основное меню -->
         <section id="mainMenu" class="screen main-menu-screen">
             <div class="menu-content">
-                <h2 class="menu-title">Добро пожаловать!</h2>
-                <p class="menu-description">Выберите действие:</p>
+                <div class="game-info">
+                    <h2 class="menu-title">Добро пожаловать!</h2>
+                    <div class="info-card">
+                        <h3>О игре</h3>
+                        <p>Шпион - это увлекательная игра на дедукцию, где один игрок становится шпионом, а остальные пытаются его разоблачить.</p>
+                        <div class="rules">
+                            <h4>Правила:</h4>
+                            <ol>
+                                <li>Создайте игру или присоединитесь к существующей</li>
+                                <li>Каждый игрок получает локацию, кроме шпиона</li>
+                                <li>Обсуждайте локацию, не называя её напрямую</li>
+                                <li>Шпион должен угадать локацию</li>
+                                <li>Другие игроки должны вычислить шпиона</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
                 <div class="menu-buttons">
                     <button id="showCreateGame" class="primary-button">Создать игру</button>
                     <button id="showJoinGame" class="primary-button">Присоединиться</button>
@@ -128,9 +170,9 @@
             <span class="nav-icon">🔗</span>
             <span class="nav-text">Присоединиться</span>
         </button>
-        <button id="settingsNav" class="nav-button">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-text">Настройки</span>
+        <button id="profileNav" class="nav-button">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">Профиль</span>
         </button>
     </nav>
 
