@@ -105,6 +105,113 @@ const sounds = {
     leave: new Audio('/sounds/leave.mp3')
 };
 
+// Localization
+const translations = {
+    ru: {
+        welcome: 'Добро пожаловать!',
+        createGame: 'Создать игру',
+        joinGame: 'Присоединиться',
+        profile: 'Профиль',
+        settings: 'Настройки',
+        back: 'Назад',
+        save: 'Сохранить',
+        changeAvatar: 'Изменить',
+        enterName: 'Введите имя',
+        enterGameId: 'ID игры',
+        enterMessage: 'Введите сообщение',
+        send: 'Отправить',
+        copy: 'Копировать',
+        players: 'Игроки',
+        startGame: 'Начать игру',
+        leaveGame: 'Покинуть игру',
+        endGame: 'Завершить игру',
+        newGame: 'Новая игра',
+        gameEnded: 'Игра завершена!'
+    },
+    en: {
+        welcome: 'Welcome!',
+        createGame: 'Create Game',
+        joinGame: 'Join Game',
+        profile: 'Profile',
+        settings: 'Settings',
+        back: 'Back',
+        save: 'Save',
+        changeAvatar: 'Change Avatar',
+        enterName: 'Enter name',
+        enterGameId: 'Game ID',
+        enterMessage: 'Enter message',
+        send: 'Send',
+        copy: 'Copy',
+        players: 'Players',
+        startGame: 'Start Game',
+        leaveGame: 'Leave Game',
+        endGame: 'End Game',
+        newGame: 'New Game',
+        gameEnded: 'Game Ended!'
+    },
+    es: {
+        welcome: '¡Bienvenido!',
+        createGame: 'Crear Juego',
+        joinGame: 'Unirse',
+        profile: 'Perfil',
+        settings: 'Ajustes',
+        back: 'Atrás',
+        save: 'Guardar',
+        changeAvatar: 'Cambiar Avatar',
+        enterName: 'Ingrese nombre',
+        enterGameId: 'ID del Juego',
+        enterMessage: 'Ingrese mensaje',
+        send: 'Enviar',
+        copy: 'Copiar',
+        players: 'Jugadores',
+        startGame: 'Iniciar Juego',
+        leaveGame: 'Salir del Juego',
+        endGame: 'Terminar Juego',
+        newGame: 'Nuevo Juego',
+        gameEnded: '¡Juego Terminado!'
+    }
+};
+
+let currentLanguage = localStorage.getItem('language') || 'ru';
+
+function updateLanguage(lang) {
+    currentLanguage = lang;
+    localStorage.setItem('language', lang);
+    translatePage();
+}
+
+function translatePage() {
+    const elements = document.querySelectorAll('[data-translate]');
+    elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[currentLanguage][key]) {
+            element.textContent = translations[currentLanguage][key];
+        }
+    });
+}
+
+// User Profile
+let userProfile = {
+    name: localStorage.getItem('userName') || '',
+    avatar: localStorage.getItem('userAvatar') || '/images/default-avatar.png'
+};
+
+function updateProfile(name, avatar) {
+    userProfile.name = name;
+    userProfile.avatar = avatar;
+    localStorage.setItem('userName', name);
+    localStorage.setItem('userAvatar', avatar);
+    updateProfileUI();
+}
+
+function updateProfileUI() {
+    const profileName = document.getElementById('profileName');
+    const profileAvatar = document.getElementById('profileAvatar');
+    
+    if (profileName) profileName.value = userProfile.name;
+    if (profileAvatar) profileAvatar.src = userProfile.avatar;
+}
+
 // Функции
 function showScreen(screenName) {
     console.log('Showing screen:', screenName);
