@@ -190,30 +190,52 @@ function updateTheme(theme) {
     // Обновляем иконку в хедере
     const themeButton = document.getElementById('themeButton');
     if (themeButton) {
-        const icon = themeButton.querySelector('.button-icon');
-        if (icon) {
-            icon.className = `fas fa-${theme === 'dark' ? 'sun' : 'moon'} button-icon`;
-        }
+        themeButton.querySelector('.button-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
     }
     
     // Обновляем цвета в Telegram WebApp
     if (theme === 'dark') {
-        tg.setHeaderColor('#36393f');
-        tg.setBackgroundColor('#36393f');
+        tg.setHeaderColor('#212121');
+        tg.setBackgroundColor('#212121');
     } else {
-        tg.setHeaderColor('#ffffff');
+        tg.setHeaderColor('#2481cc');
         tg.setBackgroundColor('#ffffff');
+    }
+}
+
+// Функция показа экрана
+function showScreen(screenId) {
+    console.log('Showing screen:', screenId);
+    
+    // Если мы в игре, разрешаем показывать только игровые экраны
+    if (state.isInGame && !['gameScreen', 'waitingScreen'].includes(screenId)) {
+        console.log('Navigation blocked during gameplay');
+        return;
+    }
+    
+    // Скрываем все экраны
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.add('hidden');
+    });
+    
+    // Показываем нужный экран
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) {
+        targetScreen.classList.remove('hidden');
+        console.log('Screen shown:', screenId);
+    } else {
+        console.error('Screen not found:', screenId);
+        // Если экран не найден, показываем главное меню
+        const mainMenu = document.getElementById('mainMenu');
+        if (mainMenu) {
+            mainMenu.classList.remove('hidden');
+        }
     }
 }
 
 // Функция обновления профиля
 function updateProfile(name, avatar) {
     console.log('Updating profile:', { name, avatar });
-    if (!name || !avatar) {
-        console.error('Invalid profile data');
-        return;
-    }
-    
     userProfile.name = name;
     userProfile.avatar = avatar;
     
@@ -337,73 +359,201 @@ function playSound(soundName) {
     }
 }
 
+// Функция для загрузки аватара
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Проверяем тип файла
+    if (!file.type.startsWith('image/')) {
+        tg.showAlert('Пожалуйста, выберите изображение');
+        return;
+    }
+
+    // Проверяем размер файла (максимум 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        tg.showAlert('Размер файла не должен превышать 2MB');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Image = e.target.result;
+        updateProfile(userProfile.name, base64Image);
+        
+        // Обновляем выбранный аватар
+        document.querySelectorAll('.avatar-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
 // Инициализация обработчиков событий
 function initializeEventListeners() {
     console.log('Initializing event listeners...');
 
-    // Обработчик кнопки темы
-    const themeButton = document.getElementById('themeButton');
-    if (themeButton) {
-        themeButton.addEventListener('click', () => {
-            const newTheme = state.theme === 'dark' ? 'light' : 'dark';
-            updateTheme(newTheme);
-        });
-    }
-
-    // Обработчик загрузки аватара
-    const avatarUpload = document.getElementById('avatarUpload');
-    const changeAvatar = document.getElementById('changeAvatar');
-    if (avatarUpload && changeAvatar) {
-        changeAvatar.addEventListener('click', () => {
-            avatarUpload.click();
-        });
-
-        avatarUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                // Проверяем тип файла
-                if (!file.type.startsWith('image/')) {
-                    tg.showAlert('Пожалуйста, выберите изображение');
-                    return;
-                }
-
-                // Проверяем размер файла (максимум 2MB)
-                if (file.size > 2 * 1024 * 1024) {
-                    tg.showAlert('Размер файла не должен превышать 2MB');
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    updateProfile(userProfile.name, e.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    // Обработчики навигации
-    const navButtons = document.querySelectorAll('.nav-button');
-    navButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const screenId = button.getAttribute('data-screen');
-            if (screenId) {
-                showScreen(screenId);
-            }
-        });
-    });
-
-    // Обработчик сохранения имени
-    const saveNameButton = document.getElementById('saveName');
-    if (saveNameButton) {
-        saveNameButton.addEventListener('click', () => {
+    // Сохранение ника
+    const saveNicknameBtn = document.getElementById('saveNickname');
+    if (saveNicknameBtn) {
+        saveNicknameBtn.addEventListener('click', () => {
             const nameInput = document.getElementById('profileName');
             if (nameInput) {
                 const newName = nameInput.value.trim();
                 if (newName) {
                     updateProfile(newName, userProfile.avatar);
+                    console.log('Nickname saved:', newName);
                 }
+            }
+        });
+    }
+
+    // Создание игры
+    const createGameBtn = document.getElementById('createGame');
+    if (createGameBtn) {
+        createGameBtn.addEventListener('click', () => {
+            console.log('Create game button clicked');
+            createGame();
+        });
+    } else {
+        console.error('Create game button not found');
+    }
+
+    // Присоединение к игре
+    const joinGameBtn = document.getElementById('joinGame');
+    if (joinGameBtn) {
+        joinGameBtn.addEventListener('click', () => {
+            console.log('Join game button clicked');
+            joinGame();
+        });
+    } else {
+        console.error('Join game button not found');
+    }
+
+    // Навигация
+    const mainMenuNav = document.getElementById('mainMenuNav');
+    if (mainMenuNav) {
+        mainMenuNav.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Main menu nav clicked');
+            showScreen('mainMenu');
+        });
+    }
+
+    const createGameNav = document.getElementById('createGameNav');
+    if (createGameNav) {
+        createGameNav.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Create game nav clicked');
+            showScreen('startScreen');
+        });
+    }
+
+    const joinGameNav = document.getElementById('joinGameNav');
+    if (joinGameNav) {
+        joinGameNav.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Join game nav clicked');
+            showScreen('joinScreen');
+        });
+    }
+
+    // Профиль
+    const profileButton = document.getElementById('profileButton');
+    if (profileButton) {
+        profileButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Profile button clicked');
+            showScreen('profileScreen');
+        });
+    }
+
+    const profileNav = document.getElementById('profileNav');
+    if (profileNav) {
+        profileNav.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Profile nav clicked');
+            showScreen('profileScreen');
+        });
+    }
+
+    // Настройки
+    const settingsButton = document.getElementById('settingsButton');
+    if (settingsButton) {
+        settingsButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Settings button clicked');
+            showScreen('settingsScreen');
+        });
+    }
+
+    // Кнопки "Назад"
+    const backButtons = [
+        { id: 'backFromProfile', screen: 'mainMenu' },
+        { id: 'backFromSettings', screen: 'mainMenu' },
+        { id: 'backToMenu1', screen: 'mainMenu' },
+        { id: 'backToMenu2', screen: 'mainMenu' },
+        { id: 'backToMenu3', screen: 'mainMenu' }
+    ];
+
+    backButtons.forEach(button => {
+        const element = document.getElementById(button.id);
+        if (element) {
+            element.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log(`${button.id} clicked`);
+                showScreen(button.screen);
+            });
+        }
+    });
+
+    // Чат
+    const sendMessageBtn = document.getElementById('sendMessage');
+    if (sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', () => {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                if (message.startsWith('/')) {
+                    handleCommand(message);
+                } else {
+                    socket.emit('chatMessage', {
+                        sender: userProfile.name,
+                        text: message
+                    });
+                }
+                messageInput.value = '';
+            }
+        });
+    }
+
+    // Обработка Enter в полях ввода
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const message = e.target.value.trim();
+                if (message) {
+                    if (message.startsWith('/')) {
+                        handleCommand(message);
+                    } else {
+                        socket.emit('chatMessage', {
+                            sender: userProfile.name,
+                            text: message
+                        });
+                    }
+                    e.target.value = '';
+                }
+            }
+        });
+    }
+
+    const gameIdInput = document.getElementById('gameId');
+    if (gameIdInput) {
+        gameIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                joinGame();
             }
         });
     }
@@ -445,7 +595,6 @@ socket.on('error', (error) => {
 socket.on('gameJoined', (data) => {
     console.log('Game joined:', data);
     state.gameId = data.gameId;
-    state.players = data.players;
     showScreen('waitingScreen');
     updatePlayersList(data.players);
     document.getElementById('currentGameId').textContent = data.gameId;
@@ -453,7 +602,6 @@ socket.on('gameJoined', (data) => {
 
 socket.on('gameUpdated', (data) => {
     console.log('Game updated:', data);
-    state.players = data.players;
     updatePlayersList(data.players);
 });
 
@@ -559,6 +707,46 @@ function createGame() {
     });
 }
 
+// Функция отправки сообщения
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    if (!messageInput) {
+        console.error('Message input not found');
+        return;
+    }
+
+    const message = messageInput.value.trim();
+    if (!message) {
+        console.log('Empty message, not sending');
+        return;
+    }
+
+    console.log('Sending message:', message);
+    
+    try {
+        // Отправляем сообщение на сервер
+        socket.emit('chatMessage', {
+            gameId: state.gameId,
+            sender: userProfile.name,
+            text: message,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Добавляем сообщение в чат
+        addChatMessage({
+            sender: userProfile.name,
+            text: message,
+            isOwn: true
+        });
+        
+        // Очищаем поле ввода
+        messageInput.value = '';
+    } catch (error) {
+        console.error('Error sending message:', error);
+        tg.showAlert('Ошибка отправки сообщения. Попробуйте еще раз.');
+    }
+}
+
 // Функция присоединения к игре
 function joinGame() {
     console.log('Joining game...');
@@ -577,6 +765,7 @@ function joinGame() {
     
     console.log('Emitting joinGame event with:', {
         gameId: gameId,
+        playerName: userProfile.name,
         user: {
             id: socket.id,
             name: userProfile.name,
@@ -586,6 +775,7 @@ function joinGame() {
     
     socket.emit('joinGame', {
         gameId: gameId,
+        playerName: userProfile.name,
         user: {
             id: socket.id,
             name: userProfile.name,
@@ -626,45 +816,6 @@ function handleCommand(command) {
                 text: '📖 Доступные команды:\n/start - Начать игру\n/help - Показать это сообщение'
             });
             break;
-    }
-}
-
-// Функция отправки сообщения
-function sendMessage() {
-    const messageInput = document.getElementById('messageInput');
-    if (!messageInput) {
-        console.error('Message input not found');
-        return;
-    }
-
-    const message = messageInput.value.trim();
-    if (!message) {
-        console.log('Empty message, not sending');
-        return;
-    }
-
-    console.log('Sending message:', message);
-    
-    try {
-        // Добавляем сообщение в чат сразу
-        addChatMessage({
-            sender: userProfile.name,
-            text: message,
-            isOwn: true
-        });
-        
-        // Очищаем поле ввода
-        messageInput.value = '';
-        
-        // Отправляем сообщение на сервер
-        socket.emit('chatMessage', {
-            gameId: state.gameId,
-            sender: userProfile.name,
-            text: message
-        });
-    } catch (error) {
-        console.error('Error sending message:', error);
-        tg.showAlert('Ошибка отправки сообщения. Попробуйте еще раз.');
     }
 }
 

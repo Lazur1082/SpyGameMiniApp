@@ -2,140 +2,212 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spy Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Шпион - Игра</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
-        <div class="header-left">
-            <button id="themeButton" class="button">
-                <i class="fas fa-moon button-icon"></i>
+        <h1 class="header-title">Шпион</h1>
+        <div class="header-actions">
+            <button id="themeButton" class="theme-button" aria-label="Сменить тему">
+                <span class="button-icon">🌙</span>
             </button>
-        </div>
-        <div class="header-center">
-            <h1>Spy Game</h1>
-        </div>
-        <div class="header-right">
-            <button id="profileButton" class="button">
-                <img id="headerAvatar" class="header-avatar" src="/images/default-avatar.png" alt="Profile">
+            <button id="profileButton" class="profile-button" aria-label="Профиль">
+                <img id="headerAvatar" src="/images/default-avatar.png" alt="Аватар" class="header-avatar">
+            </button>
+            <button id="settingsButton" class="settings-button" aria-label="Настройки">
+                <span class="button-icon">⚙️</span>
             </button>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Main Menu Screen -->
-        <div id="mainMenu" class="screen">
-            <div class="game-info">
-                <h2>Добро пожаловать в Spy Game!</h2>
-                <p>В этой игре один из игроков становится шпионом, а остальные знают локацию. Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.</p>
-                <div class="button-group">
-                    <button id="showCreateGame" class="button">Создать игру</button>
-                    <button id="showJoinGame" class="button">Присоединиться</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Create Game Screen -->
-        <div id="startScreen" class="screen hidden">
-            <div class="game-info">
-                <h2>Создание игры</h2>
-                <button id="createGame" class="button">Создать игру</button>
-                <button id="backToMenu1" class="button">Назад</button>
-            </div>
-        </div>
-
-        <!-- Join Game Screen -->
-        <div id="joinScreen" class="screen hidden">
-            <div class="game-info">
-                <h2>Присоединение к игре</h2>
-                <input type="text" id="gameId" placeholder="Введите ID игры" class="message-input">
-                <button id="joinGame" class="button">Присоединиться</button>
-                <button id="backToMenu2" class="button">Назад</button>
-            </div>
-        </div>
-
-        <!-- Waiting Screen -->
-        <div id="waitingScreen" class="screen hidden">
-            <div class="game-info">
-                <h2>Ожидание игроков</h2>
-                <div class="game-id">
-                    <span>ID игры: </span>
-                    <span id="currentGameId"></span>
-                    <button id="copyGameId" class="copy-button">Копировать</button>
-                </div>
-                <div id="playersList" class="players-list"></div>
-                <button id="startGame" class="button">Начать игру</button>
-                <button id="backToMenu3" class="button">Назад</button>
-            </div>
-        </div>
-
-        <!-- Game Screen -->
-        <div id="gameScreen" class="screen hidden">
-            <div class="role-info">
-                <h3 id="roleTitle" class="role-title"></h3>
-                <p id="roleDescription" class="role-description"></p>
-            </div>
-            <div class="chat-area">
-                <div id="chatMessages" class="chat-messages"></div>
-                <div class="input-area">
-                    <input type="text" id="messageInput" placeholder="Введите сообщение..." class="message-input">
-                    <button id="sendMessage" class="button">Отправить</button>
-                </div>
-            </div>
-        </div>
-
+    <main class="container">
         <!-- Profile Screen -->
-        <div id="profileScreen" class="screen hidden">
+        <section id="profileScreen" class="screen hidden">
             <div class="profile-content">
                 <div class="profile-avatar">
-                    <img id="profileAvatar" src="/images/default-avatar.png" alt="Profile">
-                    <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
-                    <button id="changeAvatar" class="button">Изменить аватар</button>
+                    <img id="profileAvatar" src="/images/default-avatar.png" alt="Profile Avatar">
+                    <div class="avatar-options">
+                        <button class="avatar-option" data-avatar="/images/avatar1.png">
+                            <img src="/images/avatar1.png" alt="Avatar 1">
+                        </button>
+                        <button class="avatar-option" data-avatar="/images/avatar2.png">
+                            <img src="/images/avatar2.png" alt="Avatar 2">
+                        </button>
+                        <button class="avatar-option" data-avatar="/images/avatar3.png">
+                            <img src="/images/avatar3.png" alt="Avatar 3">
+                        </button>
+                        <button class="avatar-option" data-avatar="/images/avatar4.png">
+                            <img src="/images/avatar4.png" alt="Avatar 4">
+                        </button>
+                    </div>
+                    <button id="uploadAvatar" class="secondary-button">
+                        <span class="button-icon">📤</span>
+                        Загрузить аватар
+                    </button>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
                 </div>
                 <div class="profile-info">
-                    <input type="text" id="profileName" placeholder="Введите имя" class="message-input">
-                    <button id="saveNickname" class="button">Сохранить</button>
-                </div>
-                <div class="profile-stats">
-                    <div class="stat-item">
-                        <span>Игр сыграно:</span>
-                        <span id="gamesPlayed">0</span>
+                    <div class="input-group">
+                        <input type="text" id="profileName" class="input-field" placeholder="Ваше имя">
+                        <button id="saveNickname" class="primary-button">
+                            <span class="button-icon">💾</span>
+                            Сохранить ник
+                        </button>
                     </div>
-                    <div class="stat-item">
-                        <span>Игр выиграно:</span>
-                        <span id="gamesWon">0</span>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Игр сыграно</span>
+                            <span id="gamesPlayed" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Побед</span>
+                            <span id="gamesWon" class="stat-value">0</span>
+                        </div>
                     </div>
                 </div>
-                <button id="backFromProfile" class="button">Назад</button>
             </div>
-        </div>
+            <button id="backFromProfile" class="secondary-button">
+                <span class="button-icon">←</span>
+                Назад
+            </button>
+        </section>
+
+        <!-- Настройки -->
+        <section id="settingsScreen" class="screen settings-screen hidden">
+            <div class="settings-group">
+                <div class="settings-item">
+                    <label for="languageSelect">Язык</label>
+                    <select id="languageSelect" class="language-select">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+            </div>
+            <button id="backFromSettings" class="secondary-button">Назад</button>
+        </section>
+
+        <!-- Основное меню -->
+        <section id="mainMenu" class="screen main-menu-screen">
+            <div class="menu-content">
+                <div class="game-info">
+                    <h2 class="menu-title">Добро пожаловать!</h2>
+                    <div class="info-card">
+                        <h3>О игре</h3>
+                        <p>Шпион - это увлекательная игра на дедукцию, где один игрок становится шпионом, а остальные пытаются его разоблачить.</p>
+                        <div class="rules">
+                            <h4>Правила:</h4>
+                            <ol>
+                                <li>Создайте игру или присоединитесь к существующей</li>
+                                <li>Каждый игрок получает локацию, кроме шпиона</li>
+                                <li>Обсуждайте локацию, не называя её напрямую</li>
+                                <li>Шпион должен угадать локацию</li>
+                                <li>Другие игроки должны вычислить шпиона</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-buttons">
+                    <button id="showCreateGame" class="primary-button">Создать игру</button>
+                    <button id="showJoinGame" class="primary-button">Присоединиться</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Создание игры -->
+        <section id="startScreen" class="screen create-game-screen hidden">
+            <div class="input-group">
+                <button id="createGame" class="primary-button">Создать игру</button>
+            </div>
+            <button id="backToMenu1" class="secondary-button">Назад</button>
+        </section>
+
+        <!-- Присоединение к игре -->
+        <section id="joinScreen" class="screen join-game-screen hidden">
+            <div class="input-group">
+                <input type="text" id="gameId" class="input-field" placeholder="ID игры">
+                <button id="joinGame" class="primary-button">Присоединиться</button>
+            </div>
+            <button id="backToMenu2" class="secondary-button">Назад</button>
+        </section>
+
+        <!-- Ожидание игроков -->
+        <section id="waitingScreen" class="screen lobby-screen hidden">
+            <div class="lobby-content">
+                <div class="game-id">
+                    <span>ID игры:</span>
+                    <span id="currentGameId" class="game-id-value"></span>
+                    <button id="copyGameId" class="copy-button" aria-label="Копировать ID">
+                        <span class="button-icon">📋</span>
+                    </button>
+                </div>
+                <div class="players-container">
+                    <h3>Игроки:</h3>
+                    <div id="playersList" class="players-list"></div>
+                </div>
+                <div class="chat-container">
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" class="message-input" placeholder="Введите сообщение">
+                        <button id="sendMessage" class="send-button">Отправить</button>
+                    </div>
+                </div>
+                <button id="startGame" class="primary-button">Начать игру</button>
+                <button id="backToMenu3" class="secondary-button">Назад</button>
+            </div>
+        </section>
+
+        <!-- Игра -->
+        <section id="gameScreen" class="screen game-screen hidden">
+            <div class="game-content">
+                <div class="game-info">
+                    <h2 id="roleInfo"></h2>
+                    <p id="gameWord"></p>
+                </div>
+                <div class="chat-container">
+                    <div id="gameChatMessages" class="chat-messages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="gameMessageInput" class="message-input" placeholder="Введите сообщение">
+                        <button id="sendGameMessage" class="send-button">Отправить</button>
+                    </div>
+                </div>
+                <button id="endGame" class="primary-button">Завершить игру</button>
+            </div>
+        </section>
+
+        <!-- Результаты игры -->
+        <section id="endScreen" class="screen end-screen hidden">
+            <div class="end-content">
+                <h2>Игра завершена!</h2>
+                <div id="gameResults" class="game-results"></div>
+                <button id="newGame" class="primary-button">Новая игра</button>
+            </div>
+        </section>
     </main>
 
-    <!-- Bottom Navigation -->
-    <nav class="bottom-navigation">
-        <a href="#" id="mainMenuNav" class="nav-button">
-            <i class="fas fa-home nav-icon"></i>
-            <span>Главная</span>
-        </a>
-        <a href="#" id="createGameNav" class="nav-button">
-            <i class="fas fa-plus nav-icon"></i>
-            <span>Создать</span>
-        </a>
-        <a href="#" id="joinGameNav" class="nav-button">
-            <i class="fas fa-user-plus nav-icon"></i>
-            <span>Присоединиться</span>
-        </a>
-        <a href="#" id="profileNav" class="nav-button">
-            <i class="fas fa-user nav-icon"></i>
-            <span>Профиль</span>
-        </a>
+    <nav class="bottom-nav">
+        <button id="mainMenuNav" class="nav-button">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Главная</span>
+        </button>
+        <button id="createGameNav" class="nav-button">
+            <span class="nav-icon">🎮</span>
+            <span class="nav-text">Создать</span>
+        </button>
+        <button id="joinGameNav" class="nav-button">
+            <span class="nav-icon">🔗</span>
+            <span class="nav-text">Присоединиться</span>
+        </button>
+        <button id="profileNav" class="nav-button">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">Профиль</span>
+        </button>
     </nav>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>
 </body>
 </html> 
