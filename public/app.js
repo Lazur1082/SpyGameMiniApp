@@ -363,18 +363,45 @@ function initializeEventListeners() {
     console.log('Initializing event listeners');
     
     // Кнопка создания игры в главном меню
-    document.getElementById('createGameButton').onclick = function() {
-        console.log('Create game button clicked');
-        document.getElementById('mainMenuScreen').classList.add('hidden');
-        document.getElementById('createGameScreen').classList.remove('hidden');
-    };
+    document.getElementById('createGameButton').addEventListener('click', () => {
+        showScreen('createGameScreen');
+    });
     
     // Кнопка присоединения к игре в главном меню
-    document.getElementById('joinGameButton').onclick = function() {
-        console.log('Join game button clicked');
-        document.getElementById('mainMenuScreen').classList.add('hidden');
-        document.getElementById('joinGameScreen').classList.remove('hidden');
-    };
+    document.getElementById('joinGameButton').addEventListener('click', () => {
+        showScreen('joinGameScreen');
+    });
+    
+    // Кнопка создания игры
+    const createGameButton = document.getElementById('createGameButton');
+    if (createGameButton) {
+        createGameButton.onclick = function() {
+            console.log('Create game button clicked');
+            const name = document.getElementById('playerName').value.trim();
+            if (name) {
+                console.log('Creating game with name:', name);
+                socket.emit('createGame', { name });
+            } else {
+                tg.showAlert('Введите ваше имя');
+            }
+        };
+    }
+    
+    // Кнопка присоединения к существующей игре
+    const joinExistingGameButton = document.getElementById('joinExistingGameButton');
+    if (joinExistingGameButton) {
+        joinExistingGameButton.onclick = function() {
+            console.log('Join existing game button clicked');
+            const name = document.getElementById('joinPlayerName').value.trim();
+            const gameId = document.getElementById('gameCode').value.trim();
+            if (name && gameId) {
+                console.log('Joining game:', gameId, 'with name:', name);
+                socket.emit('joinGame', { name, gameId });
+            } else {
+                tg.showAlert('Введите имя и код игры');
+            }
+        };
+    }
     
     // Кнопка темы в хедере
     const themeButton = document.getElementById('themeButton');
