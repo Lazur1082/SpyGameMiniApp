@@ -15,15 +15,6 @@ const tg = window.Telegram?.WebApp || {
 // Инициализация Socket.io
 const socket = io();
 
-// Константы
-const DEFAULT_AVATARS = [
-    '/images/default-avatar.png',
-    '/images/avatar1.png',
-    '/images/avatar2.png',
-    '/images/avatar3.png',
-    '/images/avatar4.png'
-];
-
 // Состояние приложения
 const state = {
     gameId: null,
@@ -35,7 +26,7 @@ const state = {
 // Профиль пользователя
 const userProfile = {
     name: tg.initDataUnsafe?.user?.username || 'Игрок',
-    avatar: DEFAULT_AVATARS[0]
+    avatar: '/images/default-avatar.png'
 };
 
 // Основные функции
@@ -64,7 +55,7 @@ const updatePlayersList = (players) => {
         playerItem.className = 'player-item';
         playerItem.innerHTML = `
             <div class="player-avatar">
-                <img src="${player.avatar || DEFAULT_AVATARS[0]}" alt="${player.name}">
+                <img src="${player.avatar}" alt="${player.name}">
             </div>
             <span class="player-name">${player.name}</span>
             ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
@@ -78,7 +69,7 @@ const addChatMessage = (message) => {
     if (!chatMessages) return;
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${message.isOwn ? 'own' : ''}`;
+    messageDiv.className = `message ${message.sender === userProfile.name ? 'own' : ''}`;
     messageDiv.innerHTML = `
         <div class="message-sender">${message.sender}</div>
         <div class="message-text">${message.text}</div>
@@ -95,9 +86,7 @@ const setupEventListeners = () => {
     if (createGameBtn) {
         createGameBtn.addEventListener('click', () => {
             socket.emit('createGame', {
-                playerName: userProfile.name,
                 user: {
-                    id: socket.id,
                     name: userProfile.name,
                     avatar: userProfile.avatar
                 }
@@ -116,10 +105,8 @@ const setupEventListeners = () => {
             }
             
             socket.emit('joinGame', {
-                gameId: gameId,
-                playerName: userProfile.name,
+                gameId,
                 user: {
-                    id: socket.id,
                     name: userProfile.name,
                     avatar: userProfile.avatar
                 }
@@ -142,19 +129,12 @@ const setupEventListeners = () => {
                 return;
             }
 
-            try {
-                socket.emit('chatMessage', {
-                    gameId: state.gameId,
-                    sender: userProfile.name,
-                    text: message
-                });
-                
-                // Очищаем поле ввода
-                messageInput.value = '';
-            } catch (error) {
-                console.error('Error sending message:', error);
-                tg.showAlert('Ошибка отправки сообщения');
-            }
+            socket.emit('chatMessage', {
+                gameId: state.gameId,
+                text: message
+            });
+            
+            messageInput.value = '';
         });
     }
 
@@ -237,12 +217,18 @@ const setupSocketHandlers = () => {
         });
     });
 
-    socket.on('chatMessage', (data) => {
+    socket.on('playerLeft', (data) => {
+        state.players = state.players.filter(p => p.name !== data.playerName);
+        updatePlayersList(state.players);
+        
         addChatMessage({
-            sender: data.sender,
-            text: data.text,
-            isOwn: data.sender === userProfile.name
+            sender: 'Система',
+            text: `${data.playerName} покинул игру`
         });
+    });
+
+    socket.on('chatMessage', (data) => {
+        addChatMessage(data);
     });
 
     socket.on('gameStarted', (data) => {
@@ -257,28 +243,19 @@ const setupSocketHandlers = () => {
             text: `Игра началась! Ваша роль: ${data.role}`
         });
     });
-
-    socket.on('gameEnded', (data) => {
-        state.isInGame = false;
-        showScreen('endScreen');
-        
-        document.querySelector('.bottom-navigation').style.display = 'flex';
-        document.querySelector('.header').style.display = 'flex';
-        
-        addChatMessage({
-            sender: 'Система',
-            text: `Игра завершена! Шпион: ${data.spy}, Локация: ${data.location}`
-        });
-    });
 };
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
+    // Инициализация Telegram WebApp
     tg.ready();
     tg.expand();
     tg.enableClosingConfirmation();
     
+    // Установка обработчиков
     setupSocketHandlers();
     setupEventListeners();
+    
+    // Показываем главное меню
     showScreen('mainMenu');
 });
