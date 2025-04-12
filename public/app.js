@@ -20,12 +20,6 @@ try {
     };
 }
 
-// Настройки
-const settings = {
-    theme: 'light',
-    sound: true
-};
-
 // Socket.io
 const socket = io();
 
@@ -89,8 +83,6 @@ const buttons = {
 
 // Состояние приложения
 const state = {
-    theme: localStorage.getItem('theme') || 'light',
-    sound: localStorage.getItem('sound') === 'true',
     gameId: null,
     playerName: null,
     role: null,
@@ -111,11 +103,8 @@ const translations = {
         welcome: 'Добро пожаловать!',
         createGame: 'Создать игру',
         joinGame: 'Присоединиться',
-        profile: 'Профиль',
         settings: 'Настройки',
         back: 'Назад',
-        save: 'Сохранить',
-        changeAvatar: 'Изменить',
         enterName: 'Введите имя',
         enterGameId: 'ID игры',
         enterMessage: 'Введите сообщение',
@@ -123,7 +112,6 @@ const translations = {
         copy: 'Копировать',
         players: 'Игроки',
         startGame: 'Начать игру',
-        leaveGame: 'Покинуть игру',
         endGame: 'Завершить игру',
         newGame: 'Новая игра',
         gameEnded: 'Игра завершена!'
@@ -132,11 +120,8 @@ const translations = {
         welcome: 'Welcome!',
         createGame: 'Create Game',
         joinGame: 'Join Game',
-        profile: 'Profile',
         settings: 'Settings',
         back: 'Back',
-        save: 'Save',
-        changeAvatar: 'Change Avatar',
         enterName: 'Enter name',
         enterGameId: 'Game ID',
         enterMessage: 'Enter message',
@@ -144,7 +129,6 @@ const translations = {
         copy: 'Copy',
         players: 'Players',
         startGame: 'Start Game',
-        leaveGame: 'Leave Game',
         endGame: 'End Game',
         newGame: 'New Game',
         gameEnded: 'Game Ended!'
@@ -153,11 +137,8 @@ const translations = {
         welcome: '¡Bienvenido!',
         createGame: 'Crear Juego',
         joinGame: 'Unirse',
-        profile: 'Perfil',
         settings: 'Ajustes',
         back: 'Atrás',
-        save: 'Guardar',
-        changeAvatar: 'Cambiar Avatar',
         enterName: 'Ingrese nombre',
         enterGameId: 'ID del Juego',
         enterMessage: 'Ingrese mensaje',
@@ -165,7 +146,6 @@ const translations = {
         copy: 'Copiar',
         players: 'Jugadores',
         startGame: 'Iniciar Juego',
-        leaveGame: 'Salir del Juego',
         endGame: 'Terminar Juego',
         newGame: 'Nuevo Juego',
         gameEnded: '¡Juego Terminado!'
@@ -217,21 +197,23 @@ function showScreen(screenName) {
     console.log('Showing screen:', screenName);
     
     // Скрываем все экраны
-    Object.values(elements).forEach(element => {
-        if (element && element.classList && element.classList.contains('screen')) {
-            element.classList.add('hidden');
-        }
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.add('hidden');
     });
 
     // Показываем нужный экран
-    const targetScreen = elements[screenName + 'Screen'] || elements[screenName + 'Menu'];
+    const targetScreen = document.getElementById(screenName + 'Screen') || 
+                        document.getElementById(screenName + 'Menu');
     if (targetScreen) {
         targetScreen.classList.remove('hidden');
     }
 }
 
 function updatePlayersList(players) {
-    elements.playersList.innerHTML = '';
+    const playersList = document.getElementById('playersList');
+    if (!playersList) return;
+    
+    playersList.innerHTML = '';
     players.forEach(player => {
         const playerItem = document.createElement('div');
         playerItem.className = 'player-item';
@@ -241,19 +223,22 @@ function updatePlayersList(players) {
             <span class="player-name">${player.name}</span>
             ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
         `;
-        elements.playersList.appendChild(playerItem);
+        playersList.appendChild(playerItem);
     });
 }
 
 function addChatMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${message.sender === state.playerName ? 'own' : ''}`;
     messageDiv.innerHTML = `
         <div class="message-sender">${message.sender}</div>
         <div class="message-text">${message.text}</div>
     `;
-    elements.chatMessages.appendChild(messageDiv);
-    elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
     
     if (state.sound && message.sender !== state.playerName) {
         sounds.message.play().catch(() => {});
@@ -271,34 +256,6 @@ function playSound(soundName) {
     } catch (error) {
         console.error('Error initializing sound:', error);
     }
-}
-
-// Функция обновления темы
-function updateTheme(theme) {
-    console.log('Updating theme to:', theme);
-    state.theme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-    
-    // Обновляем иконку в хедере
-    const themeButton = document.getElementById('themeButton');
-    if (themeButton) {
-        themeButton.querySelector('.button-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
-    }
-    
-    // Обновляем цвета в Telegram WebApp
-    if (theme === 'dark') {
-        tg.setHeaderColor('#212121');
-        tg.setBackgroundColor('#212121');
-    } else {
-        tg.setHeaderColor('#2481cc');
-        tg.setBackgroundColor('#ffffff');
-    }
-}
-
-function updateSound(sound) {
-    state.sound = sound;
-    localStorage.setItem('sound', sound);
 }
 
 // Инициализация обработчиков событий
@@ -339,6 +296,22 @@ function initializeEventListeners() {
     document.getElementById('backToMenu3').addEventListener('click', () => {
         console.log('Back to menu 3 clicked');
         showScreen('main');
+    });
+
+    // Нижняя навигация
+    document.getElementById('createGameNav').addEventListener('click', () => {
+        console.log('Create game nav clicked');
+        showScreen('start');
+    });
+
+    document.getElementById('joinGameNav').addEventListener('click', () => {
+        console.log('Join game nav clicked');
+        showScreen('join');
+    });
+
+    document.getElementById('settingsNav').addEventListener('click', () => {
+        console.log('Settings nav clicked');
+        showScreen('settings');
     });
 
     // Кнопки игры
@@ -388,15 +361,10 @@ function initializeEventListeners() {
         }
     });
 
-    // Настройки
-    document.getElementById('themeToggle').addEventListener('change', (e) => {
-        console.log('Theme toggle changed:', e.target.checked);
-        updateTheme(e.target.checked ? 'dark' : 'light');
-    });
-
-    document.getElementById('soundToggle').addEventListener('change', (e) => {
-        console.log('Sound toggle changed:', e.target.checked);
-        updateSound(e.target.checked);
+    // Язык
+    document.getElementById('languageSelect').addEventListener('change', (e) => {
+        console.log('Language changed:', e.target.value);
+        updateLanguage(e.target.value);
     });
 
     // Обработка нажатия Enter в полях ввода
@@ -543,13 +511,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Инициализация обработчиков событий
     initializeEventListeners();
     
-    // Установка начальной темы
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    updateTheme(savedTheme);
-    
-    // Установка начальных настроек звука
-    const savedSound = localStorage.getItem('sound') === 'true';
-    updateSound(savedSound);
+    // Установка начального языка
+    const savedLanguage = localStorage.getItem('language') || 'ru';
+    updateLanguage(savedLanguage);
     
     // Показываем главное меню
     showScreen('main');

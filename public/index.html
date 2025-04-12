@@ -12,9 +12,6 @@
     <header class="header">
         <h1 class="header-title">Шпион</h1>
         <div class="header-actions">
-            <button id="themeButton" class="theme-button" aria-label="Переключить тему">
-                <span class="button-icon">🌙</span>
-            </button>
             <button id="settingsButton" class="settings-button" aria-label="Настройки">
                 <span class="button-icon">⚙️</span>
             </button>
@@ -26,18 +23,12 @@
         <section id="settingsScreen" class="screen settings-screen hidden">
             <div class="settings-group">
                 <div class="settings-item">
-                    <label for="themeToggle">Темная тема</label>
-                    <label class="theme-switch">
-                        <input type="checkbox" id="themeToggle">
-                        <span class="theme-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item">
-                    <label for="soundToggle">Звук</label>
-                    <label class="theme-switch">
-                        <input type="checkbox" id="soundToggle" checked>
-                        <span class="theme-slider"></span>
-                    </label>
+                    <label for="languageSelect">Язык</label>
+                    <select id="languageSelect" class="language-select">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
                 </div>
             </div>
             <button id="backFromSettings" class="secondary-button">Назад</button>
@@ -127,6 +118,21 @@
             </div>
         </section>
     </main>
+
+    <nav class="bottom-nav">
+        <button id="createGameNav" class="nav-button">
+            <span class="nav-icon">🎮</span>
+            <span class="nav-text">Создать</span>
+        </button>
+        <button id="joinGameNav" class="nav-button">
+            <span class="nav-icon">🔗</span>
+            <span class="nav-text">Присоединиться</span>
+        </button>
+        <button id="settingsNav" class="nav-button">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text">Настройки</span>
+        </button>
+    </nav>
 
     <script src="app.js"></script>
 </body>
