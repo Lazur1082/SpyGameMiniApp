@@ -102,52 +102,52 @@ body {
 
 /* Header */
 .header {
-    background-color: var(--discord-secondary);
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 50px;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 100;
-}
-
-.header-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.header-actions {
+    height: 60px;
+    background-color: var(--discord-secondary);
     display: flex;
-    gap: var(--spacing-medium);
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header-left, .header-center, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header h1 {
+    color: var(--discord-text);
+    font-size: 1.2rem;
+    margin: 0;
 }
 
 /* Theme Button */
-.theme-button {
+#themeButton {
     background: none;
     border: none;
-    color: var(--text-primary);
+    color: var(--discord-text);
     cursor: pointer;
-    padding: var(--spacing-small);
+    padding: 8px;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background-color 0.2s;
 }
 
-.theme-button:hover {
-    background-color: var(--hover-color);
+#themeButton:hover {
+    background-color: var(--discord-tertiary);
 }
 
-.theme-button .button-icon {
-    font-size: 1.5rem;
+#themeButton .button-icon {
+    font-size: 1.2rem;
 }
 
 /* Buttons */
@@ -679,11 +679,14 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
+    height: 60px;
     background-color: var(--discord-secondary);
-    padding: 10px;
     display: flex;
+    align-items: center;
     justify-content: space-around;
-    box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+    padding: 0 10px;
+    z-index: 1000;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .nav-button {
@@ -692,16 +695,19 @@ body {
     align-items: center;
     color: var(--discord-text-secondary);
     text-decoration: none;
-    font-size: 12px;
-    gap: 4px;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
 }
 
-.nav-button.active {
+.nav-button:hover {
     color: var(--discord-text);
+    background-color: var(--discord-tertiary);
 }
 
 .nav-icon {
-    font-size: 20px;
+    font-size: 1.2rem;
+    margin-bottom: 4px;
 }
 
 .nav-text {
@@ -724,16 +730,16 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-medium);
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .profile-avatar img {
     width: 120px;
     height: 120px;
     border-radius: 50%;
+    border: 3px solid var(--discord-accent);
     object-fit: cover;
-    border: 3px solid var(--primary-color);
-    box-shadow: 0 4px 12px var(--shadow-color);
     background-color: transparent;
 }
 
@@ -871,14 +877,12 @@ body {
 
 /* Header Avatar */
 .header-avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    border: 2px solid var(--primary-color);
-    background-color: transparent;
     overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.2s;
+    border: 2px solid var(--discord-accent);
+    background-color: transparent;
 }
 
 .header-avatar img {
@@ -944,16 +948,16 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-medium);
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .profile-avatar img {
     width: 120px;
     height: 120px;
     border-radius: 50%;
+    border: 3px solid var(--discord-accent);
     object-fit: cover;
-    border: 3px solid var(--primary-color);
-    box-shadow: 0 4px 12px var(--shadow-color);
     background-color: transparent;
 }
 
@@ -1079,10 +1083,14 @@ body {
 
 /* Main content area */
 .main-content {
-    display: flex;
-    height: calc(100vh - 50px);
-    margin-top: 50px;
-    overflow: hidden;
+    position: fixed;
+    top: 60px;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: var(--discord-bg);
 }
 
 /* Chat area */
@@ -1155,4 +1163,48 @@ body {
 .button:disabled {
     background-color: var(--discord-secondary);
     cursor: not-allowed;
+}
+
+/* Avatar Upload */
+#avatarUpload {
+    display: none;
+}
+
+#changeAvatar {
+    background-color: var(--discord-accent);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#changeAvatar:hover {
+    background-color: var(--discord-accent-hover);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1rem;
+    }
+    
+    .nav-text {
+        display: none;
+    }
+    
+    .nav-button {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 0 10px;
+    }
+    
+    .main-content {
+        padding: 10px;
+    }
 }

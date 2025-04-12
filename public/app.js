@@ -190,7 +190,10 @@ function updateTheme(theme) {
     // Обновляем иконку в хедере
     const themeButton = document.getElementById('themeButton');
     if (themeButton) {
-        themeButton.querySelector('.button-icon').className = `fas fa-${theme === 'dark' ? 'sun' : 'moon'} button-icon`;
+        const icon = themeButton.querySelector('.button-icon');
+        if (icon) {
+            icon.className = `fas fa-${theme === 'dark' ? 'sun' : 'moon'} button-icon`;
+        }
     }
     
     // Обновляем цвета в Telegram WebApp
@@ -359,36 +362,6 @@ function playSound(soundName) {
     }
 }
 
-// Функция для загрузки аватара
-function handleAvatarUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Проверяем тип файла
-    if (!file.type.startsWith('image/')) {
-        tg.showAlert('Пожалуйста, выберите изображение');
-        return;
-    }
-
-    // Проверяем размер файла (максимум 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-        tg.showAlert('Размер файла не должен превышать 2MB');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const base64Image = e.target.result;
-        updateProfile(userProfile.name, base64Image);
-        
-        // Обновляем выбранный аватар
-        document.querySelectorAll('.avatar-option').forEach(opt => {
-            opt.classList.remove('selected');
-        });
-    };
-    reader.readAsDataURL(file);
-}
-
 // Инициализация обработчиков событий
 function initializeEventListeners() {
     console.log('Initializing event listeners...');
@@ -554,6 +527,35 @@ function initializeEventListeners() {
         gameIdInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 joinGame();
+            }
+        });
+    }
+
+    // Обработчик кнопки темы
+    const themeButton = document.getElementById('themeButton');
+    if (themeButton) {
+        themeButton.addEventListener('click', () => {
+            const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+            updateTheme(newTheme);
+        });
+    }
+
+    // Обработчик загрузки аватара
+    const avatarUpload = document.getElementById('avatarUpload');
+    const changeAvatar = document.getElementById('changeAvatar');
+    if (avatarUpload && changeAvatar) {
+        changeAvatar.addEventListener('click', () => {
+            avatarUpload.click();
+        });
+
+        avatarUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    updateProfile(userProfile.name, e.target.result);
+                };
+                reader.readAsDataURL(file);
             }
         });
     }
