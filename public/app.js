@@ -168,6 +168,8 @@ function updateTheme(theme) {
     
     // Обновляем состояние переключателя
     const themeToggle = document.getElementById('themeToggle');
+    const themeButton = document.getElementById('themeButton');
+    
     if (themeToggle) {
         themeToggle.checked = theme === 'dark';
         
@@ -178,6 +180,10 @@ function updateTheme(theme) {
             sun.style.opacity = theme === 'light' ? '1' : '0';
             moon.style.opacity = theme === 'dark' ? '1' : '0';
         }
+    }
+    
+    if (themeButton) {
+        themeButton.querySelector('.button-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
     }
     
     // Обновляем цвета в Telegram WebApp
@@ -199,7 +205,17 @@ function updateSound(sound) {
 function initializeEventListeners() {
     console.log('Initializing event listeners');
     
-    // Переключатель темы
+    // Кнопка темы в хедере
+    const themeButton = document.getElementById('themeButton');
+    if (themeButton) {
+        themeButton.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            updateTheme(newTheme);
+        });
+    }
+    
+    // Переключатель темы в настройках
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         // Устанавливаем начальное состояние
