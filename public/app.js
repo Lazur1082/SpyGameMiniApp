@@ -38,7 +38,14 @@ const translations = {
         notifications: 'Уведомления',
         theme: 'Тема',
         darkTheme: 'Темная',
-        lightTheme: 'Светлая'
+        lightTheme: 'Светлая',
+        lobby: 'Лобби',
+        copyGameId: 'Копировать ID',
+        waitingForPlayers: 'Ожидание игроков...',
+        playerJoined: 'присоединился к игре',
+        playerLeft: 'покинул игру',
+        admin: 'Админ',
+        gameIdCopied: 'ID игры скопирован'
     },
     en: {
         welcome: 'Welcome to Spy Game!',
@@ -57,7 +64,14 @@ const translations = {
         notifications: 'Notifications',
         theme: 'Theme',
         darkTheme: 'Dark',
-        lightTheme: 'Light'
+        lightTheme: 'Light',
+        lobby: 'Lobby',
+        copyGameId: 'Copy ID',
+        waitingForPlayers: 'Waiting for players...',
+        playerJoined: 'joined the game',
+        playerLeft: 'left the game',
+        admin: 'Admin',
+        gameIdCopied: 'Game ID copied'
     },
     es: {
         welcome: '¡Bienvenido a Spy Game!',
@@ -76,7 +90,14 @@ const translations = {
         notifications: 'Notificaciones',
         theme: 'Tema',
         darkTheme: 'Oscuro',
-        lightTheme: 'Claro'
+        lightTheme: 'Claro',
+        lobby: 'Sala de espera',
+        copyGameId: 'Copiar ID',
+        waitingForPlayers: 'Esperando jugadores...',
+        playerJoined: 'se unió al juego',
+        playerLeft: 'salió del juego',
+        admin: 'Admin',
+        gameIdCopied: 'ID del juego copiado'
     }
 };
 
@@ -86,14 +107,18 @@ const elements = {
         home: document.getElementById('homeSection'),
         create: document.getElementById('createGameSection'),
         join: document.getElementById('joinGameSection'),
-        settings: document.getElementById('settingsSection')
+        settings: document.getElementById('settingsSection'),
+        lobby: document.getElementById('lobbySection')
     },
     navItems: document.querySelectorAll('.nav-item'),
     themeToggle: document.getElementById('themeToggle'),
     languageSelect: document.getElementById('languageSelect'),
     themeSelect: document.getElementById('themeSelect'),
     soundToggle: document.getElementById('soundToggle'),
-    notificationsToggle: document.getElementById('notificationsToggle')
+    notificationsToggle: document.getElementById('notificationsToggle'),
+    gameId: document.getElementById('gameId'),
+    playersList: document.getElementById('playersList'),
+    copyGameIdBtn: document.getElementById('copyGameIdBtn')
 };
 
 // Functions
@@ -150,6 +175,21 @@ function joinGame() {
     socket.emit('joinGame', { gameCode });
 }
 
+function updatePlayersList(players) {
+    elements.playersList.innerHTML = players.map(player => `
+        <div class="player-item">
+            <div class="player-avatar">${player.name.charAt(0)}</div>
+            <span class="player-name">${player.name}</span>
+            ${player.isAdmin ? '<span class="admin-badge" data-i18n="admin">Админ</span>' : ''}
+        </div>
+    `).join('');
+    
+    // Update translations for admin badges
+    document.querySelectorAll('.admin-badge').forEach(badge => {
+        badge.textContent = translations[state.currentLanguage].admin;
+    });
+}
+
 // Event Listeners
 elements.navItems.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -198,6 +238,18 @@ document.querySelectorAll('.back-to-home').forEach(button => {
     });
 });
 
+elements.copyGameIdBtn.addEventListener('click', () => {
+    if (state.gameId) {
+        navigator.clipboard.writeText(state.gameId)
+            .then(() => {
+                alert(translations[state.currentLanguage].gameIdCopied || 'ID игры скопирован');
+            })
+            .catch(err => {
+                console.error('Failed to copy game ID:', err);
+            });
+    }
+});
+
 // Socket.io event handlers
 socket.on('connect', () => {
     console.log('Connected to server');
@@ -206,17 +258,40 @@ socket.on('connect', () => {
 socket.on('gameCreated', (data) => {
     state.gameId = data.gameId;
     state.isAdmin = true;
+    elements.gameId.textContent = data.gameId;
     showSection('lobby');
 });
 
 socket.on('gameJoined', (data) => {
     state.gameId = data.gameId;
     state.isAdmin = false;
+    elements.gameId.textContent = data.gameId;
     showSection('lobby');
 });
 
 socket.on('error', (error) => {
     alert(error.message);
+});
+
+socket.on('updatePlayers', (data) => {
+    state.players = data.players;
+    updatePlayersList(data.players);
+    
+    // Show/hide start game button based on admin status
+    const startGameBtn = document.getElementById('startGameBtn');
+    startGameBtn.style.display = state.isAdmin ? 'block' : 'none';
+});
+
+socket.on('playerJoined', (data) => {
+    if (state.settings.notifications) {
+        alert(`${data.playerName} ${translations[state.currentLanguage].playerJoined}`);
+    }
+});
+
+socket.on('playerLeft', (data) => {
+    if (state.settings.notifications) {
+        alert(`${data.playerName} ${translations[state.currentLanguage].playerLeft}`);
+    }
 });
 
 // Initialize
@@ -243,4 +318,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Show home section
     showSection('home');
+    
+    // Add translations for admin badge
+    translations.ru.admin = 'Админ';
+    translations.en.admin = 'Admin';
+    translations.es.admin = 'Admin';
+    
+    // Add translation for game ID copied message
+    translations.ru.gameIdCopied = 'ID игры скопирован';
+    translations.en.gameIdCopied = 'Game ID copied';
+    translations.es.gameIdCopied = 'ID del juego copiado';
 });
