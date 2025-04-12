@@ -95,7 +95,8 @@ const state = {
     playerName: null,
     role: null,
     players: [],
-    messages: []
+    messages: [],
+    language: localStorage.getItem('language') || 'ru'
 };
 
 // Звуковые эффекты
@@ -103,6 +104,105 @@ const sounds = {
     message: new Audio('/sounds/message.mp3'),
     join: new Audio('/sounds/join.mp3'),
     leave: new Audio('/sounds/leave.mp3')
+};
+
+// Локализация
+const translations = {
+    ru: {
+        gameTitle: 'Шпион',
+        gameDescription: 'Увлекательная игра для компании друзей',
+        createGame: 'Создать игру',
+        joinGame: 'Присоединиться',
+        back: 'Назад',
+        startGame: 'Начать игру',
+        leaveLobby: 'Покинуть лобби',
+        endGame: 'Завершить игру',
+        yourName: 'Ваше имя',
+        gameCode: 'Код игры',
+        gameCodeLabel: 'Код игры:',
+        copyCode: 'Копировать код',
+        players: 'Игроки',
+        yourRole: 'Ваша роль',
+        enterMessage: 'Введите сообщение...',
+        send: 'Отправить',
+        language: 'Язык'
+    },
+    en: {
+        gameTitle: 'Spy',
+        gameDescription: 'An exciting game for a group of friends',
+        createGame: 'Create Game',
+        joinGame: 'Join Game',
+        back: 'Back',
+        startGame: 'Start Game',
+        leaveLobby: 'Leave Lobby',
+        endGame: 'End Game',
+        yourName: 'Your Name',
+        gameCode: 'Game Code',
+        gameCodeLabel: 'Game Code:',
+        copyCode: 'Copy Code',
+        players: 'Players',
+        yourRole: 'Your Role',
+        enterMessage: 'Enter message...',
+        send: 'Send',
+        language: 'Language'
+    },
+    es: {
+        gameTitle: 'Espía',
+        gameDescription: 'Un juego emocionante para un grupo de amigos',
+        createGame: 'Crear Juego',
+        joinGame: 'Unirse al Juego',
+        back: 'Atrás',
+        startGame: 'Comenzar Juego',
+        leaveLobby: 'Salir del Lobby',
+        endGame: 'Terminar Juego',
+        yourName: 'Tu Nombre',
+        gameCode: 'Código del Juego',
+        gameCodeLabel: 'Código del Juego:',
+        copyCode: 'Copiar Código',
+        players: 'Jugadores',
+        yourRole: 'Tu Rol',
+        enterMessage: 'Escribe un mensaje...',
+        send: 'Enviar',
+        language: 'Idioma'
+    },
+    fr: {
+        gameTitle: 'Espion',
+        gameDescription: 'Un jeu passionnant pour un groupe d\'amis',
+        createGame: 'Créer une Partie',
+        joinGame: 'Rejoindre une Partie',
+        back: 'Retour',
+        startGame: 'Commencer la Partie',
+        leaveLobby: 'Quitter le Lobby',
+        endGame: 'Terminer la Partie',
+        yourName: 'Votre Nom',
+        gameCode: 'Code de la Partie',
+        gameCodeLabel: 'Code de la Partie:',
+        copyCode: 'Copier le Code',
+        players: 'Joueurs',
+        yourRole: 'Votre Rôle',
+        enterMessage: 'Entrez un message...',
+        send: 'Envoyer',
+        language: 'Langue'
+    },
+    de: {
+        gameTitle: 'Spion',
+        gameDescription: 'Ein spannendes Spiel für eine Gruppe von Freunden',
+        createGame: 'Spiel Erstellen',
+        joinGame: 'Spiel Beitreten',
+        back: 'Zurück',
+        startGame: 'Spiel Starten',
+        leaveLobby: 'Lobby Verlassen',
+        endGame: 'Spiel Beenden',
+        yourName: 'Dein Name',
+        gameCode: 'Spielcode',
+        gameCodeLabel: 'Spielcode:',
+        copyCode: 'Code Kopieren',
+        players: 'Spieler',
+        yourRole: 'Deine Rolle',
+        enterMessage: 'Nachricht eingeben...',
+        send: 'Senden',
+        language: 'Sprache'
+    }
 };
 
 // Функции
@@ -141,10 +241,25 @@ function updatePlayersList(players) {
 function addChatMessage(message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${message.sender === state.playerName ? 'own' : ''}`;
-    messageDiv.innerHTML = `
+    
+    let messageContent = `
         <div class="message-sender">${message.sender}</div>
-        <div class="message-text">${message.text}</div>
     `;
+    
+    if (message.text) {
+        messageContent += `<div class="message-text">${message.text}</div>`;
+    }
+    
+    if (message.photo) {
+        messageContent += `
+            <div class="message-photo-container">
+                <img src="${message.photo}" alt="Фото" class="message-photo">
+                ${message.caption ? `<div class="message-photo-caption">${message.caption}</div>` : ''}
+            </div>
+        `;
+    }
+    
+    messageDiv.innerHTML = messageContent;
     elements.chatMessages.appendChild(messageDiv);
     elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
     
@@ -194,9 +309,47 @@ function updateSound(sound) {
     localStorage.setItem('sound', sound);
 }
 
+// Функция обновления языка
+function updateLanguage(lang) {
+    console.log('Updating language to:', lang);
+    state.language = lang;
+    document.documentElement.lang = lang;
+    localStorage.setItem('language', lang);
+    
+    const t = translations[lang];
+    
+    // Обновляем тексты
+    document.querySelector('.menu-title').textContent = t.gameTitle;
+    document.querySelector('.menu-description').textContent = t.gameDescription;
+    document.getElementById('createGameButton').textContent = t.createGame;
+    document.getElementById('joinGameButton').textContent = t.joinGame;
+    document.getElementById('backFromSettings').textContent = t.back;
+    document.getElementById('startGameButton').textContent = t.startGame;
+    document.getElementById('leaveLobbyButton').textContent = t.leaveLobby;
+    document.getElementById('endGameButton').textContent = t.endGame;
+    document.getElementById('playerName').placeholder = t.yourName;
+    document.getElementById('joinPlayerName').placeholder = t.yourName;
+    document.getElementById('gameCode').placeholder = t.gameCode;
+    document.querySelector('.game-id span').textContent = t.gameCodeLabel;
+    document.getElementById('copyGameCode').ariaLabel = t.copyCode;
+    document.querySelector('.players-container h3').textContent = t.players;
+    document.querySelector('.role-display h2').textContent = t.yourRole;
+    document.getElementById('messageInput').placeholder = t.enterMessage;
+    document.getElementById('sendMessageButton').ariaLabel = t.send;
+    document.querySelector('.settings-item label').textContent = t.language;
+}
+
 // Обработчики событий
 function initializeEventListeners() {
     console.log('Initializing event listeners');
+    
+    // Выбор языка
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        languageSelect.addEventListener('change', (e) => {
+            updateLanguage(e.target.value);
+        });
+    }
     
     // Кнопка темы в хедере
     const themeButton = document.getElementById('themeButton');
@@ -354,6 +507,33 @@ function initializeEventListeners() {
             updateSound(e.target.checked);
         });
     }
+
+    // Кнопка отправки фото
+    const sendPhotoButton = document.getElementById('sendPhotoButton');
+    if (sendPhotoButton) {
+        sendPhotoButton.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const photoData = e.target.result;
+                        const caption = prompt('Введите подпись к фото (необязательно):');
+                        socket.emit('chatMessage', {
+                            text: '',
+                            photo: photoData,
+                            caption: caption
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        });
+    }
 }
 
 // Обработчики событий Socket.io
@@ -435,8 +615,8 @@ socket.on('gameStarted', ({ role, location }) => {
     playSound('start');
 });
 
-socket.on('chatMessage', ({ sender, text }) => {
-    addChatMessage({ sender, text });
+socket.on('chatMessage', (message) => {
+    addChatMessage(message);
 });
 
 socket.on('gameEnded', ({ spy, location }) => {
@@ -459,6 +639,42 @@ function initializeSound() {
             localStorage.setItem('sound', state.sound);
             console.log('Sound setting changed:', state.sound);
         });
+    }
+}
+
+// Инициализация приложения
+function initializeApp() {
+    try {
+        // Инициализация Telegram WebApp
+        tg.ready();
+        tg.expand();
+        
+        // Устанавливаем тему
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        updateTheme(savedTheme);
+        
+        // Устанавливаем язык
+        const savedLanguage = localStorage.getItem('language') || 'ru';
+        updateLanguage(savedLanguage);
+        
+        // Устанавливаем выбранный язык в селекте
+        const languageSelect = document.getElementById('languageSelect');
+        if (languageSelect) {
+            languageSelect.value = savedLanguage;
+        }
+        
+        // Подключаемся к серверу
+        socket.connect();
+        
+        // Initialize sound
+        initializeSound();
+    } catch (error) {
+        console.error('Ошибка инициализации:', error);
+        try {
+            tg.showAlert('Произошла ошибка при загрузке приложения');
+        } catch (e) {
+            alert('Произошла ошибка при загрузке приложения');
+        }
     }
 }
 
@@ -489,11 +705,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Показываем главное меню
         showScreen('main');
         
-        // Подключаемся к серверу
-        socket.connect();
-        
-        // Initialize sound
-        initializeSound();
+        // Инициализация приложения
+        initializeApp();
     } catch (error) {
         console.error('Ошибка инициализации:', error);
         try {
