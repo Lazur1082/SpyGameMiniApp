@@ -139,69 +139,33 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Обработчик начала игры
+    // Начало игры
     socket.on('startGame', ({ gameId }) => {
-        const game = games.get(gameId);
-        if (game && game.players.length >= 3) {
-            // Выбираем случайную локацию
-            const location = locations[Math.floor(Math.random() * locations.length)];
-            
-            // Выбираем случайного шпиона
-            const spyIndex = Math.floor(Math.random() * game.players.length);
-            
-            // Отправляем роли игрокам
-            game.players.forEach((player, index) => {
-                const role = index === spyIndex ? 'spy' : 'civilian';
-                const playerSocket = io.sockets.sockets.get(player.id);
-                if (playerSocket) {
-                    playerSocket.emit('gameStarted', { role, location });
-                }
-            });
-            
-            // Отправляем сообщение с фото и кнопкой
-            const message = {
-                type: 'gameStart',
-                photo: 'https://example.com/game-start.jpg', // Замените на реальный URL фото
-                caption: 'Игра началась!',
-                buttons: [
-                    {
-                        text: 'Правила игры',
-                        callback_data: 'rules'
-                    },
-                    {
-                        text: 'Начать обсуждение',
-                        callback_data: 'start_discussion'
-                    }
-                ]
-            };
-            
-            io.to(gameId).emit('gameMessage', message);
-            
-            // Удаляем игру из списка активных
-            games.delete(gameId);
-        }
-    });
-
-    // Обработчик нажатия на inline кнопку
-    socket.on('buttonClick', ({ gameId, buttonId }) => {
-        const game = games.get(gameId);
-        if (game) {
-            switch (buttonId) {
-                case 'rules':
-                    const rulesMessage = {
-                        type: 'rules',
-                        text: 'Правила игры:\n1. Один игрок - шпион\n2. Остальные - мирные жители\n3. Шпион не знает локацию\n4. Мирные жители знают локацию\n5. Обсуждайте локацию, не называя её\n6. Шпион должен угадать локацию'
-                    };
-                    io.to(gameId).emit('gameMessage', rulesMessage);
-                    break;
-                case 'start_discussion':
-                    const discussionMessage = {
-                        type: 'discussion',
-                        text: 'Обсуждение началось! Время: 10 минут'
-                    };
-                    io.to(gameId).emit('gameMessage', discussionMessage);
-                    break;
+        try {
+            const game = games.get(gameId);
+            if (!game) {
+                socket.emit('error', { message: 'Игра не найдена' });
+                return;
             }
+            if (game.players.length < 3) {
+                socket.emit('error', { message: 'Недостаточно игроков' });
+                return;
+            }
+
+            game.status = 'playing';
+            game.location = getRandomLocation();
+            game.spy = game.players[Math.floor(Math.random() * game.players.length)].id;
+
+            game.players.forEach(player => {
+                const role = player.id === game.spy ? 'spy' : 'civilian';
+                io.to(player.id).emit('gameStarted', {
+                    role,
+                    location: role === 'civilian' ? game.location : null
+                });
+            });
+        } catch (error) {
+            console.error('Ошибка при начале игры:', error);
+            socket.emit('error', { message: 'Ошибка при начале игры' });
         }
     });
 

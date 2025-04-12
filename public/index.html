@@ -22,116 +22,111 @@
     </header>
 
     <main class="container">
+        <!-- Настройки -->
+        <section id="settingsScreen" class="screen settings-screen hidden">
+            <div class="settings-group">
+                <div class="settings-item">
+                    <label for="soundToggle">Звуковые эффекты</label>
+                    <div class="theme-switch">
+                        <input type="checkbox" id="soundToggle" class="theme-checkbox" aria-label="Переключить звуковые эффекты">
+                        <div class="theme-slider">
+                            <div class="theme-icon">
+                                <span class="sound-on" aria-hidden="true">🔊</span>
+                                <span class="sound-off" aria-hidden="true">🔇</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button id="backFromSettings" class="secondary-button">Назад</button>
+        </section>
+
         <!-- Главное меню -->
-        <section id="mainMenuScreen" class="screen main-menu">
+        <section id="mainMenu" class="screen main-menu">
             <div class="menu-content">
-                <h2 class="menu-title">Шпион</h2>
-                <p class="menu-description">Увлекательная игра для компании друзей</p>
+                <h2 class="menu-title">Игра "Шпион" 🕵️‍♂️</h2>
+                <p class="menu-description">Увлекательная игра на внимательность и логику</p>
                 <div class="menu-buttons">
                     <button id="showCreateGame" class="primary-button">
-                        <span class="button-icon">🎮</span>
+                        <span class="button-icon" aria-hidden="true">🎮</span>
                         Создать игру
                     </button>
                     <button id="showJoinGame" class="primary-button">
-                        <span class="button-icon">🔗</span>
+                        <span class="button-icon" aria-hidden="true">🔗</span>
                         Присоединиться
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- Настройки -->
-        <section id="settingsScreen" class="screen settings-screen hidden">
-            <div class="settings-group">
-                <div class="settings-item">
-                    <label for="languageSelect">Язык</label>
-                    <select id="languageSelect" class="language-select">
-                        <option value="ru">Русский</option>
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                        <option value="fr">Français</option>
-                        <option value="de">Deutsch</option>
-                    </select>
-                </div>
-                <div class="settings-item">
-                    <label for="soundToggle">Звук</label>
-                    <label class="theme-switch">
-                        <input type="checkbox" id="soundToggle" checked>
-                        <span class="theme-slider">
-                            <span class="theme-icon">🔊</span>
-                            <span class="theme-icon">🔇</span>
-                        </span>
-                    </label>
-                </div>
-            </div>
-            <button id="backFromSettings" class="secondary-button">Назад</button>
-        </section>
-
-        <!-- Создание игры -->
-        <section id="createGameScreen" class="screen hidden">
-            <div class="input-group">
+        <!-- Экран создания игры -->
+        <section id="startScreen" class="screen hidden">
+            <div class="screen-content">
                 <h2>Создание игры</h2>
-                <input type="text" id="playerName" class="input-field" placeholder="Ваше имя">
-                <button id="createGame" class="primary-button">Создать игру</button>
+                <div class="input-group">
+                    <input type="text" id="playerName" placeholder="Ваше имя" class="input-field" required>
+                    <button id="createGame" class="primary-button">Создать</button>
+                </div>
                 <button id="backToMenu1" class="secondary-button">Назад</button>
             </div>
         </section>
 
-        <!-- Присоединение к игре -->
-        <section id="joinGameScreen" class="screen hidden">
-            <div class="input-group">
-                <h2>Присоединение к игре</h2>
-                <input type="text" id="joinPlayerName" class="input-field" placeholder="Ваше имя">
-                <input type="text" id="gameCode" class="input-field" placeholder="Код игры">
-                <button id="joinGameButton" class="primary-button">Присоединиться</button>
-                <button id="backFromJoin" class="secondary-button">Назад</button>
+        <!-- Экран присоединения к игре -->
+        <section id="joinScreen" class="screen hidden">
+            <div class="screen-content">
+                <h2>Присоединиться к игре</h2>
+                <div class="input-group">
+                    <input type="text" id="playerNameJoin" placeholder="Ваше имя" class="input-field" required>
+                    <input type="text" id="gameId" placeholder="ID игры" class="input-field" required>
+                    <button id="joinGame" class="primary-button">Присоединиться</button>
+                </div>
+                <button id="backToMenu2" class="secondary-button">Назад</button>
             </div>
         </section>
 
-        <!-- Лобби -->
-        <section id="lobbyScreen" class="screen hidden">
+        <!-- Экран ожидания -->
+        <section id="waitingScreen" class="screen lobby hidden">
             <div class="lobby-content">
                 <div class="lobby-info">
+                    <h3>Лобби</h3>
                     <div class="game-id">
-                        <span>Код игры:</span>
-                        <span id="gameCodeDisplay" class="game-id-value"></span>
-                        <button id="copyGameCode" class="copy-button" aria-label="Копировать код">
-                            <span class="button-icon">📋</span>
-                        </button>
+                        <span>ID игры:</span>
+                        <span id="currentGameId" class="game-id-value"></span>
+                        <button class="copy-button" onclick="copyGameId()" aria-label="Копировать ID игры">📋</button>
                     </div>
                 </div>
                 <div class="players-container">
-                    <h3>Игроки</h3>
+                    <h3>Игроки:</h3>
                     <div id="playersList" class="players-list"></div>
                 </div>
-                <button id="startGameButton" class="primary-button">Начать игру</button>
-                <button id="leaveLobbyButton" class="secondary-button">Покинуть лобби</button>
+                <div class="lobby-actions">
+                    <button id="startGame" class="primary-button">Начать игру</button>
+                    <button id="backToMenu3" class="secondary-button">Покинуть игру</button>
+                </div>
             </div>
         </section>
 
-        <!-- Игра -->
+        <!-- Игровой экран -->
         <section id="gameScreen" class="screen hidden">
             <div class="game-content">
-                <div class="role-display">
-                    <h2>Ваша роль</h2>
-                    <p id="playerRole" class="role-text"></p>
-                </div>
-                <div class="timer-display">
-                    <span id="timer">10:00</span>
-                </div>
+                <div id="roleInfo" class="role-info"></div>
                 <div class="chat-container">
                     <div id="chatMessages" class="chat-messages"></div>
                     <div class="chat-input">
-                        <input type="text" id="messageInput" class="input-field" placeholder="Введите сообщение...">
-                        <button id="sendPhotoButton" class="send-button" aria-label="Отправить фото">
-                            <span class="button-icon">📷</span>
-                        </button>
-                        <button id="sendMessageButton" class="send-button" aria-label="Отправить сообщение">
-                            <span class="button-icon">📤</span>
-                        </button>
+                        <input type="text" id="messageInput" placeholder="Введите сообщение..." class="input-field">
+                        <button id="sendMessage" class="send-button">Отправить</button>
                     </div>
                 </div>
-                <button id="endGameButton" class="secondary-button">Завершить игру</button>
+                <button id="endGame" class="secondary-button">Завершить игру</button>
+            </div>
+        </section>
+
+        <!-- Экран завершения -->
+        <section id="endScreen" class="screen hidden">
+            <div class="end-content">
+                <h2>Игра завершена!</h2>
+                <div id="gameResults" class="game-results"></div>
+                <button id="newGame" class="primary-button">Новая игра</button>
             </div>
         </section>
     </main>
