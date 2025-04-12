@@ -589,7 +589,11 @@ socket.on('disconnect', () => {
 
 socket.on('error', (error) => {
     console.error('Socket error:', error);
-    tg.showAlert(error.message || 'Произошла ошибка');
+    if (error.message === 'games is not defined') {
+        tg.showAlert('Сервер не готов к работе. Пожалуйста, попробуйте позже.');
+    } else {
+        tg.showAlert(error.message || 'Произошла ошибка');
+    }
 });
 
 socket.on('gameJoined', (data) => {
@@ -689,6 +693,11 @@ socket.on('gameEnded', ({ spy, location }) => {
     }
 });
 
+socket.on('chatError', (error) => {
+    console.error('Chat error:', error);
+    tg.showAlert('Ошибка отправки сообщения. Попробуйте еще раз.');
+});
+
 socket.on('joinError', (error) => {
     console.error('Join error:', error);
     tg.showAlert(error.message || 'Ошибка присоединения к игре');
@@ -784,15 +793,20 @@ function joinGame() {
     
     console.log('Joining game with ID:', gameId);
     
-    socket.emit('joinGame', {
-        gameId: gameId,
-        playerName: userProfile.name,
-        user: {
-            id: socket.id,
-            name: userProfile.name,
-            avatar: userProfile.avatar
-        }
-    });
+    try {
+        socket.emit('joinGame', {
+            gameId: gameId,
+            playerName: userProfile.name,
+            user: {
+                id: socket.id,
+                name: userProfile.name,
+                avatar: userProfile.avatar
+            }
+        });
+    } catch (error) {
+        console.error('Error joining game:', error);
+        tg.showAlert('Ошибка присоединения к игре. Попробуйте еще раз.');
+    }
 }
 
 // Функция начала игры
