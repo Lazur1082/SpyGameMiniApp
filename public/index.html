@@ -22,6 +22,24 @@
     </header>
 
     <main class="container">
+        <!-- Главное меню -->
+        <section id="mainMenuScreen" class="screen main-menu">
+            <div class="menu-content">
+                <h2 class="menu-title">Шпион</h2>
+                <p class="menu-description">Увлекательная игра для компании друзей</p>
+                <div class="menu-buttons">
+                    <button id="showCreateGame" class="primary-button">
+                        <span class="button-icon">🎮</span>
+                        Создать игру
+                    </button>
+                    <button id="showJoinGame" class="primary-button">
+                        <span class="button-icon">🔗</span>
+                        Присоединиться
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <!-- Настройки -->
         <section id="settingsScreen" class="screen settings-screen hidden">
             <div class="settings-group">
@@ -35,40 +53,34 @@
                         <option value="de">Deutsch</option>
                     </select>
                 </div>
-            </div>
-            <button id="backFromSettings" class="secondary-button">Назад</button>
-        </section>
-
-        <!-- Главное меню -->
-        <section id="mainMenuScreen" class="screen main-menu">
-            <div class="menu-content">
-                <h2 class="menu-title">Шпион</h2>
-                <p class="menu-description">Увлекательная игра для компании друзей</p>
-                <div class="menu-buttons">
-                    <button id="createGameButton" class="primary-button">
-                        <span class="button-icon">🎮</span>
-                        Создать игру
-                    </button>
-                    <button id="joinGameButton" class="primary-button">
-                        <span class="button-icon">🔗</span>
-                        Присоединиться
-                    </button>
+                <div class="settings-item">
+                    <label for="soundToggle">Звук</label>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <span class="theme-slider">
+                            <span class="theme-icon">🔊</span>
+                            <span class="theme-icon">🔇</span>
+                        </span>
+                    </label>
                 </div>
             </div>
+            <button id="backFromSettings" class="secondary-button">Назад</button>
         </section>
 
         <!-- Создание игры -->
         <section id="createGameScreen" class="screen hidden">
             <div class="input-group">
+                <h2>Создание игры</h2>
                 <input type="text" id="playerName" class="input-field" placeholder="Ваше имя">
-                <button id="startGameButton" class="primary-button">Начать игру</button>
-                <button id="backFromCreate" class="secondary-button">Назад</button>
+                <button id="createGame" class="primary-button">Создать игру</button>
+                <button id="backToMenu1" class="secondary-button">Назад</button>
             </div>
         </section>
 
         <!-- Присоединение к игре -->
         <section id="joinGameScreen" class="screen hidden">
             <div class="input-group">
+                <h2>Присоединение к игре</h2>
                 <input type="text" id="joinPlayerName" class="input-field" placeholder="Ваше имя">
                 <input type="text" id="gameCode" class="input-field" placeholder="Код игры">
                 <button id="joinGameButton" class="primary-button">Присоединиться</button>

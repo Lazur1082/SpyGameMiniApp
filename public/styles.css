@@ -7,20 +7,17 @@
 }
 
 :root {
-    /* Light theme (голубые цвета) */
+    /* Светлая тема */
     --primary-color: #2196f3;
-    --primary-dark: #1976d2;
-    --primary-light: #bbdefb;
-    --secondary-color: #64b5f6;
-    --accent-color: #82b1ff;
-    --background-primary: #f5f9ff;
-    --background-secondary: #ffffff;
-    --text-primary: #333333;
-    --text-secondary: #666666;
+    --secondary-color: #1976d2;
+    --background-primary: #ffffff;
+    --background-secondary: #f5f5f5;
+    --text-primary: #212121;
+    --text-secondary: #757575;
     --border-color: #e0e0e0;
     --success-color: #4caf50;
-    --warning-color: #ff9800;
     --error-color: #f44336;
+    --warning-color: #ff9800;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --shadow-hover: rgba(0, 0, 0, 0.15);
     --border-radius: 16px;
@@ -40,24 +37,22 @@
     --danger-color: #f44336;
     --text-color: #333333;
     --text-light: #78909c;
-    --background-color: #f5f9ff;
     --card-background: #ffffff;
     --hover-color: #f8f9fa;
     --active-color: #e9ecef;
 }
 
 [data-theme="dark"] {
-    /* Dark theme (красные цвета) */
-    --primary-color: #f44336;
-    --primary-dark: #d32f2f;
-    --primary-light: #ffcdd2;
-    --secondary-color: #ef5350;
-    --accent-color: #e57373;
-    --background-primary: #1a0000;
-    --background-secondary: #2c0000;
+    --primary-color: #1976d2;
+    --secondary-color: #1565c0;
+    --background-primary: #121212;
+    --background-secondary: #1e1e1e;
     --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --border-color: #404040;
+    --text-secondary: #b0b0b0;
+    --border-color: #333333;
+    --success-color: #388e3c;
+    --error-color: #d32f2f;
+    --warning-color: #f57c00;
     --shadow-color: rgba(0, 0, 0, 0.3);
     --shadow-hover: rgba(0, 0, 0, 0.4);
     --hover-color: rgba(244, 67, 54, 0.1);
@@ -70,7 +65,7 @@ body {
     min-height: 100vh;
     padding-top: var(--safe-area-top);
     padding-bottom: var(--safe-area-bottom);
-    transition: background-color var(--transition-medium), color var(--transition-medium);
+    transition: background-color 0.3s, color 0.3s;
     line-height: 1.6;
     display: flex;
     flex-direction: column;
