@@ -1,27 +1,28 @@
 // Инициализация Telegram WebApp
-let tg;
-try {
-    tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.enableClosingConfirmation();
-} catch (e) {
-    // Создаем заглушку для работы на ПК
-    tg = {
-        initData: '',
-        initDataUnsafe: { user: { username: 'Player' } },
-        ready: () => {},
-        expand: () => {},
-        enableClosingConfirmation: () => {},
-        showAlert: (message) => alert(message),
-        showPopup: (params) => confirm(params.message),
-        close: () => {},
-        setHeaderColor: (color) => {},
-        setBackgroundColor: (color) => {}
-    };
-}
+const tg = window.Telegram?.WebApp || {
+    initData: '',
+    initDataUnsafe: { user: { username: 'Player' } },
+    ready: () => {},
+    expand: () => {},
+    enableClosingConfirmation: () => {},
+    showAlert: (message) => alert(message),
+    showPopup: (params) => confirm(params.message),
+    close: () => {},
+    setHeaderColor: (color) => {},
+    setBackgroundColor: (color) => {}
+};
 
-// Socket.io
+// Инициализация Socket.io
 const socket = io();
+
+// Константы
+const DEFAULT_AVATARS = [
+    '/images/default-avatar.png',
+    '/images/avatar1.png',
+    '/images/avatar2.png',
+    '/images/avatar3.png',
+    '/images/avatar4.png'
+];
 
 // DOM элементы
 const elements = {
@@ -85,8 +86,6 @@ const buttons = {
 const state = {
     theme: localStorage.getItem('theme') || 'light',
     gameId: null,
-    playerName: null,
-    role: null,
     players: [],
     messages: [],
     isInGame: false,
@@ -175,8 +174,8 @@ function translatePage() {
 
 // Профиль пользователя
 const userProfile = {
-    name: localStorage.getItem('userName') || '',
-    avatar: localStorage.getItem('userAvatar') || '/images/default-avatar.png',
+    name: tg.initDataUnsafe?.user?.username || 'Игрок',
+    avatar: localStorage.getItem('userAvatar') || DEFAULT_AVATARS[0],
     gamesPlayed: parseInt(localStorage.getItem('gamesPlayed')) || 0,
     gamesWon: parseInt(localStorage.getItem('gamesWon')) || 0
 };
@@ -224,55 +223,22 @@ function showScreen(screenId) {
 }
 
 // Функция обновления профиля
-function updateProfile(name, avatar) {
-    console.log('Updating profile:', { name, avatar });
-    userProfile.name = name;
-    userProfile.avatar = avatar;
+function updateProfile(avatar) {
+    console.log('Updating profile:', { avatar });
+    if (!DEFAULT_AVATARS.includes(avatar)) {
+        console.error('Invalid avatar selected');
+        return;
+    }
     
-    // Сохраняем в localStorage
-    localStorage.setItem('userName', name);
+    userProfile.avatar = avatar;
     localStorage.setItem('userAvatar', avatar);
     
-    // Обновляем UI
-    updateProfileUI();
-}
-
-function updateProfileUI() {
-    console.log('Updating profile UI');
-    const profileName = document.getElementById('profileName');
-    const profileAvatar = document.getElementById('profileAvatar');
+    // Обновляем аватар в интерфейсе
     const headerAvatar = document.getElementById('headerAvatar');
-    const gamesPlayed = document.getElementById('gamesPlayed');
-    const gamesWon = document.getElementById('gamesWon');
+    const profileAvatar = document.getElementById('profileAvatar');
     
-    if (profileName) {
-        profileName.value = userProfile.name;
-        console.log('Updated profile name:', userProfile.name);
-    }
-    if (profileAvatar) {
-        profileAvatar.src = userProfile.avatar;
-        console.log('Updated profile avatar:', userProfile.avatar);
-    }
-    if (headerAvatar) {
-        headerAvatar.src = userProfile.avatar;
-        console.log('Updated header avatar:', userProfile.avatar);
-    }
-    if (gamesPlayed) {
-        gamesPlayed.textContent = userProfile.gamesPlayed;
-        console.log('Updated games played:', userProfile.gamesPlayed);
-    }
-    if (gamesWon) {
-        gamesWon.textContent = userProfile.gamesWon;
-        console.log('Updated games won:', userProfile.gamesWon);
-    }
-}
-
-function updateGameStats(played, won) {
-    userProfile.gamesPlayed = played;
-    userProfile.gamesWon = won;
-    localStorage.setItem('gamesPlayed', played);
-    localStorage.setItem('gamesWon', won);
-    updateProfileUI();
+    if (headerAvatar) headerAvatar.src = avatar;
+    if (profileAvatar) profileAvatar.src = avatar;
 }
 
 function updatePlayersList(players) {
@@ -285,7 +251,7 @@ function updatePlayersList(players) {
         playerItem.className = 'player-item';
         playerItem.innerHTML = `
             <div class="player-avatar">
-                <img src="${userProfile.avatar}" alt="${player.name}">
+                <img src="${player.avatar || DEFAULT_AVATARS[0]}" alt="${player.name}">
             </div>
             <span class="player-name">${player.name}</span>
             ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
@@ -336,47 +302,25 @@ function playSound(soundName) {
     }
 }
 
-// Функция для загрузки аватара
-function handleAvatarUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Проверяем тип файла
-    if (!file.type.startsWith('image/')) {
-        tg.showAlert('Пожалуйста, выберите изображение');
-        return;
-    }
-
-    // Проверяем размер файла (максимум 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-        tg.showAlert('Размер файла не должен превышать 2MB');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const base64Image = e.target.result;
-        updateProfile(userProfile.name, base64Image);
-        
-        // Обновляем выбранный аватар
-        document.querySelectorAll('.avatar-option').forEach(opt => {
-            opt.classList.remove('selected');
-        });
-    };
-    reader.readAsDataURL(file);
-}
-
 // Обработчики событий
 function setupEventListeners() {
-    // Кнопка создания игры
+    // Смена аватара
+    const avatarOptions = document.querySelectorAll('.avatar-option');
+    avatarOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const avatar = option.dataset.avatar;
+            if (avatar) {
+                updateProfile(avatar);
+                avatarOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+            }
+        });
+    });
+
+    // Создание игры
     const createGameBtn = document.getElementById('createGame');
     if (createGameBtn) {
         createGameBtn.addEventListener('click', () => {
-            if (!userProfile.name) {
-                const defaultName = tg?.initDataUnsafe?.user?.username || 'Игрок';
-                updateProfile(defaultName, userProfile.avatar);
-            }
-            
             socket.emit('createGame', {
                 playerName: userProfile.name,
                 user: {
@@ -388,7 +332,7 @@ function setupEventListeners() {
         });
     }
 
-    // Кнопка присоединения к игре
+    // Присоединение к игре
     const joinGameBtn = document.getElementById('joinGame');
     if (joinGameBtn) {
         joinGameBtn.addEventListener('click', () => {
@@ -396,11 +340,6 @@ function setupEventListeners() {
             if (!gameId) {
                 tg.showAlert('Введите ID игры');
                 return;
-            }
-            
-            if (!userProfile.name) {
-                const defaultName = tg?.initDataUnsafe?.user?.username || 'Игрок';
-                updateProfile(defaultName, userProfile.avatar);
             }
             
             socket.emit('joinGame', {
@@ -415,7 +354,7 @@ function setupEventListeners() {
         });
     }
 
-    // Кнопка отправки сообщения
+    // Отправка сообщения
     const sendMessageBtn = document.getElementById('sendMessage');
     if (sendMessageBtn) {
         sendMessageBtn.addEventListener('click', () => {
@@ -441,7 +380,7 @@ function setupEventListeners() {
         });
     }
 
-    // Кнопка начала игры
+    // Начало игры
     const startGameBtn = document.getElementById('startGame');
     if (startGameBtn) {
         startGameBtn.addEventListener('click', () => {
@@ -486,7 +425,11 @@ function setupSocketHandlers() {
     socket.on('gameCreated', (data) => {
         console.log('Game created:', data);
         state.gameId = data.gameId;
-        state.players = [{ name: userProfile.name, isAdmin: true }];
+        state.players = [{ 
+            name: userProfile.name, 
+            avatar: userProfile.avatar,
+            isAdmin: true 
+        }];
         state.isAdmin = true;
         showScreen('waitingScreen');
         updatePlayersList(state.players);
@@ -516,7 +459,11 @@ function setupSocketHandlers() {
     socket.on('playerJoined', (data) => {
         console.log('Player joined:', data);
         if (!state.players) state.players = [];
-        state.players.push({ name: data.playerName, isAdmin: false });
+        state.players.push({ 
+            name: data.playerName, 
+            avatar: data.avatar,
+            isAdmin: false 
+        });
         updatePlayersList(state.players);
         
         addChatMessage({
@@ -567,19 +514,21 @@ function setupSocketHandlers() {
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initializing app...');
+    
+    // Инициализация Telegram WebApp
+    tg.ready();
+    tg.expand();
+    tg.enableClosingConfirmation();
+    
+    // Установка обработчиков
     setupSocketHandlers();
     setupEventListeners();
     
-    // Установка начального языка
-    const savedLanguage = localStorage.getItem('language') || 'ru';
-    updateLanguage(savedLanguage);
-    
     // Установка начальной темы
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    updateTheme(savedTheme);
+    updateTheme(state.theme);
     
     // Обновление профиля
-    updateProfileUI();
+    updateProfile(userProfile.avatar);
     
     // Показываем главное меню
     showScreen('mainMenu');
