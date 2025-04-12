@@ -364,14 +364,6 @@ function updateGameScreen(game) {
 function initializeEventListeners() {
     console.log('Initializing event listeners');
     
-    // Выбор языка
-    const languageSelect = document.getElementById('languageSelect');
-    if (languageSelect) {
-        languageSelect.addEventListener('change', (e) => {
-            updateLanguage(e.target.value);
-        });
-    }
-    
     // Кнопка темы в хедере
     const themeButton = document.getElementById('themeButton');
     if (themeButton) {
@@ -382,21 +374,6 @@ function initializeEventListeners() {
         });
     }
     
-    // Переключатель темы в настройках
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-        // Устанавливаем начальное состояние
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        themeToggle.checked = savedTheme === 'dark';
-        updateTheme(savedTheme);
-        
-        themeToggle.addEventListener('change', (e) => {
-            console.log('Theme toggle changed:', e.target.checked);
-            const isDark = e.target.checked;
-            updateTheme(isDark ? 'dark' : 'light');
-        });
-    }
-
     // Кнопка настроек
     const settingsButton = document.getElementById('settingsButton');
     if (settingsButton) {
@@ -405,49 +382,15 @@ function initializeEventListeners() {
         });
     }
     
-    if (elements.backFromSettings) {
-        elements.backFromSettings.addEventListener('click', () => {
-            console.log('Back from settings clicked');
+    // Кнопка назад из настроек
+    const backFromSettings = document.getElementById('backFromSettings');
+    if (backFromSettings) {
+        backFromSettings.addEventListener('click', () => {
             showScreen('main');
         });
     }
     
-    if (elements.showCreateGame) {
-        elements.showCreateGame.addEventListener('click', () => {
-            console.log('Show create game clicked');
-            showScreen('start');
-        });
-    }
-    
-    if (elements.showJoinGame) {
-        elements.showJoinGame.addEventListener('click', () => {
-            console.log('Show join game clicked');
-            showScreen('join');
-        });
-    }
-    
-    if (elements.backToMenu1) {
-        elements.backToMenu1.addEventListener('click', () => {
-            console.log('Back to menu 1 clicked');
-            showScreen('main');
-        });
-    }
-    
-    if (elements.backToMenu2) {
-        elements.backToMenu2.addEventListener('click', () => {
-            console.log('Back to menu 2 clicked');
-            showScreen('main');
-        });
-    }
-    
-    if (elements.backToMenu3) {
-        elements.backToMenu3.addEventListener('click', () => {
-            console.log('Back to menu 3 clicked');
-            showScreen('main');
-        });
-    }
-
-    // Кнопка создания игры
+    // Кнопка создания игры в главном меню
     const createGameButton = document.getElementById('createGameButton');
     if (createGameButton) {
         createGameButton.addEventListener('click', () => {
@@ -456,7 +399,7 @@ function initializeEventListeners() {
         });
     }
     
-    // Кнопка присоединения к игре
+    // Кнопка присоединения к игре в главном меню
     const joinGameButton = document.getElementById('joinGameButton');
     if (joinGameButton) {
         joinGameButton.addEventListener('click', () => {
@@ -479,6 +422,14 @@ function initializeEventListeners() {
         });
     }
     
+    // Кнопка назад из создания игры
+    const backFromCreate = document.getElementById('backFromCreate');
+    if (backFromCreate) {
+        backFromCreate.addEventListener('click', () => {
+            showScreen('main');
+        });
+    }
+    
     // Кнопка присоединения к существующей игре
     const joinExistingGameButton = document.getElementById('joinExistingGameButton');
     if (joinExistingGameButton) {
@@ -493,15 +444,40 @@ function initializeEventListeners() {
             }
         });
     }
-
-    // Настройки
-    if (elements.soundToggle) {
-        elements.soundToggle.addEventListener('change', (e) => {
-            console.log('Sound toggle changed');
-            updateSound(e.target.checked);
+    
+    // Кнопка назад из присоединения к игре
+    const backFromJoin = document.getElementById('backFromJoin');
+    if (backFromJoin) {
+        backFromJoin.addEventListener('click', () => {
+            showScreen('main');
         });
     }
-
+    
+    // Кнопка копирования кода игры
+    const copyGameCode = document.getElementById('copyGameCode');
+    if (copyGameCode) {
+        copyGameCode.addEventListener('click', () => {
+            const gameCode = document.getElementById('gameCodeDisplay').textContent;
+            navigator.clipboard.writeText(gameCode).then(() => {
+                tg.showAlert('Код игры скопирован');
+            }).catch(() => {
+                tg.showAlert('Не удалось скопировать код');
+            });
+        });
+    }
+    
+    // Кнопка отправки сообщения
+    const sendMessageButton = document.getElementById('sendMessageButton');
+    if (sendMessageButton) {
+        sendMessageButton.addEventListener('click', () => {
+            const text = document.getElementById('messageInput').value.trim();
+            if (text) {
+                socket.emit('chatMessage', { text });
+                document.getElementById('messageInput').value = '';
+            }
+        });
+    }
+    
     // Кнопка отправки фото
     const sendPhotoButton = document.getElementById('sendPhotoButton');
     if (sendPhotoButton) {
@@ -526,6 +502,33 @@ function initializeEventListeners() {
                 }
             };
             input.click();
+        });
+    }
+    
+    // Кнопка завершения игры
+    const endGameButton = document.getElementById('endGameButton');
+    if (endGameButton) {
+        endGameButton.addEventListener('click', () => {
+            const gameId = document.getElementById('gameCodeDisplay').textContent;
+            if (gameId) {
+                socket.emit('endGame', { gameId });
+            }
+        });
+    }
+    
+    // Кнопка выхода из лобби
+    const leaveLobbyButton = document.getElementById('leaveLobbyButton');
+    if (leaveLobbyButton) {
+        leaveLobbyButton.addEventListener('click', () => {
+            showScreen('main');
+        });
+    }
+    
+    // Выбор языка
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        languageSelect.addEventListener('change', (e) => {
+            updateLanguage(e.target.value);
         });
     }
 }
