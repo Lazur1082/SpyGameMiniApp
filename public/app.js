@@ -194,15 +194,16 @@ function initializeEventListeners() {
     // Переключатель темы
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
+        // Устанавливаем начальное состояние
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        themeToggle.checked = savedTheme === 'dark';
+        updateTheme(savedTheme);
+        
         themeToggle.addEventListener('change', (e) => {
             console.log('Theme toggle changed:', e.target.checked);
             const isDark = e.target.checked;
             updateTheme(isDark ? 'dark' : 'light');
         });
-        
-        // Устанавливаем начальное состояние
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        themeToggle.checked = savedTheme === 'dark';
     }
 
     // Кнопка настроек
