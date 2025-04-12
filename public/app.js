@@ -1,261 +1,134 @@
-// Инициализация Telegram WebApp
-const tg = window.Telegram?.WebApp || {
-    initData: '',
-    initDataUnsafe: { user: { username: 'Player' } },
-    ready: () => {},
-    expand: () => {},
-    enableClosingConfirmation: () => {},
-    showAlert: (message) => alert(message),
-    showPopup: (params) => confirm(params.message),
-    close: () => {},
-    setHeaderColor: (color) => {},
-    setBackgroundColor: (color) => {}
-};
+// Initialize Telegram WebApp
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-// Инициализация Socket.io
+// Initialize Socket.io
 const socket = io();
 
-// Состояние приложения
-const state = {
+// Game state
+let gameState = {
     gameId: null,
+    playerName: tg.initDataUnsafe.user?.first_name || 'Player',
+    isAdmin: false,
     players: [],
-    isInGame: false,
-    isAdmin: false
+    messages: []
 };
 
-// Профиль пользователя
-const userProfile = {
-    name: tg.initDataUnsafe?.user?.username || 'Игрок',
-    avatar: '/images/default-avatar.png'
+// DOM Elements
+const screens = {
+    menu: document.getElementById('menuScreen'),
+    join: document.getElementById('joinScreen'),
+    lobby: document.getElementById('lobbyScreen'),
+    game: document.getElementById('gameScreen')
 };
 
-// Основные функции
-const showScreen = (screenId) => {
-    if (state.isInGame && !['gameScreen', 'waitingScreen'].includes(screenId)) {
-        return;
-    }
-    
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.add('hidden');
+const elements = {
+    playersList: document.getElementById('playersList'),
+    chatMessages: document.getElementById('chatMessages'),
+    chatInput: document.getElementById('chatInput'),
+    gameIdDisplay: document.getElementById('gameId'),
+    joinGameInput: document.getElementById('joinGameInput'),
+    roleDisplay: document.getElementById('roleDisplay'),
+    locationDisplay: document.getElementById('locationDisplay')
+};
+
+// Show active screen, hide others
+function showScreen(screenId) {
+    Object.values(screens).forEach(screen => {
+        screen.style.display = 'none';
     });
-    
-    const targetScreen = document.getElementById(screenId);
-    if (targetScreen) {
-        targetScreen.classList.remove('hidden');
-    }
-};
+    screens[screenId].style.display = 'flex';
+}
 
-const updatePlayersList = (players) => {
-    const playersList = document.getElementById('playersList');
-    if (!playersList) return;
-    
-    playersList.innerHTML = '';
-    players.forEach(player => {
-        const playerItem = document.createElement('div');
-        playerItem.className = 'player-item';
-        playerItem.innerHTML = `
-            <div class="player-avatar">
-                <img src="${player.avatar}" alt="${player.name}">
-            </div>
+// Update players list
+function updatePlayersList(players) {
+    elements.playersList.innerHTML = players.map(player => `
+        <div class="player-item">
             <span class="player-name">${player.name}</span>
             ${player.isAdmin ? '<span class="admin-badge">👑</span>' : ''}
-        `;
-        playersList.appendChild(playerItem);
-    });
-};
+        </div>
+    `).join('');
+}
 
-const addChatMessage = (message) => {
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${message.sender === userProfile.name ? 'own' : ''}`;
-    messageDiv.innerHTML = `
+// Add chat message
+function addChatMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.className = `message${message.sender === gameState.playerName ? ' own' : ''}`;
+    messageElement.innerHTML = `
         <div class="message-sender">${message.sender}</div>
         <div class="message-text">${message.text}</div>
     `;
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-};
+    elements.chatMessages.appendChild(messageElement);
+    elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+}
 
-// Обработчики событий
-const setupEventListeners = () => {
-    // Создание игры
-    const createGameBtn = document.getElementById('createGame');
-    if (createGameBtn) {
-        createGameBtn.addEventListener('click', () => {
-            socket.emit('createGame', {
-                user: {
-                    name: userProfile.name,
-                    avatar: userProfile.avatar
-                }
-            });
-        });
-    }
-
-    // Присоединение к игре
-    const joinGameBtn = document.getElementById('joinGame');
-    if (joinGameBtn) {
-        joinGameBtn.addEventListener('click', () => {
-            const gameId = document.getElementById('gameId').value.trim();
-            if (!gameId) {
-                tg.showAlert('Введите ID игры');
-                return;
-            }
-            
-            socket.emit('joinGame', {
-                gameId,
-                user: {
-                    name: userProfile.name,
-                    avatar: userProfile.avatar
-                }
-            });
-        });
-    }
-
-    // Отправка сообщения
-    const sendMessageBtn = document.getElementById('sendMessage');
-    if (sendMessageBtn) {
-        sendMessageBtn.addEventListener('click', () => {
-            const messageInput = document.getElementById('messageInput');
-            if (!messageInput) return;
-
-            const message = messageInput.value.trim();
-            if (!message) return;
-
-            if (!state.gameId) {
-                tg.showAlert('Вы не находитесь в игре');
-                return;
-            }
-
-            socket.emit('chatMessage', {
-                gameId: state.gameId,
-                text: message
-            });
-            
-            messageInput.value = '';
-        });
-    }
-
-    // Начало игры
-    const startGameBtn = document.getElementById('startGame');
-    if (startGameBtn) {
-        startGameBtn.addEventListener('click', () => {
-            if (!state.isAdmin) {
-                tg.showAlert('Только администратор может начать игру');
-                return;
-            }
-            
-            socket.emit('startGame', { gameId: state.gameId });
-        });
-    }
-};
-
-// Обработчики Socket.io
-const setupSocketHandlers = () => {
-    socket.on('connect', () => {
-        showScreen('mainMenu');
-        addChatMessage({
-            sender: 'Система',
-            text: '🎮 Добро пожаловать в игру "Шпион"!'
-        });
-    });
-
-    socket.on('connect_error', (error) => {
-        tg.showAlert('Ошибка подключения к серверу');
-    });
-
-    socket.on('error', (error) => {
-        tg.showAlert(error.message || 'Произошла ошибка');
-    });
-
-    socket.on('gameCreated', (data) => {
-        state.gameId = data.gameId;
-        state.players = [{ 
-            name: userProfile.name, 
-            avatar: userProfile.avatar,
-            isAdmin: true 
-        }];
-        state.isAdmin = true;
-        showScreen('waitingScreen');
-        updatePlayersList(state.players);
-        document.getElementById('currentGameId').textContent = data.gameId;
-        
-        addChatMessage({
-            sender: 'Система',
-            text: `Игра ${data.gameId} создана. Ожидаем игроков...`
-        });
-    });
-
-    socket.on('gameJoined', (data) => {
-        state.gameId = data.gameId;
-        state.players = data.players;
-        state.isAdmin = false;
-        showScreen('waitingScreen');
-        updatePlayersList(data.players);
-        document.getElementById('currentGameId').textContent = data.gameId;
-        
-        addChatMessage({
-            sender: 'Система',
-            text: `Вы присоединились к игре ${data.gameId}`
-        });
-    });
-
-    socket.on('playerJoined', (data) => {
-        if (!state.players) state.players = [];
-        state.players.push({ 
-            name: data.playerName, 
-            avatar: data.avatar,
-            isAdmin: false 
-        });
-        updatePlayersList(state.players);
-        
-        addChatMessage({
-            sender: 'Система',
-            text: `${data.playerName} присоединился к игре`
-        });
-    });
-
-    socket.on('playerLeft', (data) => {
-        state.players = state.players.filter(p => p.name !== data.playerName);
-        updatePlayersList(state.players);
-        
-        addChatMessage({
-            sender: 'Система',
-            text: `${data.playerName} покинул игру`
-        });
-    });
-
-    socket.on('chatMessage', (data) => {
-        addChatMessage(data);
-    });
-
-    socket.on('gameStarted', (data) => {
-        state.isInGame = true;
-        showScreen('gameScreen');
-        
-        document.querySelector('.bottom-navigation').style.display = 'none';
-        document.querySelector('.header').style.display = 'none';
-        
-        addChatMessage({
-            sender: 'Система',
-            text: `Игра началась! Ваша роль: ${data.role}`
-        });
-    });
-};
-
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', () => {
-    // Инициализация Telegram WebApp
-    tg.ready();
-    tg.expand();
-    tg.enableClosingConfirmation();
-    
-    // Установка обработчиков
-    setupSocketHandlers();
-    setupEventListeners();
-    
-    // Показываем главное меню
-    showScreen('mainMenu');
+// Event Listeners
+document.getElementById('createGameBtn').addEventListener('click', () => {
+    socket.emit('createGame', { playerName: gameState.playerName });
 });
+
+document.getElementById('joinGameBtn').addEventListener('click', () => {
+    const gameId = elements.joinGameInput.value.trim();
+    if (gameId) {
+        socket.emit('joinGame', { gameId, playerName: gameState.playerName });
+    }
+});
+
+document.getElementById('startGameBtn').addEventListener('click', () => {
+    if (gameState.gameId) {
+        socket.emit('startGame', { gameId: gameState.gameId });
+    }
+});
+
+document.getElementById('sendMessageBtn').addEventListener('click', () => {
+    const text = elements.chatInput.value.trim();
+    if (text && gameState.gameId) {
+        socket.emit('chatMessage', { gameId: gameState.gameId, text });
+        elements.chatInput.value = '';
+    }
+});
+
+// Socket event handlers
+socket.on('connect', () => {
+    console.log('Connected to server');
+    showScreen('menu');
+});
+
+socket.on('gameCreated', (data) => {
+    gameState.gameId = data.gameId;
+    gameState.isAdmin = true;
+    elements.gameIdDisplay.textContent = data.gameId;
+    showScreen('lobby');
+});
+
+socket.on('gameJoined', (data) => {
+    gameState.gameId = data.gameId;
+    showScreen('lobby');
+});
+
+socket.on('updatePlayers', (data) => {
+    gameState.players = data.players;
+    updatePlayersList(data.players);
+    
+    // Show/hide start game button based on admin status
+    const startGameBtn = document.getElementById('startGameBtn');
+    const isAdmin = data.players.find(p => p.id === socket.id)?.isAdmin;
+    startGameBtn.style.display = isAdmin ? 'block' : 'none';
+});
+
+socket.on('gameStarted', (data) => {
+    elements.roleDisplay.textContent = data.isSpy ? 'Вы шпион!' : 'Вы мирный житель';
+    elements.locationDisplay.textContent = data.isSpy ? '???' : `Локация: ${data.location}`;
+    showScreen('game');
+});
+
+socket.on('newMessage', (message) => {
+    addChatMessage(message);
+});
+
+socket.on('error', (data) => {
+    alert(data.message);
+});
+
+// Initialize
+showScreen('menu');
