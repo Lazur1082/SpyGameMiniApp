@@ -411,6 +411,7 @@ function initializeEventListeners() {
             console.log('Start game button clicked');
             const name = document.getElementById('playerName').value.trim();
             if (name) {
+                console.log('Creating game with name:', name);
                 socket.emit('createGame', { name });
             } else {
                 tg.showAlert('Введите ваше имя');
@@ -546,30 +547,27 @@ socket.on('disconnect', () => {
 });
 
 socket.on('error', (error) => {
-    console.error('Ошибка:', error);
-    tg.showPopup({
-        title: 'Ошибка',
-        message: error.message || 'Произошла ошибка',
-        buttons: [{type: 'ok'}]
-    });
+    console.error('Socket error:', error);
+    tg.showAlert(error.message || 'Произошла ошибка');
 });
 
-socket.on('gameCreated', ({ gameId, player, players }) => {
+socket.on('gameCreated', (data) => {
+    console.log('Game created:', data);
+    const { gameId, player, players } = data;
+    
+    // Сохраняем информацию об игре
     state.gameId = gameId;
     state.playerName = player.name;
-    state.role = player.role;
+    state.isAdmin = player.isAdmin;
     state.players = players;
-    elements.currentGameId.textContent = gameId;
-    updatePlayersList(players);
-    showScreen('waiting');
     
-    // Копируем ID игры в буфер обмена
-    navigator.clipboard.writeText(gameId).catch(() => {});
-    tg.showPopup({
-        title: 'Игра создана',
-        message: `ID игры: ${gameId}\nID скопирован в буфер обмена`,
-        buttons: [{type: 'ok'}]
-    });
+    // Обновляем отображение
+    document.getElementById('gameCodeDisplay').textContent = gameId;
+    updatePlayersList(players);
+    
+    // Переходим в лобби
+    document.getElementById('createGameScreen').classList.add('hidden');
+    document.getElementById('lobbyScreen').classList.remove('hidden');
 });
 
 socket.on('joinedGame', ({ gameId, player, players }) => {

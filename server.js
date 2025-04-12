@@ -36,41 +36,21 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
     }
 });
 
-// Обработчик команды /start
+// Обработка команды /start
 bot.onText(/\/start/, async (msg) => {
     try {
         const chatId = msg.chat.id;
-        const firstName = msg.from.first_name;
+        const username = msg.from.username || msg.from.first_name;
         
         // Отправляем приветственное сообщение с фото
-        await bot.sendPhoto(
-            chatId,
-            'public/images/SpyGameBanner.png',
-            {
-                caption: `🎮 Добро пожаловать в игру "Шпион", ${firstName}!\n\n` +
-                        `🔍 В этой игре один из игроков становится шпионом, а остальные знают локацию.\n` +
-                        `🎯 Задача шпиона - угадать локацию, а остальных - не дать ему это сделать.\n\n` +
-                        `📱 Для начала игры:\n` +
-                        `1. Создайте новую игру\n` +
-                        `2. Пригласите друзей по коду\n` +
-                        `3. Начните игру, когда все присоединятся\n\n` +
-                        `⚙️ Настройки:\n` +
-                        `- Выберите язык в настройках\n` +
-                        `- Переключите тему на тёмную/светлую\n\n` +
-                        `🎲 Удачи в игре!`,
-                parse_mode: 'HTML',
-                reply_markup: {
-                    inline_keyboard: [
-                        [
-                            { text: '🎮 Создать игру', web_app: { url: process.env.WEBAPP_URL } }
-                        ]
-                    ]
-                }
-            }
-        );
+        await bot.sendPhoto(chatId, 'https://example.com/welcome.jpg', {
+            caption: `Привет, ${username}! Добро пожаловать в игру "Шпион".\n\n` +
+                    'Чтобы начать игру, перейдите по ссылке ниже:\n' +
+                    'https://t.me/your_bot_username?start=game',
+            parse_mode: 'HTML'
+        });
     } catch (error) {
-        console.error('Ошибка при отправке стартового сообщения:', error);
-        await bot.sendMessage(msg.chat.id, 'Произошла ошибка при запуске бота. Пожалуйста, попробуйте позже.');
+        console.error('Error in /start command:', error);
     }
 });
 
@@ -107,22 +87,50 @@ function getRandomLocation() {
 io.on('connection', (socket) => {
     console.log('Новое подключение:', socket.id);
 
-    // Создание новой игры
-    socket.on('createGame', ({ name }) => {
+    // Обработка создания игры
+    socket.on('createGame', async (data) => {
         try {
-            const gameId = generateGameId();
+            const { name } = data;
+            if (!name) {
+                socket.emit('error', { message: 'Имя игрока не указано' });
+                return;
+            }
+
+            // Генерируем уникальный ID игры
+            const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            
+            // Создаем новую игру
             const game = {
                 id: gameId,
-                players: [{ id: socket.id, name, isAdmin: true }],
+                players: [{
+                    id: socket.id,
+                    name: name,
+                    isAdmin: true
+                }],
                 status: 'waiting',
-                location: null,
-                spy: null
+                timer: 300, // 5 минут
+                createdAt: Date.now()
             };
+
+            // Сохраняем игру
             games.set(gameId, game);
+            
+            // Присоединяем сокет к комнате игры
             socket.join(gameId);
-            socket.emit('gameCreated', { gameId, player: game.players[0], players: game.players });
+            
+            // Отправляем ответ клиенту
+            socket.emit('gameCreated', {
+                gameId: gameId,
+                player: {
+                    name: name,
+                    isAdmin: true
+                },
+                players: game.players
+            });
+
+            console.log(`Game created: ${gameId} by ${name}`);
         } catch (error) {
-            console.error('Ошибка при создании игры:', error);
+            console.error('Error creating game:', error);
             socket.emit('error', { message: 'Ошибка при создании игры' });
         }
     });
