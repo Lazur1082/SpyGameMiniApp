@@ -154,14 +154,15 @@ function addChatMessage(message) {
 }
 
 function playSound(soundName) {
-    if (state.sound && sounds[soundName]) {
-        try {
-            sounds[soundName].play().catch(error => {
-                console.warn('Ошибка воспроизведения звука:', error);
-            });
-        } catch (error) {
-            console.warn('Ошибка воспроизведения звука:', error);
-        }
+    if (!state.sound) return;
+    
+    try {
+        const audio = new Audio(`/sounds/${soundName}.mp3`);
+        audio.play().catch(error => {
+            console.error('Error playing sound:', error);
+        });
+    } catch (error) {
+        console.error('Error initializing sound:', error);
     }
 }
 
@@ -462,6 +463,19 @@ socket.on('gameEnded', ({ spy, location }) => {
     playSound('end');
 });
 
+// Sound handling
+function initializeSound() {
+    const soundToggle = document.getElementById('soundToggle');
+    if (soundToggle) {
+        soundToggle.checked = state.sound;
+        soundToggle.addEventListener('change', (e) => {
+            state.sound = e.target.checked;
+            localStorage.setItem('sound', state.sound);
+            console.log('Sound setting changed:', state.sound);
+        });
+    }
+}
+
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded');
@@ -491,6 +505,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Подключаемся к серверу
         socket.connect();
+        
+        // Initialize sound
+        initializeSound();
     } catch (error) {
         console.error('Ошибка инициализации:', error);
         try {
