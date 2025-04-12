@@ -482,12 +482,7 @@ function initializeEventListeners() {
     // Присоединение к игре
     document.getElementById('joinGame').addEventListener('click', () => {
         console.log('Join game clicked');
-        const gameId = document.getElementById('gameId').value.trim();
-        if (gameId) {
-            joinGame(gameId, userProfile.name);
-        } else {
-            tg.showAlert('Пожалуйста, введите ID игры');
-        }
+        joinGame();
     });
 
     document.getElementById('startGame').addEventListener('click', () => {
@@ -593,13 +588,14 @@ socket.on('error', (error) => {
 socket.on('gameCreated', (data) => {
     console.log('Game created:', data);
     state.gameId = data.gameId;
-    showScreen('lobby');
+    showScreen('waitingScreen');
     updatePlayersList([{ name: userProfile.name, isAdmin: true }]);
+    document.getElementById('currentGameId').textContent = data.gameId;
 });
 
 socket.on('playerJoined', (data) => {
     console.log('Player joined:', data);
-    const players = [...state.players, { name: data.playerName, role: 'player' }];
+    const players = [...state.players, { name: data.playerName, isAdmin: false }];
     updatePlayersList(players);
 });
 
@@ -621,6 +617,14 @@ socket.on('gameEnded', ({ spy, location }) => {
     `;
     showScreen('end');
     playSound('end');
+});
+
+socket.on('joinError', (error) => {
+    console.error('Join error:', error);
+    addChatMessage({
+        sender: 'Система',
+        text: `Ошибка: ${error.message}`
+    });
 });
 
 // Sound handling
@@ -645,14 +649,30 @@ function createGame() {
     }
     
     socket.emit('createGame', {
-        playerName: userProfile.name
+        playerName: userProfile.name,
+        playerId: socket.id
     });
 }
 
 // Функция присоединения к игре
-function joinGame(gameId, playerName) {
-    console.log('Joining game:', gameId, 'as player:', playerName);
-    socket.emit('joinGame', { gameId, playerName });
+function joinGame() {
+    console.log('Joining game...');
+    const gameId = document.getElementById('gameId').value.trim();
+    if (!gameId) {
+        console.error('Game ID is required');
+        return;
+    }
+    
+    if (!userProfile.name) {
+        console.error('Player name is required');
+        return;
+    }
+    
+    socket.emit('joinGame', {
+        gameId: gameId,
+        playerName: userProfile.name,
+        playerId: socket.id
+    });
 }
 
 // Функция начала игры
