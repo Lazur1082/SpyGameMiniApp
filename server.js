@@ -153,6 +153,14 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    // Измените обработчик события для присоединения игрока
+    socket.on('playerJoined', (data) => {
+        if (data.playerName) {
+            updatePlayersList(data.players);
+            addChatMessage(`${data.playerName} присоединился к игре`, 'system');
+        }
+    });
 });
 
 // Error handling
@@ -167,4 +175,37 @@ process.on('unhandledRejection', (err) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+});
+
+// Убедитесь, что в функции addChatMessage используется корректное имя
+function addChatMessage(message, type = 'received', playerName = 'System') {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${type}`;
+    messageElement.innerHTML = `
+        <div class="message-sender">${playerName || 'Игрок'}</div>
+        <div class="message-text">${message || ''}</div>
+    `;
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Функция для скрытия экрана загрузки
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const app = document.querySelector('.app');
+    if (loadingScreen && app) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            app.style.display = 'flex';
+        }, 500);
+    }
+}
+
+// Вызов hideLoadingScreen после загрузки
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(hideLoadingScreen, 1000);
 });
