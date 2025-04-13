@@ -10,7 +10,9 @@ const state = {
     currentScreen: 'home',
     gameId: null,
     isAdmin: false,
-    players: []
+    players: [],
+    userName: tg.initDataUnsafe?.user?.first_name || 'Player',
+    userId: tg.initDataUnsafe?.user?.id || Math.random().toString(36).substring(7)
 };
 
 // DOM Elements
@@ -100,14 +102,32 @@ document.getElementById('settingsBtn')?.addEventListener('click', () => {
 document.getElementById('confirmCreateBtn')?.addEventListener('click', () => {
     const playersCount = parseInt(document.getElementById('playersCount').value);
     const roundTime = parseInt(document.getElementById('roundTime').value);
-    socket.emit('createGame', { playersCount, roundTime });
+    
+    if (playersCount < 2 || playersCount > 10) {
+        alert('Количество игроков должно быть от 2 до 10');
+        return;
+    }
+    
+    socket.emit('createGame', {
+        playersCount,
+        roundTime,
+        playerName: state.userName,
+        userId: state.userId
+    });
 });
 
 document.getElementById('confirmJoinBtn')?.addEventListener('click', () => {
-    const gameCode = document.getElementById('gameCode').value;
-    if (gameCode) {
-        socket.emit('joinGame', { gameId: gameCode });
+    const gameCode = document.getElementById('gameCode').value.trim();
+    if (!gameCode) {
+        alert('Пожалуйста, введите код игры');
+        return;
     }
+    
+    socket.emit('joinGame', {
+        gameId: gameCode,
+        playerName: state.userName,
+        userId: state.userId
+    });
 });
 
 sendMessageBtn?.addEventListener('click', () => {
@@ -115,7 +135,8 @@ sendMessageBtn?.addEventListener('click', () => {
     if (message && state.gameId) {
         socket.emit('chatMessage', {
             gameId: state.gameId,
-            message: message
+            sender: state.userName,
+            text: message
         });
         messageInput.value = '';
     }
@@ -174,12 +195,17 @@ socket.on('gameCreated', (data) => {
 
 socket.on('gameJoined', (data) => {
     state.gameId = data.gameId;
-    state.isAdmin = false;
+    state.isAdmin = data.isAdmin;
     if (gameIdElement) gameIdElement.textContent = data.gameId;
     showScreen('lobby');
 });
 
 socket.on('playerJoined', (data) => {
+    state.players = data.players;
+    updatePlayersList(data.players);
+});
+
+socket.on('playerLeft', (data) => {
     state.players = data.players;
     updatePlayersList(data.players);
 });
@@ -198,12 +224,16 @@ socket.on('gameStarted', (data) => {
     showScreen('game');
 });
 
-socket.on('chatMessage', (data) => {
-    addChatMessage(data);
+socket.on('chatMessage', (message) => {
+    addChatMessage(message);
 });
 
-socket.on('gameError', (data) => {
-    alert(data.message);
+socket.on('gameError', (error) => {
+    alert(error.message);
+});
+
+socket.on('error', (error) => {
+    alert(error.message || 'Произошла ошибка');
 });
 
 // Initialize
