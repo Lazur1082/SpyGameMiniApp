@@ -13,7 +13,7 @@ const state = {
     players: [],
     role: null,
     location: null,
-    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
+    playerName: 'Игрок'
 };
 
 // DOM elements
@@ -84,18 +84,14 @@ function showGameNavigation(show) {
 
 // Screen management
 function showScreen(screenName) {
-    // Hide all screens
     Object.values(screens).forEach(screen => {
         if (screen) {
-            screen.classList.remove('active');
             screen.style.display = 'none';
         }
     });
-
-    // Show requested screen
+    
     const screen = screens[screenName];
     if (screen) {
-        screen.classList.add('active');
         screen.style.display = 'block';
         state.currentScreen = screenName;
     }
@@ -104,39 +100,31 @@ function showScreen(screenName) {
     showGameNavigation(screenName === 'game' || screenName === 'lobby');
 }
 
-// Players list management
+// Update players list
 function updatePlayersList(players) {
-    if (!lists.players) return;
-    lists.players.innerHTML = '';
+    const playersList = document.getElementById('playersList');
+    if (!playersList) return;
+    
+    playersList.innerHTML = '';
     players.forEach(player => {
-        const playerItem = document.createElement('div');
-        playerItem.className = 'player-item';
-        playerItem.innerHTML = `
-            <div class="player-avatar">👤</div>
-            <div class="player-name">${player.name || 'Игрок'}</div>
-            ${player.isAdmin ? '<div class="admin-badge">👑</div>' : ''}
-        `;
-        lists.players.appendChild(playerItem);
+        const playerElement = document.createElement('div');
+        playerElement.className = 'player-item';
+        playerElement.textContent = `${player.name}${player.isAdmin ? ' (Админ)' : ''}`;
+        playersList.appendChild(playerElement);
     });
 }
 
-// Chat management
+// Add chat message
 function addChatMessage(message, type = 'received', playerName = 'System') {
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
-
+    
     const messageElement = document.createElement('div');
     messageElement.className = `message ${type}`;
-    
-    if (playerName !== 'System') {
-        messageElement.innerHTML = `
-            <div class="message-sender">${playerName || 'Игрок'}</div>
-            <div class="message-text">${message || ''}</div>
-        `;
-    } else {
-        messageElement.innerHTML = `<div class="message-text">${message || ''}</div>`;
-    }
-    
+    messageElement.innerHTML = `
+        <div class="message-sender">${playerName}</div>
+        <div class="message-text">${message}</div>
+    `;
     chatMessages.appendChild(messageElement);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -206,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Game start
+    // Start game
     if (buttons.startGame) {
         buttons.startGame.addEventListener('click', () => {
             if (state.isAdmin && state.gameId) {
@@ -249,10 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Chat
+    // Send message
     if (buttons.sendMessage) {
         buttons.sendMessage.addEventListener('click', () => {
-            const message = inputs.message?.value.trim();
+            const message = inputs.message?.value?.trim();
             if (message && state.gameId) {
                 socket.emit('chatMessage', {
                     gameId: state.gameId,
@@ -335,17 +323,10 @@ socket.on('playerLeft', (data) => {
 });
 
 socket.on('gameStarted', (data) => {
-    const playerData = data.players.find(p => p.name === state.playerName);
-    if (playerData) {
-        state.role = playerData.role;
-        state.location = playerData.location;
-        document.getElementById('playerRole').textContent = state.role;
-        if (state.role === 'Мирный житель') {
-            document.getElementById('playerLocation').textContent = state.location;
-        } else {
-            document.getElementById('playerLocation').textContent = 'Неизвестно';
-        }
-    }
+    state.role = data.role;
+    state.location = data.location;
+    document.getElementById('playerRole').textContent = state.role;
+    document.getElementById('playerLocation').textContent = state.location;
     showScreen('game');
     addChatMessage('Игра началась!', 'system');
 });

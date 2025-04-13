@@ -37,146 +37,121 @@ bot.onText(/\/start/, (msg) => {
 io.on('connection', (socket) => {
     console.log('New client connected');
 
+    // Create new game
     socket.on('createGame', (data) => {
-        try {
-            const { playersCount, roundTime, playerName } = data;
-            
-            if (playersCount < 2 || playersCount > 10) {
-                socket.emit('gameError', { message: 'Количество игроков должно быть от 2 до 10' });
-                return;
-            }
-
-            const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const game = {
-                id: gameId,
-                players: [{
-                    id: socket.id,
-                    name: playerName,
-                    isAdmin: true
-                }],
-                playersCount,
-                roundTime,
-                status: 'waiting',
-                messages: []
-            };
-
-            games.set(gameId, game);
-            socket.join(gameId);
-            socket.emit('gameCreated', { gameId, players: game.players });
-        } catch (error) {
-            console.error('Error creating game:', error);
-            socket.emit('gameError', { message: 'Ошибка при создании игры' });
-        }
+        const { playersCount, playerName } = data;
+        const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        const game = {
+            id: gameId,
+            players: [{ id: socket.id, name: playerName, isAdmin: true }],
+            maxPlayers: playersCount,
+            status: 'waiting'
+        };
+        
+        games.set(gameId, game);
+        socket.join(gameId);
+        
+        socket.emit('gameCreated', {
+            gameId,
+            players: game.players
+        });
     });
 
+    // Join existing game
     socket.on('joinGame', (data) => {
-        try {
-            const { gameId, playerName } = data;
-            const game = games.get(gameId);
+        const { gameId, playerName } = data;
+        const game = games.get(gameId);
 
-            if (!game) {
-                socket.emit('gameError', { message: 'Игра не найдена' });
-                return;
-            }
-
-            if (game.players.length >= game.playersCount) {
-                socket.emit('gameError', { message: 'Игра уже заполнена' });
-                return;
-            }
-
-            if (game.status !== 'waiting') {
-                socket.emit('gameError', { message: 'Игра уже началась' });
-                return;
-            }
-
-            game.players.push({
-                id: socket.id,
-                name: playerName,
-                isAdmin: false
-            });
-
-            socket.join(gameId);
-            io.to(gameId).emit('playerJoined', { players: game.players });
-        } catch (error) {
-            console.error('Error joining game:', error);
-            socket.emit('gameError', { message: 'Ошибка при присоединении к игре' });
+        if (!game) {
+            socket.emit('gameJoined', { error: 'Игра не найдена' });
+            return;
         }
+
+        if (game.players.length >= game.maxPlayers) {
+            socket.emit('gameJoined', { error: 'Игра уже заполнена' });
+            return;
+        }
+
+        if (game.status !== 'waiting') {
+            socket.emit('gameJoined', { error: 'Игра уже началась' });
+            return;
+        }
+
+        game.players.push({ id: socket.id, name: playerName, isAdmin: false });
+        socket.join(gameId);
+
+        io.to(gameId).emit('playerJoined', {
+            players: game.players
+        });
+
+        socket.emit('gameJoined', {
+            gameId,
+            players: game.players
+        });
     });
 
-    socket.on('chatMessage', (data) => {
-        try {
-            const { gameId, sender, text } = data;
-            const game = games.get(gameId);
-
-            if (!game) {
-                socket.emit('gameError', { message: 'Игра не найдена' });
-                return;
-            }
-
-            const message = {
-                sender,
-                text,
-                timestamp: new Date().toISOString()
-            };
-
-            game.messages.push(message);
-            io.to(gameId).emit('chatMessage', message);
-        } catch (error) {
-            console.error('Error sending message:', error);
-            socket.emit('gameError', { message: 'Ошибка отправки сообщения' });
-        }
-    });
-
+    // Start game
     socket.on('startGame', (data) => {
-        try {
-            const { gameId } = data;
-            const game = games.get(gameId);
+        const { gameId } = data;
+        const game = games.get(gameId);
 
-            if (!game) {
-                socket.emit('gameError', { message: 'Игра не найдена' });
-                return;
-            }
+        if (!game) return;
 
-            if (game.players.length < 2) {
-                socket.emit('gameError', { message: 'Недостаточно игроков для начала игры' });
-                return;
-            }
-
-            if (game.players.length > game.playersCount) {
-                socket.emit('gameError', { message: 'Слишком много игроков' });
-                return;
-            }
-
-            const spyIndex = Math.floor(Math.random() * game.players.length);
-            const word = 'Телефон'; // Здесь можно добавить список слов
-
-            game.players.forEach((player, index) => {
-                const role = index === spyIndex ? 'Шпион' : 'Игрок';
-                const playerWord = role === 'Шпион' ? null : word;
-                io.to(player.id).emit('gameStarted', { role, word: playerWord });
+        const admin = game.players.find(p => p.isAdmin);
+        if (admin && admin.id === socket.id) {
+            game.status = 'started';
+            
+            // Assign roles and locations
+            const roles = ['Шпион', 'Мирный житель'];
+            const locations = ['Пляж', 'Кинотеатр', 'Ресторан', 'Школа', 'Больница', 'Аэропорт'];
+            
+            const shuffledPlayers = [...game.players].sort(() => Math.random() - 0.5);
+            const spyIndex = Math.floor(Math.random() * shuffledPlayers.length);
+            
+            shuffledPlayers.forEach((player, index) => {
+                const role = index === spyIndex ? roles[0] : roles[1];
+                const location = index === spyIndex ? 'Неизвестно' : locations[Math.floor(Math.random() * locations.length)];
+                
+                io.to(player.id).emit('gameStarted', {
+                    players: game.players,
+                    role,
+                    location
+                });
             });
-
-            game.status = 'playing';
-            io.to(gameId).emit('gameStatus', { status: 'playing' });
-        } catch (error) {
-            console.error('Error starting game:', error);
-            socket.emit('gameError', { message: 'Ошибка при начале игры' });
         }
     });
 
+    // Handle chat messages
+    socket.on('chatMessage', (data) => {
+        const { gameId, message, playerName } = data;
+        io.to(gameId).emit('chatMessage', {
+            message,
+            playerName
+        });
+    });
+
+    // Handle disconnection
     socket.on('disconnect', () => {
         console.log('Client disconnected');
-        games.forEach((game, gameId) => {
+        
+        // Find and remove player from games
+        for (const [gameId, game] of games.entries()) {
             const playerIndex = game.players.findIndex(p => p.id === socket.id);
             if (playerIndex !== -1) {
+                const player = game.players[playerIndex];
                 game.players.splice(playerIndex, 1);
+                
                 if (game.players.length === 0) {
                     games.delete(gameId);
                 } else {
-                    io.to(gameId).emit('playerLeft', { players: game.players });
+                    io.to(gameId).emit('playerLeft', {
+                        players: game.players
+                    });
                 }
+                break;
             }
-        });
+        }
     });
 });
 
