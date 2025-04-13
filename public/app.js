@@ -2,8 +2,13 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// Initialize Socket.io
-const socket = io();
+// Initialize Socket.io with error handling
+const socket = io('https://spygameminiapp.onrender.com', {
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 20000
+});
 
 // Application state
 const state = {
@@ -63,6 +68,11 @@ function showScreen(screenName) {
         // Fallback to home screen if requested screen doesn't exist
         showScreen('home');
     }
+}
+
+function showAlert(message) {
+    // Use standard browser alert instead of Telegram WebApp popup
+    alert(message);
 }
 
 function updatePlayersList(players) {
@@ -142,7 +152,7 @@ if (buttons.copyGameId) {
         const gameId = document.getElementById('gameId');
         if (gameId) {
             navigator.clipboard.writeText(gameId.textContent);
-            alert('ID игры скопирован!');
+            showAlert('ID игры скопирован!');
         }
     });
 }
@@ -169,18 +179,32 @@ document.querySelectorAll('.nav-item').forEach(item => {
         e.preventDefault();
         const screen = item.dataset.screen;
         if (screen === 'game' && !state.gameId) {
-            alert('Сначала создайте или присоединитесь к игре');
+            showAlert('Сначала создайте или присоединитесь к игре');
             return;
         }
         showScreen(screen);
     });
 });
 
-// Socket Events
+// Socket.io connection handling
 socket.on('connect', () => {
     console.log('Connected to server');
 });
 
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+    showAlert('Ошибка подключения к серверу. Пожалуйста, попробуйте позже.');
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Disconnected:', reason);
+    if (reason === 'io server disconnect') {
+        // Server initiated disconnect, try to reconnect
+        socket.connect();
+    }
+});
+
+// Game Events
 socket.on('gameCreated', (data) => {
     state.gameId = data.gameId;
     state.isAdmin = true;
