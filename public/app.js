@@ -32,7 +32,8 @@ const buttons = {
     startGame: document.getElementById('startGameBtn'),
     endGame: document.getElementById('endGameBtn'),
     copyGameId: document.getElementById('copyGameIdBtn'),
-    sendMessage: document.getElementById('sendMessageBtn')
+    sendMessage: document.getElementById('sendMessageBtn'),
+    backToMenu: document.getElementById('backToMenuBtn')
 };
 
 const navItems = document.querySelectorAll('.nav-item');
@@ -57,15 +58,11 @@ function showScreen(screenName) {
     if (screen) {
         screen.classList.add('active');
         state.currentScreen = screenName;
+    } else {
+        console.error(`Screen not found: ${screenName}`);
+        // Fallback to home screen if requested screen doesn't exist
+        showScreen('home');
     }
-
-    // Update navigation
-    navItems.forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.screen === screenName) {
-            item.classList.add('active');
-        }
-    });
 }
 
 function updatePlayersList(players) {
@@ -159,6 +156,25 @@ if (buttons.sendMessage) {
         }
     });
 }
+
+if (buttons.backToMenu) {
+    buttons.backToMenu.addEventListener('click', () => {
+        showScreen('home');
+    });
+}
+
+// Navigation event listeners
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const screen = item.dataset.screen;
+        if (screen === 'game' && !state.gameId) {
+            alert('Сначала создайте или присоединитесь к игре');
+            return;
+        }
+        showScreen(screen);
+    });
+});
 
 // Socket Events
 socket.on('connect', () => {
