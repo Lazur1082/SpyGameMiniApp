@@ -61,11 +61,14 @@ function toggleTheme() {
 // Game navigation
 function showGameNavigation(show) {
     const gameNav = document.getElementById('gameNav');
-    gameNav.style.display = show ? 'flex' : 'none';
+    if (gameNav) {
+        gameNav.style.display = show ? 'flex' : 'none';
+    }
 }
 
 // Screen management
 function showScreen(screenName) {
+    // Hide all screens
     Object.values(screens).forEach(screen => {
         if (screen) {
             screen.classList.remove('active');
@@ -73,6 +76,7 @@ function showScreen(screenName) {
         }
     });
 
+    // Show requested screen
     const screen = screens[screenName];
     if (screen) {
         screen.classList.add('active');
@@ -123,74 +127,6 @@ function addChatMessage(message, type = 'received', playerName = 'System') {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Theme toggle
-    buttons.themeToggle.addEventListener('click', toggleTheme);
-
-    // Navigation
-    buttons.createGame.addEventListener('click', () => showScreen('create'));
-    buttons.joinGame.addEventListener('click', () => showScreen('join'));
-    buttons.backToMenu.addEventListener('click', () => showScreen('home'));
-    buttons.backToMenu2.addEventListener('click', () => showScreen('home'));
-
-    // Game creation
-    buttons.confirmCreate.addEventListener('click', () => {
-        const playersCount = inputs.playersCount.value;
-        socket.emit('createGame', {
-            playersCount,
-            playerName: tg.initDataUnsafe.user?.first_name || 'Player'
-        });
-    });
-
-    // Game joining
-    buttons.confirmJoin.addEventListener('click', () => {
-        const gameId = inputs.gameId.value;
-        if (gameId) {
-            socket.emit('joinGame', {
-                gameId,
-                playerName: tg.initDataUnsafe.user?.first_name || 'Player'
-            });
-        }
-    });
-
-    // Game start
-    buttons.startGame.addEventListener('click', () => {
-        if (state.isAdmin) {
-            socket.emit('startGame', { gameId: state.gameId });
-        }
-    });
-
-    // Leave game
-    buttons.leaveGame.addEventListener('click', () => {
-        if (state.gameId) {
-            socket.emit('leaveGame', { gameId: state.gameId });
-            state.gameId = null;
-            state.isAdmin = false;
-            showScreen('home');
-        }
-    });
-
-    // Chat
-    buttons.sendMessage.addEventListener('click', () => {
-        const message = inputs.message.value.trim();
-        if (message && state.gameId) {
-            socket.emit('chatMessage', {
-                gameId: state.gameId,
-                message,
-                playerName: tg.initDataUnsafe.user?.first_name || 'Player'
-            });
-            addChatMessage(message, 'sent', tg.initDataUnsafe.user?.first_name || 'Player');
-            inputs.message.value = '';
-        }
-    });
-
-    // Copy game ID
-    buttons.copyGameId.addEventListener('click', () => {
-        if (state.gameId) {
-            navigator.clipboard.writeText(state.gameId);
-            alert('Код игры скопирован!');
-        }
-    });
-
     // Initialize screens
     Object.values(screens).forEach(screen => {
         if (screen) {
@@ -198,6 +134,99 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     showScreen('home');
+
+    // Theme toggle
+    if (buttons.themeToggle) {
+        buttons.themeToggle.addEventListener('click', toggleTheme);
+    }
+
+    // Navigation
+    if (buttons.createGame) {
+        buttons.createGame.addEventListener('click', () => showScreen('create'));
+    }
+
+    if (buttons.joinGame) {
+        buttons.joinGame.addEventListener('click', () => showScreen('join'));
+    }
+
+    if (buttons.backToMenu) {
+        buttons.backToMenu.addEventListener('click', () => showScreen('home'));
+    }
+
+    if (buttons.backToMenu2) {
+        buttons.backToMenu2.addEventListener('click', () => showScreen('home'));
+    }
+
+    // Game creation
+    if (buttons.confirmCreate) {
+        buttons.confirmCreate.addEventListener('click', () => {
+            const playersCount = inputs.playersCount?.value || 4;
+            socket.emit('createGame', {
+                playersCount,
+                playerName: tg.initDataUnsafe.user?.first_name || 'Player'
+            });
+        });
+    }
+
+    // Game joining
+    if (buttons.confirmJoin) {
+        buttons.confirmJoin.addEventListener('click', () => {
+            const gameId = inputs.gameId?.value;
+            if (gameId) {
+                socket.emit('joinGame', {
+                    gameId,
+                    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
+                });
+            }
+        });
+    }
+
+    // Game start
+    if (buttons.startGame) {
+        buttons.startGame.addEventListener('click', () => {
+            if (state.isAdmin && state.gameId) {
+                socket.emit('startGame', { gameId: state.gameId });
+            }
+        });
+    }
+
+    // Leave game
+    if (buttons.leaveGame) {
+        buttons.leaveGame.addEventListener('click', () => {
+            if (state.gameId) {
+                socket.emit('leaveGame', { gameId: state.gameId });
+                state.gameId = null;
+                state.isAdmin = false;
+                showScreen('home');
+            }
+        });
+    }
+
+    // Chat
+    if (buttons.sendMessage) {
+        buttons.sendMessage.addEventListener('click', () => {
+            const message = inputs.message?.value.trim();
+            if (message && state.gameId) {
+                socket.emit('chatMessage', {
+                    gameId: state.gameId,
+                    message,
+                    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
+                });
+                addChatMessage(message, 'sent', tg.initDataUnsafe.user?.first_name || 'Player');
+                inputs.message.value = '';
+            }
+        });
+    }
+
+    // Copy game ID
+    if (buttons.copyGameId) {
+        buttons.copyGameId.addEventListener('click', () => {
+            if (state.gameId) {
+                navigator.clipboard.writeText(state.gameId);
+                alert('Код игры скопирован!');
+            }
+        });
+    }
 });
 
 // Socket event listeners

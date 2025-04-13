@@ -8,21 +8,23 @@
     <title>Spy Game</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <div class="app">
         <header>
             <h1>Spy Game</h1>
-            <button class="theme-toggle" id="themeToggle">
+            <button id="themeToggle" class="theme-toggle">
                 <i class="fas fa-moon"></i>
             </button>
         </header>
 
         <main>
             <!-- Home Screen -->
-            <div id="homeScreen" class="screen active">
+            <div id="homeScreen" class="screen">
+                <div class="game-info">
+                    <h2>Добро пожаловать!</h2>
+                    <p>Создайте новую игру или присоединитесь к существующей.</p>
+                </div>
                 <button id="createGameBtn" class="btn primary">
                     <i class="fas fa-plus"></i> Создать игру
                 </button>
@@ -35,7 +37,7 @@
             <div id="createGameScreen" class="screen">
                 <div class="form-group">
                     <label for="playersCount">Количество игроков:</label>
-                    <input type="number" id="playersCount" min="2" max="10" value="4">
+                    <input type="number" id="playersCount" min="2" max="8" value="4">
                 </div>
                 <button id="confirmCreateBtn" class="btn primary">
                     <i class="fas fa-check"></i> Создать
@@ -62,14 +64,21 @@
             <!-- Lobby Screen -->
             <div id="lobbyScreen" class="screen">
                 <div class="game-info">
-                    <h2>Код игры: <span id="gameId"></span></h2>
+                    <h2>Лобби</h2>
+                    <p>Код игры: <span id="gameId"></span></p>
                     <button id="copyGameIdBtn" class="btn small">
                         <i class="fas fa-copy"></i> Копировать код
                     </button>
                 </div>
-                <div class="players-list" id="playersList"></div>
+                <div class="players-list">
+                    <h3>Игроки:</h3>
+                    <div id="playersList"></div>
+                </div>
                 <button id="startGameBtn" class="btn primary">
                     <i class="fas fa-play"></i> Начать игру
+                </button>
+                <button id="leaveGameBtn" class="btn secondary">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
                 </button>
             </div>
 
@@ -80,7 +89,7 @@
                     <div class="location">Локация: <span id="playerLocation"></span></div>
                 </div>
                 <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages"></div>
+                    <div id="chatMessages" class="chat-messages"></div>
                     <div class="chat-input">
                         <input type="text" id="messageInput" placeholder="Введите сообщение...">
                         <button id="sendMessageBtn" class="btn small">
@@ -88,11 +97,14 @@
                         </button>
                     </div>
                 </div>
+                <button id="leaveGameBtn2" class="btn secondary">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </button>
             </div>
         </main>
 
         <!-- Game Navigation -->
-        <nav class="bottom-nav" id="gameNav" style="display: none;">
+        <nav id="gameNav" class="bottom-nav">
             <a href="#" class="nav-item" data-screen="lobby">
                 <i class="fas fa-users"></i>
                 <span>Лобби</span>
@@ -101,12 +113,15 @@
                 <i class="fas fa-comments"></i>
                 <span>Чат</span>
             </a>
-            <button id="leaveGameBtn" class="nav-item">
+            <a href="#" class="nav-item" id="exitGameBtn">
                 <i class="fas fa-sign-out-alt"></i>
-                <span>Выход</span>
-            </button>
+                <span>Выйти</span>
+            </a>
         </nav>
     </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="app.js"></script>
 </body>
 </html> 
