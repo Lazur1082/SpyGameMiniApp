@@ -24,15 +24,30 @@
             <!-- Main Menu Screen -->
             <div id="homeScreen" class="screen active">
                 <div class="screen-content">
-                    <button id="createGameBtn" class="btn primary">
-                        Создать игру
-                    </button>
-                    <button id="joinGameBtn" class="btn secondary">
-                        Присоединиться
-                    </button>
-                    <button id="settingsBtn" class="btn secondary">
-                        Настройки
-                    </button>
+                    <div class="game-description">
+                        <h2>Добро пожаловать в Spy Game!</h2>
+                        <p>Spy Game - это увлекательная игра, где один из игроков становится шпионом, а остальные пытаются его разоблачить.</p>
+                        <h3>Правила игры:</h3>
+                        <ul>
+                            <li>Каждый игрок получает случайную роль</li>
+                            <li>Один игрок становится шпионом</li>
+                            <li>Остальные игроки получают одинаковое задание</li>
+                            <li>Шпион не знает задание и должен его угадать</li>
+                            <li>Игроки обсуждают задание, пытаясь вычислить шпиона</li>
+                            <li>В конце раунда проводится голосование</li>
+                        </ul>
+                    </div>
+                    <div class="menu-buttons">
+                        <button id="createGameBtn" class="btn primary">
+                            <i class="fas fa-plus"></i> Создать игру
+                        </button>
+                        <button id="joinGameBtn" class="btn secondary">
+                            <i class="fas fa-sign-in-alt"></i> Присоединиться
+                        </button>
+                        <button id="settingsBtn" class="btn secondary">
+                            <i class="fas fa-cog"></i> Настройки
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -48,7 +63,6 @@
                         <input type="number" id="roundTime" min="1" max="10" value="3">
                     </div>
                     <button id="confirmCreateBtn" class="btn primary">Создать</button>
-                    <button id="backFromCreateBtn" class="btn secondary">Назад</button>
                 </div>
             </div>
 
@@ -60,7 +74,6 @@
                         <input type="text" id="gameCode" placeholder="Введите код игры">
                     </div>
                     <button id="confirmJoinBtn" class="btn primary">Присоединиться</button>
-                    <button id="backFromJoinBtn" class="btn secondary">Назад</button>
                 </div>
             </div>
 
@@ -72,7 +85,6 @@
                         <label>Звук</label>
                         <input type="checkbox" id="soundToggle" checked>
                     </div>
-                    <button id="backFromSettingsBtn" class="btn secondary">Назад</button>
                 </div>
             </div>
 
@@ -86,7 +98,6 @@
                     <div class="players-list" id="playersList"></div>
                     <button id="startGameBtn" class="btn primary">Начать игру</button>
                     <button id="endGameBtn" class="btn secondary">Завершить игру</button>
-                    <button id="backFromLobbyBtn" class="btn secondary">Назад</button>
                 </div>
             </div>
 
@@ -108,6 +119,22 @@
                 </div>
             </div>
         </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item" data-screen="home">
+                <i class="fas fa-home"></i>
+                <span>Главная</span>
+            </a>
+            <a href="#" class="nav-item" data-screen="game">
+                <i class="fas fa-gamepad"></i>
+                <span>Игра</span>
+            </a>
+            <a href="#" class="nav-item" data-screen="settings">
+                <i class="fas fa-cog"></i>
+                <span>Настройки</span>
+            </a>
+        </nav>
     </div>
 </body>
 </html> 
