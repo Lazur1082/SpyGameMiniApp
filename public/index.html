@@ -1,135 +1,113 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Spy Game</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js" defer></script>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Загрузка...</div>
-        </div>
-    </div>
-
-    <div class="app" style="display: none;">
+    <div class="app">
         <header>
             <h1>Spy Game</h1>
-            <button id="themeToggle" class="theme-toggle">
-                <i class="fas fa-moon"></i>
-            </button>
         </header>
 
-        <main>
+        <main class="main-content">
             <!-- Home Screen -->
             <div id="homeScreen" class="screen">
-                <div class="game-info">
-                    <h2>Добро пожаловать!</h2>
-                    <p>Создайте новую игру или присоединитесь к существующей.</p>
+                <div class="screen-content">
+                    <h2>Главное меню</h2>
+                    <div class="button-group">
+                        <button id="createGameBtn" class="btn primary">Создать игру</button>
+                        <button id="joinGameBtn" class="btn primary">Присоединиться</button>
+                    </div>
                 </div>
-                <button id="createGameBtn" class="btn primary">
-                    <i class="fas fa-plus"></i> Создать игру
-                </button>
-                <button id="joinGameBtn" class="btn secondary">
-                    <i class="fas fa-sign-in-alt"></i> Присоединиться
-                </button>
             </div>
 
             <!-- Create Game Screen -->
             <div id="createGameScreen" class="screen">
-                <div class="form-group">
-                    <label for="playersCount">Количество игроков:</label>
-                    <input type="number" id="playersCount" min="2" max="8" value="4">
+                <div class="screen-content">
+                    <h2>Создать игру</h2>
+                    <div class="form-group">
+                        <label for="playersCount">Количество игроков (2-8):</label>
+                        <input type="number" id="playersCount" min="2" max="8" value="4">
+                    </div>
+                    <div class="button-group">
+                        <button id="confirmCreateBtn" class="btn primary">Создать</button>
+                        <button id="backToMenuBtn" class="btn secondary">Назад</button>
+                    </div>
                 </div>
-                <button id="confirmCreateBtn" class="btn primary">
-                    <i class="fas fa-check"></i> Создать
-                </button>
-                <button id="backToMenuBtn" class="btn secondary">
-                    <i class="fas fa-arrow-left"></i> Назад
-                </button>
             </div>
 
             <!-- Join Game Screen -->
             <div id="joinGameScreen" class="screen">
-                <div class="form-group">
-                    <label for="gameCode">Код игры:</label>
-                    <input type="text" id="gameCode" placeholder="Введите код игры">
+                <div class="screen-content">
+                    <h2>Присоединиться к игре</h2>
+                    <div class="form-group">
+                        <label for="gameCode">Код игры:</label>
+                        <input type="text" id="gameCode" placeholder="Введите код">
+                    </div>
+                    <div class="button-group">
+                        <button id="confirmJoinBtn" class="btn primary">Присоединиться</button>
+                        <button id="backToMenuBtn2" class="btn secondary">Назад</button>
+                    </div>
                 </div>
-                <button id="confirmJoinBtn" class="btn primary">
-                    <i class="fas fa-check"></i> Присоединиться
-                </button>
-                <button id="backToMenuBtn2" class="btn secondary">
-                    <i class="fas fa-arrow-left"></i> Назад
-                </button>
             </div>
 
             <!-- Lobby Screen -->
             <div id="lobbyScreen" class="screen">
-                <div class="game-info">
+                <div class="screen-content">
                     <h2>Лобби</h2>
-                    <p>Код игры: <span id="gameId"></span></p>
-                    <button id="copyGameIdBtn" class="btn small">
-                        <i class="fas fa-copy"></i> Копировать код
-                    </button>
+                    <div class="game-info">
+                        <p>Код игры: <span id="gameId"></span></p>
+                        <button id="copyGameIdBtn" class="btn small">Копировать код</button>
+                    </div>
+                    <div class="players-section">
+                        <h3>Игроки</h3>
+                        <div id="playersList" class="players-list"></div>
+                    </div>
+                    <div class="button-group">
+                        <button id="startGameBtn" class="btn primary">Начать игру</button>
+                        <button id="leaveGameBtn" class="btn secondary">Покинуть игру</button>
+                    </div>
                 </div>
-                <div class="players-list">
-                    <h3>Игроки:</h3>
-                    <div id="playersList"></div>
-                </div>
-                <button id="startGameBtn" class="btn primary">
-                    <i class="fas fa-play"></i> Начать игру
-                </button>
-                <button id="leaveGameBtn" class="btn secondary">
-                    <i class="fas fa-sign-out-alt"></i> Выйти
-                </button>
             </div>
 
             <!-- Game Screen -->
             <div id="gameScreen" class="screen">
-                <div class="role-info">
-                    <div class="role">Ваша роль: <span id="playerRole"></span></div>
-                    <div class="location">Локация: <span id="playerLocation"></span></div>
-                </div>
-                <div class="chat-container">
-                    <div id="chatMessages" class="chat-messages"></div>
-                    <div class="chat-input">
-                        <input type="text" id="messageInput" placeholder="Введите сообщение...">
-                        <button id="sendMessageBtn" class="btn small">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+                <div class="screen-content">
+                    <div class="game-info">
+                        <div class="role-info">
+                            <h3>Ваша роль</h3>
+                            <p id="playerRole"></p>
+                            <h3>Локация</h3>
+                            <p id="playerLocation"></p>
+                        </div>
+                    </div>
+                    <div class="chat-section">
+                        <div id="chatMessages" class="chat-messages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="messageInput" placeholder="Введите сообщение">
+                            <button id="sendMessageBtn" class="btn small">Отправить</button>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button id="exitGameBtn" class="btn secondary">Выйти из игры</button>
                     </div>
                 </div>
-                <button id="leaveGameBtn2" class="btn secondary">
-                    <i class="fas fa-sign-out-alt"></i> Выйти
-                </button>
             </div>
         </main>
 
-        <!-- Game Navigation -->
-        <nav id="gameNav" class="bottom-nav">
-            <a href="#" class="nav-item" data-screen="lobby">
-                <i class="fas fa-users"></i>
-                <span>Лобби</span>
-            </a>
-            <a href="#" class="nav-item" data-screen="game">
-                <i class="fas fa-comments"></i>
-                <span>Чат</span>
-            </a>
-            <a href="#" class="nav-item" id="exitGameBtn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Выйти</span>
-            </a>
+        <nav class="bottom-nav">
+            <button class="nav-item" data-screen="home">Главная</button>
+            <button class="nav-item" data-screen="create">Создать</button>
+            <button class="nav-item" data-screen="join">Присоединиться</button>
         </nav>
     </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="app.js"></script>
 </body>
 </html> 

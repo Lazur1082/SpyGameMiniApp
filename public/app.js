@@ -36,7 +36,6 @@ const buttons = {
     copyGameId: document.getElementById('copyGameIdBtn'),
     sendMessage: document.getElementById('sendMessageBtn'),
     leaveGame: document.getElementById('leaveGameBtn'),
-    leaveGame2: document.getElementById('leaveGameBtn2'),
     exitGame: document.getElementById('exitGameBtn'),
     themeToggle: document.getElementById('themeToggle')
 };
@@ -215,17 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (buttons.leaveGame2) {
-        buttons.leaveGame2.addEventListener('click', () => {
-            if (state.gameId) {
-                socket.emit('leaveGame', { gameId: state.gameId });
-                state.gameId = null;
-                state.isAdmin = false;
-                showScreen('home');
-            }
-        });
-    }
-
+    // Exit game
     if (buttons.exitGame) {
         buttons.exitGame.addEventListener('click', () => {
             if (state.gameId) {
