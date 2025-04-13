@@ -87,18 +87,10 @@ function showScreen(screenName) {
         screen.classList.add('active');
         screen.style.display = 'block';
         state.currentScreen = screenName;
-        
-        // Force reflow for Android
-        screen.offsetHeight;
     }
 
-    // Update navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.screen === screenName) {
-            item.classList.add('active');
-        }
-    });
+    // Force reflow for Android
+    screen.offsetHeight;
 }
 
 function updatePlayersList(players) {
@@ -117,15 +109,23 @@ function updatePlayersList(players) {
 }
 
 function addChatMessage(message, type = 'received', playerName = 'System') {
-    if (!lists.chat) return;
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
     const messageElement = document.createElement('div');
     messageElement.className = `message ${type}`;
-    messageElement.innerHTML = `
-        <div class="message-sender">${playerName}</div>
-        <div class="message-text">${message}</div>
-    `;
-    lists.chat.appendChild(messageElement);
-    lists.chat.scrollTop = lists.chat.scrollHeight;
+    
+    if (playerName !== 'System') {
+        messageElement.innerHTML = `
+            <div class="message-sender">${playerName}</div>
+            <div class="message-text">${message}</div>
+        `;
+    } else {
+        messageElement.innerHTML = `<div class="message-text">${message}</div>`;
+    }
+    
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function assignRoles(players) {
@@ -221,14 +221,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (buttons.sendMessage) {
         buttons.sendMessage.addEventListener('click', () => {
-            const message = inputs.message?.value;
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput?.value.trim();
+            
             if (message && state.gameId) {
                 socket.emit('chatMessage', {
                     gameId: state.gameId,
                     message,
                     playerName: tg.initDataUnsafe.user?.first_name || 'Player'
                 });
-                inputs.message.value = '';
+                addChatMessage(message, 'sent', tg.initDataUnsafe.user?.first_name || 'Player');
+                messageInput.value = '';
             }
         });
     }
@@ -276,9 +279,11 @@ socket.on('gameStarted', (data) => {
     if (playerData) {
         state.role = playerData.role;
         state.location = playerData.location;
-        addChatMessage(`Ваша роль: ${state.role}`, 'system');
+        document.getElementById('playerRole').textContent = state.role;
         if (state.role === 'Мирный житель') {
-            addChatMessage(`Ваше местоположение: ${state.location}`, 'system');
+            document.getElementById('playerLocation').textContent = state.location;
+        } else {
+            document.getElementById('playerLocation').textContent = 'Неизвестно';
         }
     }
     showScreen('game');
