@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spy Game</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -21,7 +21,7 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Home Screen -->
+            <!-- Main Menu Screen -->
             <div id="homeScreen" class="screen active">
                 <div class="screen-content">
                     <button id="createGameBtn" class="btn primary">
@@ -29,6 +29,9 @@
                     </button>
                     <button id="joinGameBtn" class="btn secondary">
                         Присоединиться
+                    </button>
+                    <button id="settingsBtn" class="btn secondary">
+                        Настройки
                     </button>
                 </div>
             </div>
@@ -38,7 +41,7 @@
                 <div class="screen-content">
                     <div class="form-group">
                         <label for="playersCount">Количество игроков:</label>
-                        <input type="number" id="playersCount" min="3" max="10" value="4">
+                        <input type="number" id="playersCount" min="2" max="10" value="4">
                     </div>
                     <div class="form-group">
                         <label for="roundTime">Время раунда (минуты):</label>
@@ -61,6 +64,18 @@
                 </div>
             </div>
 
+            <!-- Settings Screen -->
+            <div id="settingsScreen" class="screen">
+                <div class="screen-content">
+                    <h2>Настройки</h2>
+                    <div class="settings-group">
+                        <label>Звук</label>
+                        <input type="checkbox" id="soundToggle" checked>
+                    </div>
+                    <button id="backFromSettingsBtn" class="btn secondary">Назад</button>
+                </div>
+            </div>
+
             <!-- Lobby Screen -->
             <div id="lobbyScreen" class="screen">
                 <div class="screen-content">
@@ -70,6 +85,7 @@
                     </div>
                     <div class="players-list" id="playersList"></div>
                     <button id="startGameBtn" class="btn primary">Начать игру</button>
+                    <button id="endGameBtn" class="btn secondary">Завершить игру</button>
                     <button id="backFromLobbyBtn" class="btn secondary">Назад</button>
                 </div>
             </div>
@@ -88,6 +104,7 @@
                             <button id="sendMessageBtn" class="btn small">Отправить</button>
                         </div>
                     </div>
+                    <button id="endGameBtn" class="btn secondary">Завершить игру</button>
                 </div>
             </div>
         </main>

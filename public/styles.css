@@ -47,6 +47,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -54,12 +55,16 @@ body {
     background-color: #1a1a1a;
     color: #ffffff;
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .app {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow: hidden;
 }
 
 /* Header */
@@ -67,6 +72,11 @@ body {
     background-color: #2481cc;
     padding: 1rem;
     text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
 }
 
 .header h1 {
@@ -79,7 +89,10 @@ body {
     flex: 1;
     position: relative;
     padding: 1rem;
-    min-height: calc(100vh - 60px);
+    padding-top: 4rem;
+    min-height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .screen {
@@ -91,7 +104,9 @@ body {
     display: none;
     background-color: #1a1a1a;
     padding: 1rem;
+    padding-top: 4rem;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .screen.active {
@@ -106,6 +121,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-height: calc(100vh - 5rem);
 }
 
 /* Buttons */
@@ -120,6 +136,9 @@ body {
     margin: 0.5rem 0;
     width: 100%;
     text-align: center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 .btn.primary {
@@ -157,6 +176,9 @@ body {
     border-radius: 4px;
     background-color: #333333;
     color: #ffffff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 /* Game elements */
@@ -222,6 +244,7 @@ body {
     overflow-y: auto;
     margin-bottom: 1rem;
     width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 .message {
@@ -261,6 +284,9 @@ body {
     border-radius: 4px;
     background-color: #444444;
     color: #ffffff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 /* Game Status */
@@ -290,37 +316,23 @@ h2 {
 
 /* Settings styles */
 .settings-group {
-    background-color: var(--secondary-bg);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px var(--shadow-color);
-}
-
-.setting-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--border-color);
-    transition: background-color 0.2s;
+    justify-content: space-between;
+    padding: 1rem;
+    background-color: #333333;
+    border-radius: 4px;
+    margin-bottom: 1rem;
 }
 
-.setting-item:last-child {
-    border-bottom: none;
+.settings-group label {
+    color: #ffffff;
+    margin: 0;
 }
 
-.setting-item:hover {
-    background-color: var(--hover-color);
-    border-radius: 8px;
-    padding: 16px;
-    margin: 0 -16px;
-}
-
-.setting-item span {
-    font-size: 16px;
-    color: var(--text-color);
-    font-weight: 500;
+.settings-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
 }
 
 /* Switch styles */
@@ -432,28 +444,27 @@ input:checked + .slider:before {
 
 /* Responsive styles */
 @media (max-width: 480px) {
-    .settings-group, .game-settings {
-        padding: 16px;
-        margin-bottom: 16px;
+    .header {
+        padding: 0.75rem;
     }
-    
-    .setting-item {
-        padding: 12px 0;
+
+    .header h1 {
+        font-size: 1.25rem;
     }
-    
-    .setting-item:hover {
-        padding: 12px;
-        margin: 0 -12px;
+
+    .main-content {
+        padding-top: 3.5rem;
     }
-    
-    .button, .input-field, .setting-group input {
-        font-size: 14px;
-        padding: 10px 14px;
+
+    .screen {
+        padding-top: 3.5rem;
     }
-    
-    .language-select, .theme-select {
-        font-size: 12px;
-        padding: 6px 10px;
-        min-width: 100px;
+
+    .btn {
+        padding: 0.75rem;
+    }
+
+    .chat-container {
+        height: calc(100vh - 180px);
     }
 }
