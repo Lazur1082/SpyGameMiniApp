@@ -35,6 +35,8 @@ const buttons = {
     copyGameId: document.getElementById('copyGameIdBtn'),
     sendMessage: document.getElementById('sendMessageBtn'),
     leaveGame: document.getElementById('leaveGameBtn'),
+    leaveGame2: document.getElementById('leaveGameBtn2'),
+    exitGame: document.getElementById('exitGameBtn'),
     themeToggle: document.getElementById('themeToggle')
 };
 
@@ -202,6 +204,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (buttons.leaveGame2) {
+        buttons.leaveGame2.addEventListener('click', () => {
+            if (state.gameId) {
+                socket.emit('leaveGame', { gameId: state.gameId });
+                state.gameId = null;
+                state.isAdmin = false;
+                showScreen('home');
+            }
+        });
+    }
+
+    if (buttons.exitGame) {
+        buttons.exitGame.addEventListener('click', () => {
+            if (state.gameId) {
+                socket.emit('leaveGame', { gameId: state.gameId });
+                state.gameId = null;
+                state.isAdmin = false;
+                showScreen('home');
+            }
+        });
+    }
+
     // Chat
     if (buttons.sendMessage) {
         buttons.sendMessage.addEventListener('click', () => {
@@ -227,6 +251,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Navigation items
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const screen = item.getAttribute('data-screen');
+            if (screen) {
+                showScreen(screen);
+            }
+        });
+    });
 });
 
 // Socket event listeners
