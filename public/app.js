@@ -2,8 +2,14 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// Initialize Socket.io
-const socket = io();
+// Initialize Socket.io with Android-specific settings
+const socket = io({
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 20000
+});
 
 // App state
 const state = {
@@ -64,6 +70,9 @@ function showScreen(screenName) {
         screen.classList.add('active');
         screen.style.display = 'block';
         state.currentScreen = screenName;
+        
+        // Force reflow for Android
+        screen.offsetHeight;
     }
 
     // Update navigation
@@ -99,7 +108,7 @@ function addChatMessage(message, type = 'received') {
     lists.chat.scrollTop = lists.chat.scrollHeight;
 }
 
-// Event listeners
+// Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize screens
     Object.values(screens).forEach(screen => {
