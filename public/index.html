@@ -1,105 +1,106 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Spy Game</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
     <div class="app">
         <header>
             <h1>Spy Game</h1>
         </header>
-
+        
         <main>
-            <!-- Главное меню -->
-            <section id="homeScreen" class="screen active">
-                <div class="menu-buttons">
-                    <button id="createGameBtn" class="btn primary">
-                        <i class="fas fa-plus"></i> Создать игру
-                    </button>
-                    <button id="joinGameBtn" class="btn primary">
-                        <i class="fas fa-sign-in-alt"></i> Присоединиться
-                    </button>
-                    <button id="settingsBtn" class="btn secondary">
-                        <i class="fas fa-cog"></i> Настройки
-                    </button>
-                </div>
-            </section>
+            <!-- Home Screen -->
+            <div id="homeScreen" class="screen active">
+                <button id="createGameBtn" class="btn primary">
+                    <i class="fas fa-plus"></i> Создать игру
+                </button>
+                <button id="joinGameBtn" class="btn primary">
+                    <i class="fas fa-sign-in-alt"></i> Присоединиться
+                </button>
+                <button id="settingsBtn" class="btn secondary">
+                    <i class="fas fa-cog"></i> Настройки
+                </button>
+            </div>
 
-            <!-- Создание игры -->
-            <section id="createGameScreen" class="screen">
+            <!-- Create Game Screen -->
+            <div id="createGameScreen" class="screen">
                 <div class="form-group">
-                    <label for="playersCount">Количество игроков</label>
-                    <input type="number" id="playersCount" min="2" max="10" value="4">
+                    <label>Количество игроков</label>
+                    <input type="number" id="playersCount" value="4" min="2" max="10">
                 </div>
                 <div class="form-group">
-                    <label for="roundTime">Время раунда (минуты)</label>
-                    <input type="number" id="roundTime" min="1" max="10" value="3">
+                    <label>Время раунда (минуты)</label>
+                    <input type="number" id="roundTime" value="3" min="1" max="10">
                 </div>
                 <button id="confirmCreateBtn" class="btn primary">Создать</button>
                 <button id="backToMenuBtn" class="btn secondary">Назад</button>
-            </section>
+            </div>
 
-            <!-- Присоединение к игре -->
-            <section id="joinGameScreen" class="screen">
+            <!-- Join Game Screen -->
+            <div id="joinGameScreen" class="screen">
                 <div class="form-group">
-                    <label for="gameCode">Код игры</label>
-                    <input type="text" id="gameCode" placeholder="Введите код игры">
+                    <label>ID игры</label>
+                    <input type="text" id="gameCode" placeholder="Введите ID игры">
                 </div>
                 <button id="confirmJoinBtn" class="btn primary">Присоединиться</button>
                 <button id="backToMenuBtn" class="btn secondary">Назад</button>
-            </section>
+            </div>
 
-            <!-- Лобби -->
-            <section id="lobbyScreen" class="screen">
+            <!-- Lobby Screen -->
+            <div id="lobbyScreen" class="screen">
                 <div class="game-info">
                     <h2>ID игры: <span id="gameId"></span></h2>
                     <button id="copyGameIdBtn" class="btn small">Копировать ID</button>
                 </div>
                 <div class="players-list" id="playersList"></div>
                 <button id="startGameBtn" class="btn primary">Начать игру</button>
-                <button id="backToMenuBtn" class="btn secondary">Выйти</button>
-            </section>
+                <button id="backToMenuBtn" class="btn secondary">Назад</button>
+            </div>
 
-            <!-- Игровой экран -->
-            <section id="gameScreen" class="screen">
-                <div class="game-status">
-                    <div id="roleInfo"></div>
-                    <div id="gameTimer"></div>
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div class="game-info">
+                    <h2>Игра идет</h2>
                 </div>
                 <div class="chat-container">
                     <div class="chat-messages" id="chatMessages"></div>
                     <div class="chat-input">
-                        <input type="text" id="messageInput" placeholder="Введите сообщение...">
-                        <button id="sendMessageBtn" class="btn small">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+                        <input type="text" id="messageInput" placeholder="Введите сообщение">
+                        <button id="sendMessageBtn" class="btn small">Отправить</button>
                     </div>
                 </div>
                 <button id="endGameBtn" class="btn secondary">Завершить игру</button>
-            </section>
+            </div>
 
-            <!-- Настройки -->
-            <section id="settingsScreen" class="screen">
+            <!-- Settings Screen -->
+            <div id="settingsScreen" class="screen">
                 <div class="settings-group">
-                    <h2>Настройки</h2>
                     <div class="setting-item">
-                        <label>Звуковые эффекты</label>
-                        <input type="checkbox" id="soundToggle" checked>
+                        <span>Звуковые эффекты</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
                     </div>
                     <div class="setting-item">
-                        <label>Уведомления</label>
-                        <input type="checkbox" id="notificationsToggle" checked>
+                        <span>Уведомления</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
                 <button id="backToMenuBtn" class="btn secondary">Назад</button>
-            </section>
+            </div>
         </main>
 
         <nav class="bottom-nav">
