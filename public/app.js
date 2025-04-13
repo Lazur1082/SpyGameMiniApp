@@ -16,7 +16,9 @@ const state = {
     currentScreen: 'home',
     gameId: null,
     isAdmin: false,
-    players: []
+    players: [],
+    role: null,
+    location: null
 };
 
 // DOM elements
@@ -53,6 +55,21 @@ const lists = {
     players: document.getElementById('playersList'),
     chat: document.getElementById('chatMessages')
 };
+
+// Game roles and locations
+const roles = ['Шпион', 'Мирный житель'];
+const locations = [
+    'Ресторан',
+    'Больница',
+    'Школа',
+    'Аэропорт',
+    'Пляж',
+    'Кинотеатр',
+    'Библиотека',
+    'Спортзал',
+    'Музей',
+    'Парк'
+];
 
 // Functions
 function showScreen(screenName) {
@@ -109,6 +126,18 @@ function addChatMessage(message, type = 'received', playerName = 'System') {
     `;
     lists.chat.appendChild(messageElement);
     lists.chat.scrollTop = lists.chat.scrollHeight;
+}
+
+function assignRoles(players) {
+    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+    const spyIndex = Math.floor(Math.random() * shuffledPlayers.length);
+    const location = locations[Math.floor(Math.random() * locations.length)];
+
+    return shuffledPlayers.map((player, index) => ({
+        ...player,
+        role: index === spyIndex ? 'Шпион' : 'Мирный житель',
+        location: index === spyIndex ? 'Неизвестно' : location
+    }));
 }
 
 // Initialize app
@@ -199,7 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     message,
                     playerName: tg.initDataUnsafe.user?.first_name || 'Player'
                 });
-                addChatMessage(message, 'sent', tg.initDataUnsafe.user?.first_name || 'Player');
                 inputs.message.value = '';
             }
         });
@@ -235,17 +263,26 @@ socket.on('gameJoined', (data) => {
 
 socket.on('playerJoined', (data) => {
     updatePlayersList(data.players);
-    addChatMessage(`${data.playerName} joined the game`, 'system');
+    addChatMessage(`${data.playerName} присоединился к игре`, 'system');
 });
 
 socket.on('playerLeft', (data) => {
     updatePlayersList(data.players);
-    addChatMessage(`${data.playerName} left the game`, 'system');
+    addChatMessage(`${data.playerName} покинул игру`, 'system');
 });
 
 socket.on('gameStarted', (data) => {
+    const playerData = data.players.find(p => p.name === (tg.initDataUnsafe.user?.first_name || 'Player'));
+    if (playerData) {
+        state.role = playerData.role;
+        state.location = playerData.location;
+        addChatMessage(`Ваша роль: ${state.role}`, 'system');
+        if (state.role === 'Мирный житель') {
+            addChatMessage(`Ваше местоположение: ${state.location}`, 'system');
+        }
+    }
     showScreen('game');
-    addChatMessage('Game started!', 'system');
+    addChatMessage('Игра началась!', 'system');
 });
 
 socket.on('chatMessage', (data) => {
