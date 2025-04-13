@@ -10,12 +10,12 @@
     --light-disabled-color: #cccccc;
     
     /* Dark theme variables */
-    --dark-bg-color: #17212b;
+    --dark-bg-color: #1a1a1a;
     --dark-text-color: #ffffff;
-    --dark-secondary-bg: #232e3c;
-    --dark-accent-color: #2ea6ff;
-    --dark-border-color: #2a3a4d;
-    --dark-hover-color: #2a3a4d;
+    --dark-secondary-bg: #2a2a2a;
+    --dark-accent-color: #ff4444;
+    --dark-border-color: #3a3a3a;
+    --dark-hover-color: #3a3a3a;
     --dark-shadow-color: rgba(0, 0, 0, 0.3);
     --dark-disabled-color: #4a4a4a;
 
@@ -70,8 +70,8 @@ html, body {
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -137,7 +137,7 @@ main {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #f5f5f5;
+    background-color: var(--bg-color);
     padding: 1rem;
     display: none;
     overflow-y: auto;
@@ -181,13 +181,13 @@ main {
 }
 
 .btn.primary {
-    background-color: #2481cc;
+    background-color: var(--accent-color);
     color: white;
 }
 
 .btn.secondary {
-    background-color: #e0e0e0;
-    color: #333;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
 }
 
 .btn.small {
@@ -260,7 +260,7 @@ main {
 
 /* Chat */
 .chat-container {
-    background-color: white;
+    background-color: var(--secondary-bg);
     border-radius: 8px;
     margin: 1rem 0;
     height: calc(100vh - 300px);
@@ -269,6 +269,7 @@ main {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    border: 1px solid var(--border-color);
 }
 
 .chat-messages {
@@ -284,24 +285,28 @@ main {
     margin-bottom: 1rem;
     padding: 0.75rem;
     border-radius: 8px;
-    background-color: #f0f0f0;
+    background-color: var(--secondary-bg);
     max-width: 80%;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    border: 1px solid var(--border-color);
 }
 
 .message.sent {
-    background-color: #e3f2fd;
+    background-color: var(--accent-color);
+    color: white;
     margin-left: auto;
 }
 
 .message.received {
-    background-color: #f5f5f5;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
     margin-right: auto;
 }
 
 .message.system {
-    background-color: #fff3e0;
+    background-color: var(--hover-color);
+    color: var(--text-color);
     text-align: center;
     margin: 0 auto;
 }
@@ -367,9 +372,9 @@ main {
 .bottom-nav {
     display: flex;
     justify-content: space-around;
-    background-color: white;
+    background-color: var(--bg-color);
     padding: 0.75rem;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-color);
     position: fixed;
     bottom: 0;
     left: 0;
@@ -385,7 +390,7 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #666;
+    color: var(--text-color);
     text-decoration: none;
     font-size: 0.75rem;
     padding: 0.5rem;
@@ -397,7 +402,7 @@ main {
 }
 
 .nav-item.active {
-    color: #2481cc;
+    color: var(--accent-color);
 }
 
 /* Responsive adjustments */
@@ -471,4 +476,17 @@ main {
     .role-info .location {
         font-size: 14px;
     }
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1.5rem;
+    z-index: 1000;
 }

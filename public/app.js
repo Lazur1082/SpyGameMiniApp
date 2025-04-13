@@ -2,14 +2,8 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// Initialize Socket.io with Android-specific settings
-const socket = io({
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000,
-    timeout: 20000
-});
+// Initialize Socket.io
+const socket = io();
 
 // App state
 const state = {
@@ -27,28 +21,27 @@ const screens = {
     create: document.getElementById('createGameScreen'),
     join: document.getElementById('joinGameScreen'),
     lobby: document.getElementById('lobbyScreen'),
-    game: document.getElementById('gameScreen'),
-    settings: document.getElementById('settingsScreen')
+    game: document.getElementById('gameScreen')
 };
 
 const buttons = {
     createGame: document.getElementById('createGameBtn'),
     joinGame: document.getElementById('joinGameBtn'),
-    settings: document.getElementById('settingsBtn'),
     confirmCreate: document.getElementById('confirmCreateBtn'),
     confirmJoin: document.getElementById('confirmJoinBtn'),
     backToMenu: document.getElementById('backToMenuBtn'),
+    backToMenu2: document.getElementById('backToMenuBtn2'),
     startGame: document.getElementById('startGameBtn'),
     copyGameId: document.getElementById('copyGameIdBtn'),
     sendMessage: document.getElementById('sendMessageBtn'),
-    endGame: document.getElementById('endGameBtn')
+    leaveGame: document.getElementById('leaveGameBtn'),
+    themeToggle: document.getElementById('themeToggle')
 };
 
 const inputs = {
     gameId: document.getElementById('gameCode'),
     message: document.getElementById('messageInput'),
-    playersCount: document.getElementById('playersCount'),
-    roundTime: document.getElementById('roundTime')
+    playersCount: document.getElementById('playersCount')
 };
 
 const lists = {
@@ -56,24 +49,23 @@ const lists = {
     chat: document.getElementById('chatMessages')
 };
 
-// Game roles and locations
-const roles = ['Шпион', 'Мирный житель'];
-const locations = [
-    'Ресторан',
-    'Больница',
-    'Школа',
-    'Аэропорт',
-    'Пляж',
-    'Кинотеатр',
-    'Библиотека',
-    'Спортзал',
-    'Музей',
-    'Парк'
-];
+// Theme handling
+function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', newTheme);
+    buttons.themeToggle.innerHTML = newTheme === 'light' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+}
 
-// Functions
+// Game navigation
+function showGameNavigation(show) {
+    const gameNav = document.getElementById('gameNav');
+    gameNav.style.display = show ? 'flex' : 'none';
+}
+
+// Screen management
 function showScreen(screenName) {
-    // Hide all screens
     Object.values(screens).forEach(screen => {
         if (screen) {
             screen.classList.remove('active');
@@ -81,7 +73,6 @@ function showScreen(screenName) {
         }
     });
 
-    // Show requested screen
     const screen = screens[screenName];
     if (screen) {
         screen.classList.add('active');
@@ -89,10 +80,11 @@ function showScreen(screenName) {
         state.currentScreen = screenName;
     }
 
-    // Force reflow for Android
-    screen.offsetHeight;
+    // Show game navigation when in game or lobby
+    showGameNavigation(screenName === 'game' || screenName === 'lobby');
 }
 
+// Players list management
 function updatePlayersList(players) {
     if (!lists.players) return;
     lists.players.innerHTML = '';
@@ -108,6 +100,7 @@ function updatePlayersList(players) {
     });
 }
 
+// Chat management
 function addChatMessage(message, type = 'received', playerName = 'System') {
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
@@ -128,120 +121,75 @@ function addChatMessage(message, type = 'received', playerName = 'System') {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function assignRoles(players) {
-    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
-    const spyIndex = Math.floor(Math.random() * shuffledPlayers.length);
-    const location = locations[Math.floor(Math.random() * locations.length)];
-
-    return shuffledPlayers.map((player, index) => ({
-        ...player,
-        role: index === spyIndex ? 'Шпион' : 'Мирный житель',
-        location: index === spyIndex ? 'Неизвестно' : location
-    }));
-}
-
-// Initialize app
+// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize screens
-    Object.values(screens).forEach(screen => {
-        if (screen) {
-            screen.style.display = 'none';
-        }
-    });
-    showScreen('home');
+    // Theme toggle
+    buttons.themeToggle.addEventListener('click', toggleTheme);
 
-    // Navigation event listeners
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const screen = item.dataset.screen;
-            if (screen === 'game' && !state.gameId) {
-                alert('Сначала создайте или присоединитесь к игре');
-                return;
-            }
-            showScreen(screen);
+    // Navigation
+    buttons.createGame.addEventListener('click', () => showScreen('create'));
+    buttons.joinGame.addEventListener('click', () => showScreen('join'));
+    buttons.backToMenu.addEventListener('click', () => showScreen('home'));
+    buttons.backToMenu2.addEventListener('click', () => showScreen('home'));
+
+    // Game creation
+    buttons.confirmCreate.addEventListener('click', () => {
+        const playersCount = inputs.playersCount.value;
+        socket.emit('createGame', {
+            playersCount,
+            playerName: tg.initDataUnsafe.user?.first_name || 'Player'
         });
     });
 
-    // Button event listeners
-    if (buttons.createGame) {
-        buttons.createGame.addEventListener('click', () => showScreen('create'));
-    }
-
-    if (buttons.joinGame) {
-        buttons.joinGame.addEventListener('click', () => showScreen('join'));
-    }
-
-    if (buttons.settings) {
-        buttons.settings.addEventListener('click', () => showScreen('settings'));
-    }
-
-    if (buttons.backToMenu) {
-        buttons.backToMenu.addEventListener('click', () => showScreen('home'));
-    }
-
-    if (buttons.confirmCreate) {
-        buttons.confirmCreate.addEventListener('click', () => {
-            const playersCount = inputs.playersCount?.value || 4;
-            const roundTime = inputs.roundTime?.value || 3;
-            socket.emit('createGame', {
-                playersCount,
-                roundTime,
+    // Game joining
+    buttons.confirmJoin.addEventListener('click', () => {
+        const gameId = inputs.gameId.value;
+        if (gameId) {
+            socket.emit('joinGame', {
+                gameId,
                 playerName: tg.initDataUnsafe.user?.first_name || 'Player'
             });
-        });
-    }
+        }
+    });
 
-    if (buttons.confirmJoin) {
-        buttons.confirmJoin.addEventListener('click', () => {
-            const gameId = inputs.gameId?.value;
-            if (gameId) {
-                socket.emit('joinGame', {
-                    gameId,
-                    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
-                });
-            }
-        });
-    }
-
-    if (buttons.startGame) {
-        buttons.startGame.addEventListener('click', () => {
+    // Game start
+    buttons.startGame.addEventListener('click', () => {
+        if (state.isAdmin) {
             socket.emit('startGame', { gameId: state.gameId });
-        });
-    }
+        }
+    });
 
-    if (buttons.copyGameId) {
-        buttons.copyGameId.addEventListener('click', () => {
-            if (state.gameId) {
-                navigator.clipboard.writeText(state.gameId);
-                alert('Game ID copied to clipboard!');
-            }
-        });
-    }
-
-    if (buttons.sendMessage) {
-        buttons.sendMessage.addEventListener('click', () => {
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput?.value.trim();
-            
-            if (message && state.gameId) {
-                socket.emit('chatMessage', {
-                    gameId: state.gameId,
-                    message,
-                    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
-                });
-                addChatMessage(message, 'sent', tg.initDataUnsafe.user?.first_name || 'Player');
-                messageInput.value = '';
-            }
-        });
-    }
-
-    if (buttons.endGame) {
-        buttons.endGame.addEventListener('click', () => {
-            socket.emit('endGame', { gameId: state.gameId });
+    // Leave game
+    buttons.leaveGame.addEventListener('click', () => {
+        if (state.gameId) {
+            socket.emit('leaveGame', { gameId: state.gameId });
+            state.gameId = null;
+            state.isAdmin = false;
             showScreen('home');
-        });
-    }
+        }
+    });
+
+    // Chat
+    buttons.sendMessage.addEventListener('click', () => {
+        const message = inputs.message.value.trim();
+        if (message && state.gameId) {
+            socket.emit('chatMessage', {
+                gameId: state.gameId,
+                message,
+                playerName: tg.initDataUnsafe.user?.first_name || 'Player'
+            });
+            addChatMessage(message, 'sent', tg.initDataUnsafe.user?.first_name || 'Player');
+            inputs.message.value = '';
+        }
+    });
+
+    // Copy game ID
+    buttons.copyGameId.addEventListener('click', () => {
+        if (state.gameId) {
+            navigator.clipboard.writeText(state.gameId);
+            alert('Код игры скопирован!');
+        }
+    });
 });
 
 // Socket event listeners
@@ -292,6 +240,13 @@ socket.on('gameStarted', (data) => {
 
 socket.on('chatMessage', (data) => {
     addChatMessage(data.message, 'received', data.playerName);
+});
+
+socket.on('gameEnded', () => {
+    state.gameId = null;
+    state.isAdmin = false;
+    showScreen('home');
+    addChatMessage('Игра завершена!', 'system');
 });
 
 socket.on('error', (error) => {
