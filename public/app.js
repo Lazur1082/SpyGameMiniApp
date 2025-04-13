@@ -99,11 +99,14 @@ function updatePlayersList(players) {
     });
 }
 
-function addChatMessage(message, type = 'received') {
+function addChatMessage(message, type = 'received', playerName = 'System') {
     if (!lists.chat) return;
     const messageElement = document.createElement('div');
     messageElement.className = `message ${type}`;
-    messageElement.textContent = message;
+    messageElement.innerHTML = `
+        <div class="message-sender">${playerName}</div>
+        <div class="message-text">${message}</div>
+    `;
     lists.chat.appendChild(messageElement);
     lists.chat.scrollTop = lists.chat.scrollHeight;
 }
@@ -193,8 +196,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (message && state.gameId) {
                 socket.emit('chatMessage', {
                     gameId: state.gameId,
-                    message
+                    message,
+                    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
                 });
+                addChatMessage(message, 'sent', tg.initDataUnsafe.user?.first_name || 'Player');
                 inputs.message.value = '';
             }
         });
@@ -244,7 +249,7 @@ socket.on('gameStarted', (data) => {
 });
 
 socket.on('chatMessage', (data) => {
-    addChatMessage(`${data.playerName}: ${data.message}`);
+    addChatMessage(data.message, 'received', data.playerName);
 });
 
 socket.on('error', (error) => {
