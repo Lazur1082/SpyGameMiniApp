@@ -2,52 +2,42 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Spy Game</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="app.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="app">
-        <!-- Header -->
         <header class="header">
-            <div class="header-content">
-                <h1 class="header-title">Spy Game</h1>
-            </div>
+            <h1>Spy Game</h1>
         </header>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- Main Menu Screen -->
+            <!-- Home Screen -->
             <div id="homeScreen" class="screen active">
                 <div class="screen-content">
                     <div class="game-description">
                         <h2>Добро пожаловать в Spy Game!</h2>
-                        <p>Spy Game - это увлекательная игра, где один из игроков становится шпионом, а остальные пытаются его разоблачить.</p>
-                        <h3>Правила игры:</h3>
-                        <ul>
-                            <li>Каждый игрок получает случайную роль</li>
-                            <li>Один игрок становится шпионом</li>
-                            <li>Остальные игроки получают одинаковое задание</li>
-                            <li>Шпион не знает задание и должен его угадать</li>
-                            <li>Игроки обсуждают задание, пытаясь вычислить шпиона</li>
-                            <li>В конце раунда проводится голосование</li>
-                        </ul>
+                        <p>Увлекательная игра в жанре социальной дедукции, где вам предстоит разгадать, кто среди вас шпион!</p>
                     </div>
                     <div class="menu-buttons">
                         <button id="createGameBtn" class="btn primary">
-                            <i class="fas fa-plus"></i> Создать игру
+                            <i class="fas fa-plus"></i>
+                            Создать игру
                         </button>
-                        <button id="joinGameBtn" class="btn secondary">
-                            <i class="fas fa-sign-in-alt"></i> Присоединиться
+                        <button id="joinGameBtn" class="btn primary">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Присоединиться
                         </button>
                         <button id="settingsBtn" class="btn secondary">
-                            <i class="fas fa-cog"></i> Настройки
+                            <i class="fas fa-cog"></i>
+                            Настройки
                         </button>
                     </div>
                 </div>
@@ -57,14 +47,15 @@
             <div id="createGameScreen" class="screen">
                 <div class="screen-content">
                     <div class="form-group">
-                        <label for="playersCount">Количество игроков:</label>
+                        <label for="playersCount">Количество игроков (2-10):</label>
                         <input type="number" id="playersCount" min="2" max="10" value="4">
                     </div>
                     <div class="form-group">
                         <label for="roundTime">Время раунда (минуты):</label>
-                        <input type="number" id="roundTime" min="1" max="10" value="3">
+                        <input type="number" id="roundTime" min="1" max="10" value="5">
                     </div>
-                    <button id="confirmCreateBtn" class="btn primary">Создать</button>
+                    <button id="confirmCreateBtn" class="btn primary">Создать игру</button>
+                    <button id="backToMenuBtn" class="btn secondary">Назад</button>
                 </div>
             </div>
 
@@ -76,25 +67,7 @@
                         <input type="text" id="gameCode" placeholder="Введите код игры">
                     </div>
                     <button id="confirmJoinBtn" class="btn primary">Присоединиться</button>
-                </div>
-            </div>
-
-            <!-- Settings Screen -->
-            <div id="settingsScreen" class="screen">
-                <div class="screen-content">
-                    <h2>Настройки</h2>
-                    <div class="settings-group">
-                        <label for="soundToggle">Звуковые эффекты</label>
-                        <input type="checkbox" id="soundToggle" checked>
-                    </div>
-                    <div class="settings-group">
-                        <label for="notificationsToggle">Уведомления</label>
-                        <input type="checkbox" id="notificationsToggle" checked>
-                    </div>
-                    <div class="settings-group">
-                        <label for="themeToggle">Темная тема</label>
-                        <input type="checkbox" id="themeToggle" checked>
-                    </div>
+                    <button id="backToMenuBtn" class="btn secondary">Назад</button>
                 </div>
             </div>
 
@@ -103,36 +76,61 @@
                 <div class="screen-content">
                     <div class="game-info">
                         <h2>ID игры: <span id="gameId"></span></h2>
-                        <button id="copyGameIdBtn" class="btn small">Копировать ID</button>
+                        <button id="copyGameIdBtn" class="btn secondary">
+                            <i class="fas fa-copy"></i>
+                            Копировать ID
+                        </button>
                     </div>
-                    <div class="players-list" id="playersList"></div>
-                    <button id="startGameBtn" class="btn primary">Начать игру</button>
-                    <button id="endGameBtn" class="btn secondary">Завершить игру</button>
+                    <div class="players-list" id="playersList">
+                        <!-- Players will be added here dynamically -->
+                    </div>
+                    <button id="startGameBtn" class="btn primary">
+                        <i class="fas fa-play"></i>
+                        Начать игру
+                    </button>
                 </div>
             </div>
 
             <!-- Game Screen -->
             <div id="gameScreen" class="screen">
                 <div class="screen-content">
-                    <div class="game-info">
+                    <div class="game-status">
                         <div id="roleInfo"></div>
-                        <div id="gameTimer"></div>
+                        <div id="gameTimer" class="timer">05:00</div>
                     </div>
                     <div class="chat-container">
-                        <div class="chat-messages" id="chatMessages"></div>
+                        <div id="chatMessages" class="chat-messages">
+                            <!-- Messages will be added here dynamically -->
+                        </div>
                         <div class="chat-input">
                             <input type="text" id="messageInput" placeholder="Введите сообщение...">
-                            <button id="sendMessageBtn" class="btn small">Отправить</button>
+                            <button id="sendMessageBtn" class="btn primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
                         </div>
                     </div>
                     <button id="endGameBtn" class="btn secondary">Завершить игру</button>
                 </div>
             </div>
+
+            <!-- Settings Screen -->
+            <div id="settingsScreen" class="screen">
+                <div class="screen-content">
+                    <div class="settings-group">
+                        <label>Звуковые эффекты</label>
+                        <input type="checkbox" id="soundToggle" checked>
+                    </div>
+                    <div class="settings-group">
+                        <label>Уведомления</label>
+                        <input type="checkbox" id="notificationsToggle" checked>
+                    </div>
+                    <button id="backToMenuBtn" class="btn secondary">Назад</button>
+                </div>
+            </div>
         </main>
 
-        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <a href="#" class="nav-item" data-screen="home">
+            <a href="#" class="nav-item active" data-screen="home">
                 <i class="fas fa-home"></i>
                 <span>Главная</span>
             </a>
