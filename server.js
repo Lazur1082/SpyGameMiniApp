@@ -187,7 +187,27 @@ io.on('connection', (socket) => {
     // Создание новой игры
     socket.on('createGame', async (data) => {
         try {
-            const gameId = uuidv4().substring(0, 6);
+            const { playersCount, roundTime, playerName } = data;
+            
+            if (playersCount < 2 || playersCount > 10) {
+                socket.emit('gameError', { message: 'Количество игроков должно быть от 2 до 10' });
+                return;
+            }
+
+            const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const game = {
+                id: gameId,
+                players: [{
+                    id: socket.id,
+                    name: playerName,
+                    isAdmin: true
+                }],
+                playersCount,
+                roundTime,
+                status: 'waiting',
+                messages: []
+            };
+
             db.serialize(() => {
                 db.run('BEGIN TRANSACTION');
                 
@@ -215,7 +235,7 @@ io.on('connection', (socket) => {
                                 
                                 db.run('COMMIT');
                                 socket.join(gameId);
-                                socket.emit('gameCreated', { gameId });
+                                socket.emit('gameCreated', { gameId, players: game.players });
                             }
                         );
                     }
@@ -223,53 +243,67 @@ io.on('connection', (socket) => {
             });
         } catch (error) {
             console.error('Error creating game:', error);
-            socket.emit('error', { message: 'Ошибка создания игры' });
+            socket.emit('gameError', { message: 'Ошибка при создании игры' });
         }
     });
 
     // Присоединение к игре
     socket.on('joinGame', async (data) => {
         try {
+            const { gameId, playerName } = data;
+            const game = {
+                id: gameId,
+                players: [{
+                    id: socket.id,
+                    name: playerName,
+                    isAdmin: false
+                }],
+                playersCount: 2,
+                roundTime: 60,
+                status: 'waiting',
+                messages: []
+            };
+
             db.serialize(() => {
                 db.run('BEGIN TRANSACTION');
                 
                 // Проверяем существование игры
                 db.get(
                     'SELECT * FROM games WHERE game_id = ? AND status = ?',
-                    [data.gameId, 'waiting'],
-                    (err, game) => {
-                        if (err || !game) {
+                    [gameId, 'waiting'],
+                    (err, existingGame) => {
+                        if (err || !existingGame) {
                             db.run('ROLLBACK');
-                            socket.emit('error', { message: 'Игра не найдена или уже началась' });
+                            socket.emit('gameError', { message: 'Игра не найдена или уже началась' });
                             return;
                         }
                         
                         // Добавляем игрока
                         db.run(
                             'INSERT INTO players (game_id, user_id, role) VALUES (?, ?, ?)',
-                            [data.gameId, data.user.id, 'civilian'],
+                            [gameId, data.user.id, 'civilian'],
                             function(err) {
                                 if (err) {
                                     db.run('ROLLBACK');
-                                    socket.emit('error', { message: 'Ошибка присоединения к игре' });
+                                    socket.emit('gameError', { message: 'Ошибка присоединения к игре' });
                                     return;
                                 }
                                 
                                 db.run('COMMIT');
-                                socket.join(data.gameId);
+                                socket.join(gameId);
                                 
                                 // Получаем список игроков
                                 db.all(
                                     'SELECT p.*, u.name, u.avatar FROM players p JOIN users u ON p.user_id = u.id WHERE p.game_id = ?',
-                                    [data.gameId],
+                                    [gameId],
                                     (err, players) => {
                                         if (err) {
-                                            socket.emit('error', { message: 'Ошибка получения списка игроков' });
+                                            socket.emit('gameError', { message: 'Ошибка получения списка игроков' });
                                             return;
                                         }
                                         
-                                        socket.emit('gameJoined', { gameId: data.gameId, players });
-                                        io.to(data.gameId).emit('playerJoined', { players });
+                                        socket.emit('gameJoined', { gameId, players });
+                                        io.to(gameId).emit('playerJoined', { players });
                                     }
                                 );
                             }
@@ -279,35 +313,49 @@ io.on('connection', (socket) => {
             });
         } catch (error) {
             console.error('Error joining game:', error);
-            socket.emit('error', { message: 'Ошибка присоединения к игре' });
+            socket.emit('gameError', { message: 'Ошибка присоединения к игре' });
         }
     });
 
     // Начало игры
     socket.on('startGame', async (data) => {
         try {
+            const { gameId } = data;
+            const game = {
+                id: gameId,
+                players: [{
+                    id: socket.id,
+                    name: data.playerName,
+                    isAdmin: true
+                }],
+                playersCount: 2,
+                roundTime: 60,
+                status: 'playing',
+                messages: []
+            };
+
             db.serialize(() => {
                 db.run('BEGIN TRANSACTION');
                 
                 // Обновляем статус игры
                 db.run(
                     'UPDATE games SET status = ? WHERE game_id = ?',
-                    ['playing', data.gameId],
+                    ['playing', gameId],
                     function(err) {
                         if (err) {
                             db.run('ROLLBACK');
-                            socket.emit('error', { message: 'Ошибка начала игры' });
+                            socket.emit('gameError', { message: 'Ошибка начала игры' });
                             return;
                         }
                         
                         // Получаем список игроков
                         db.all(
                             'SELECT * FROM players WHERE game_id = ?',
-                            [data.gameId],
+                            [gameId],
                             (err, players) => {
                                 if (err) {
                                     db.run('ROLLBACK');
-                                    socket.emit('error', { message: 'Ошибка получения списка игроков' });
+                                    socket.emit('gameError', { message: 'Ошибка получения списка игроков' });
                                     return;
                                 }
                                 
@@ -318,7 +366,7 @@ io.on('connection', (socket) => {
                                 // Обновляем роли и слова
                                 players.forEach((player, index) => {
                                     const role = index === spyIndex ? 'spy' : 'civilian';
-                                    const word = role === 'spy' ? '' : location;
+                                    const word = role === 'spy' ? null : location;
                                     
                                     db.run(
                                         'UPDATE players SET role = ?, word = ? WHERE id = ?',
@@ -326,7 +374,7 @@ io.on('connection', (socket) => {
                                         (err) => {
                                             if (err) {
                                                 db.run('ROLLBACK');
-                                                socket.emit('error', { message: 'Ошибка обновления ролей' });
+                                                socket.emit('gameError', { message: 'Ошибка обновления ролей' });
                                                 return;
                                             }
                                         }
@@ -334,7 +382,7 @@ io.on('connection', (socket) => {
                                 });
                                 
                                 db.run('COMMIT');
-                                io.to(data.gameId).emit('gameStarted', { players });
+                                io.to(gameId).emit('gameStarted', { players });
                             }
                         );
                     }
@@ -342,30 +390,38 @@ io.on('connection', (socket) => {
             });
         } catch (error) {
             console.error('Error starting game:', error);
-            socket.emit('error', { message: 'Ошибка начала игры' });
+            socket.emit('gameError', { message: 'Ошибка начала игры' });
         }
     });
 
     // Отправка сообщения в чат
-    socket.on('chatMessage', ({ text }) => {
+    socket.on('chatMessage', (data) => {
         try {
-            db.get(
-                'SELECT p.*, u.name FROM players p JOIN users u ON p.user_id = u.id WHERE p.id = ?',
-                [socket.id],
-                (err, player) => {
-                    if (err || !player) {
-                        socket.emit('error', { message: 'Ошибка отправки сообщения' });
-                        return;
-                    }
-                    
-                    io.to(player.game_id).emit('chatMessage', {
-                        sender: player.name,
-                        text
-                    });
-                }
-            );
+            const { gameId, sender, text } = data;
+            const game = {
+                id: gameId,
+                players: [{
+                    id: socket.id,
+                    name: sender,
+                    isAdmin: false
+                }],
+                playersCount: 2,
+                roundTime: 60,
+                status: 'playing',
+                messages: []
+            };
+
+            const message = {
+                sender,
+                text,
+                timestamp: new Date().toISOString()
+            };
+
+            game.messages.push(message);
+            io.to(gameId).emit('chatMessage', message);
         } catch (error) {
-            console.error('Ошибка при отправке сообщения:', error);
+            console.error('Error sending message:', error);
+            socket.emit('gameError', { message: 'Ошибка отправки сообщения' });
         }
     });
 
@@ -382,7 +438,7 @@ io.on('connection', (socket) => {
                     (err, spy) => {
                         if (err) {
                             db.run('ROLLBACK');
-                            socket.emit('error', { message: 'Ошибка завершения игры' });
+                            socket.emit('gameError', { message: 'Ошибка завершения игры' });
                             return;
                         }
                         
@@ -393,7 +449,7 @@ io.on('connection', (socket) => {
                             (err) => {
                                 if (err) {
                                     db.run('ROLLBACK');
-                                    socket.emit('error', { message: 'Ошибка завершения игры' });
+                                    socket.emit('gameError', { message: 'Ошибка завершения игры' });
                                     return;
                                 }
                                 
@@ -457,6 +513,40 @@ io.on('connection', (socket) => {
     // Обработка отключения
     socket.on('disconnect', () => {
         console.log('Client disconnected');
+        db.each(
+            'SELECT game_id FROM players WHERE id = ?',
+            [socket.id],
+            (err, row) => {
+                if (err || !row) return;
+                
+                db.run(
+                    'DELETE FROM players WHERE id = ?',
+                    [socket.id],
+                    (err) => {
+                        if (err) return;
+                        
+                        // Проверяем, остались ли игроки
+                        db.get(
+                            'SELECT COUNT(*) as count FROM players WHERE game_id = ?',
+                            [row.game_id],
+                            (err, result) => {
+                                if (err) return;
+                                
+                                if (result.count === 0) {
+                                    // Удаляем игру, если нет игроков
+                                    db.run(
+                                        'DELETE FROM games WHERE game_id = ?',
+                                        [row.game_id]
+                                    );
+                                } else {
+                                    io.to(row.game_id).emit('playerLeft', { players: result.count });
+                                }
+                            }
+                        );
+                    }
+                );
+            }
+        );
     });
 });
 
