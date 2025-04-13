@@ -1,21 +1,23 @@
 :root {
     /* Light theme variables */
-    --light-bg-color: #ffffff;
-    --light-text-color: #2c3e50;
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --primary-color: #2481cc;
+    --secondary-color: #f0f0f0;
+    --border-color: #e0e0e0;
+    --shadow-color: rgba(0, 0, 0, 0.1);
     --light-secondary-bg: #f8f9fa;
     --light-accent-color: #3498db;
-    --light-border-color: #e9ecef;
     --light-hover-color: #f1f3f5;
     --light-shadow-color: rgba(0, 0, 0, 0.1);
     --light-disabled-color: #adb5bd;
     
     /* Dark theme variables */
-    --dark-bg-color: #1a1b1e;
-    --dark-text-color: #e9ecef;
-    --dark-secondary-bg: #2c2e33;
-    --dark-accent-color: #ff4444;
-    --dark-border-color: #3a3d44;
-    --dark-hover-color: #343a40;
+    --dark-bg-color: #1a1a1a;
+    --dark-text-color: #ffffff;
+    --dark-primary-color: #2481cc;
+    --dark-secondary-color: #2d2d2d;
+    --dark-border-color: #404040;
     --dark-shadow-color: rgba(0, 0, 0, 0.3);
     --dark-disabled-color: #495057;
 
@@ -28,24 +30,28 @@
 
 /* Theme variables */
 [data-theme="light"] {
-    --bg-color: var(--light-bg-color);
-    --text-color: var(--light-text-color);
+    --bg-color: var(--bg-color);
+    --text-color: var(--text-color);
+    --primary-color: var(--primary-color);
+    --secondary-color: var(--secondary-color);
+    --border-color: var(--border-color);
+    --shadow-color: var(--shadow-color);
     --secondary-bg: var(--light-secondary-bg);
     --accent-color: var(--light-accent-color);
-    --border-color: var(--light-border-color);
     --hover-color: var(--light-hover-color);
-    --shadow-color: var(--light-shadow-color);
     --disabled-color: var(--light-disabled-color);
 }
 
 [data-theme="dark"] {
     --bg-color: var(--dark-bg-color);
     --text-color: var(--dark-text-color);
+    --primary-color: var(--dark-primary-color);
+    --secondary-color: var(--dark-secondary-color);
+    --border-color: var(--dark-border-color);
+    --shadow-color: var(--dark-shadow-color);
     --secondary-bg: var(--dark-secondary-bg);
     --accent-color: var(--dark-accent-color);
-    --border-color: var(--dark-border-color);
     --hover-color: var(--dark-hover-color);
-    --shadow-color: var(--dark-shadow-color);
     --disabled-color: var(--dark-disabled-color);
 }
 
@@ -60,9 +66,9 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     line-height: 1.6;
     min-height: 100vh;
     display: flex;
@@ -188,18 +194,18 @@ main {
 
 /* Buttons */
 .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
     border: none;
     border-radius: 8px;
+    padding: 0.75rem 1.5rem;
     font-size: 1rem;
-    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin: 0.5rem 0;
-    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .btn:hover {
@@ -216,14 +222,9 @@ main {
     margin-right: 0.5rem;
 }
 
-.btn.primary {
-    background-color: #2481cc;
-    color: white;
-}
-
 .btn.secondary {
-    background-color: #e0e0e0;
-    color: #333;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
 }
 
 .btn.small {
@@ -245,10 +246,11 @@ main {
 .form-group input {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     font-size: 1rem;
-    transition: border-color 0.3s ease;
 }
 
 .form-group input:focus {
@@ -259,19 +261,17 @@ main {
 
 /* Game elements */
 .players-list {
-    background-color: white;
+    background-color: var(--secondary-color);
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .player-item {
     display: flex;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
-    transition: background-color 0.3s ease;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .player-item:hover {
@@ -319,14 +319,10 @@ main {
 
 /* Chat */
 .chat-container {
-    background-color: white;
+    background-color: var(--secondary-color);
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    height: calc(100vh - 300px);
-    display: flex;
-    flex-direction: column;
 }
 
 .chat-messages {
@@ -337,22 +333,11 @@ main {
 }
 
 .message {
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
+    background-color: var(--bg-color);
     border-radius: 8px;
-    max-width: 80%;
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .message.received {
@@ -398,10 +383,10 @@ main {
 
 /* Bottom navigation */
 .bottom-nav {
+    background-color: var(--bg-color);
+    border-top: 1px solid var(--border-color);
     display: none;
-    background-color: white;
     padding: 0.75rem;
-    border-top: 1px solid #eee;
     position: sticky;
     bottom: 0;
     z-index: 100;
@@ -413,17 +398,12 @@ main {
 }
 
 .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #666;
+    color: var(--text-color);
     text-decoration: none;
-    font-size: 0.75rem;
-    transition: color 0.3s ease;
 }
 
-.nav-item:hover {
-    color: #2481cc;
+.nav-item.active {
+    color: var(--primary-color);
 }
 
 .nav-item i {
@@ -431,16 +411,12 @@ main {
     margin-bottom: 0.25rem;
 }
 
-.nav-item.active {
-    color: #2481cc;
-}
-
 /* Theme toggle */
 .theme-toggle {
     background: none;
     border: none;
-    color: white;
-    font-size: 1.25rem;
+    color: var(--text-color);
+    font-size: 1.2rem;
     cursor: pointer;
     padding: 0.5rem;
     transition: transform 0.3s ease;

@@ -179,7 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Game creation
     if (buttons.confirmCreate) {
         buttons.confirmCreate.addEventListener('click', () => {
-            const playersCount = inputs.playersCount?.value || 4;
+            const playersCount = parseInt(inputs.playersCount?.value) || 4;
+            if (playersCount < 2 || playersCount > 8) {
+                alert('Количество игроков должно быть от 2 до 8');
+                return;
+            }
             socket.emit('createGame', {
                 playersCount,
                 playerName: state.playerName
@@ -190,13 +194,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Game joining
     if (buttons.confirmJoin) {
         buttons.confirmJoin.addEventListener('click', () => {
-            const gameId = inputs.gameId?.value;
-            if (gameId) {
-                socket.emit('joinGame', {
-                    gameId,
-                    playerName: state.playerName
-                });
+            const gameId = inputs.gameId?.value?.trim();
+            if (!gameId) {
+                alert('Введите код игры');
+                return;
             }
+            socket.emit('joinGame', {
+                gameId,
+                playerName: state.playerName
+            });
         });
     }
 
@@ -294,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Socket event listeners
 socket.on('connect', () => {
     console.log('Connected to server');
+    addChatMessage('Подключено к серверу', 'system');
 });
 
 socket.on('gameCreated', (data) => {
@@ -306,6 +313,10 @@ socket.on('gameCreated', (data) => {
 });
 
 socket.on('gameJoined', (data) => {
+    if (data.error) {
+        alert(data.error);
+        return;
+    }
     state.gameId = data.gameId;
     document.getElementById('gameId').textContent = data.gameId;
     updatePlayersList(data.players);
@@ -315,12 +326,12 @@ socket.on('gameJoined', (data) => {
 
 socket.on('playerJoined', (data) => {
     updatePlayersList(data.players);
-    addChatMessage(`${data.playerName || 'Игрок'} присоединился к игре`, 'system');
+    addChatMessage(`${data.playerName} присоединился к игре`, 'system');
 });
 
 socket.on('playerLeft', (data) => {
     updatePlayersList(data.players);
-    addChatMessage(`${data.playerName || 'Игрок'} покинул игру`, 'system');
+    addChatMessage(`${data.playerName} покинул игру`, 'system');
 });
 
 socket.on('gameStarted', (data) => {
