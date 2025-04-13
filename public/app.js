@@ -12,7 +12,8 @@ const state = {
     isAdmin: false,
     players: [],
     role: null,
-    location: null
+    location: null,
+    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
 };
 
 // DOM elements
@@ -50,6 +51,19 @@ const lists = {
     players: document.getElementById('playersList'),
     chat: document.getElementById('chatMessages')
 };
+
+// Loading screen
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const app = document.querySelector('.app');
+    if (loadingScreen && app) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            app.style.display = 'flex';
+        }, 500);
+    }
+}
 
 // Theme handling
 function toggleTheme() {
@@ -99,7 +113,7 @@ function updatePlayersList(players) {
         playerItem.className = 'player-item';
         playerItem.innerHTML = `
             <div class="player-avatar">👤</div>
-            <div class="player-name">${player.name}</div>
+            <div class="player-name">${player.name || 'Игрок'}</div>
             ${player.isAdmin ? '<div class="admin-badge">👑</div>' : ''}
         `;
         lists.players.appendChild(playerItem);
@@ -116,11 +130,11 @@ function addChatMessage(message, type = 'received', playerName = 'System') {
     
     if (playerName !== 'System') {
         messageElement.innerHTML = `
-            <div class="message-sender">${playerName}</div>
-            <div class="message-text">${message}</div>
+            <div class="message-sender">${playerName || 'Игрок'}</div>
+            <div class="message-text">${message || ''}</div>
         `;
     } else {
-        messageElement.innerHTML = `<div class="message-text">${message}</div>`;
+        messageElement.innerHTML = `<div class="message-text">${message || ''}</div>`;
     }
     
     chatMessages.appendChild(messageElement);
@@ -136,6 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     showScreen('home');
+
+    // Hide loading screen after 1 second
+    setTimeout(hideLoadingScreen, 1000);
 
     // Theme toggle
     if (buttons.themeToggle) {
@@ -165,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const playersCount = inputs.playersCount?.value || 4;
             socket.emit('createGame', {
                 playersCount,
-                playerName: tg.initDataUnsafe.user?.first_name || 'Player'
+                playerName: state.playerName
             });
         });
     }
@@ -177,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (gameId) {
                 socket.emit('joinGame', {
                     gameId,
-                    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
+                    playerName: state.playerName
                 });
             }
         });
@@ -234,9 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 socket.emit('chatMessage', {
                     gameId: state.gameId,
                     message,
-                    playerName: tg.initDataUnsafe.user?.first_name || 'Player'
+                    playerName: state.playerName
                 });
-                addChatMessage(message, 'sent', tg.initDataUnsafe.user?.first_name || 'Player');
+                addChatMessage(message, 'sent', state.playerName);
                 inputs.message.value = '';
             }
         });
@@ -262,6 +279,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Handle Enter key in chat
+    if (inputs.message) {
+        inputs.message.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                buttons.sendMessage.click();
+            }
+        });
+    }
 });
 
 // Socket event listeners
@@ -288,16 +315,16 @@ socket.on('gameJoined', (data) => {
 
 socket.on('playerJoined', (data) => {
     updatePlayersList(data.players);
-    addChatMessage(`${data.playerName} присоединился к игре`, 'system');
+    addChatMessage(`${data.playerName || 'Игрок'} присоединился к игре`, 'system');
 });
 
 socket.on('playerLeft', (data) => {
     updatePlayersList(data.players);
-    addChatMessage(`${data.playerName} покинул игру`, 'system');
+    addChatMessage(`${data.playerName || 'Игрок'} покинул игру`, 'system');
 });
 
 socket.on('gameStarted', (data) => {
-    const playerData = data.players.find(p => p.name === (tg.initDataUnsafe.user?.first_name || 'Player'));
+    const playerData = data.players.find(p => p.name === state.playerName);
     if (playerData) {
         state.role = playerData.role;
         state.location = playerData.location;
