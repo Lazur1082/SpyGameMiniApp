@@ -190,6 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Код игры скопирован!');
         }
     });
+
+    // Initialize screens
+    Object.values(screens).forEach(screen => {
+        if (screen) {
+            screen.style.display = 'none';
+        }
+    });
+    showScreen('home');
 });
 
 // Socket event listeners
@@ -203,6 +211,7 @@ socket.on('gameCreated', (data) => {
     document.getElementById('gameId').textContent = data.gameId;
     updatePlayersList(data.players);
     showScreen('lobby');
+    addChatMessage('Вы создали игру!', 'system');
 });
 
 socket.on('gameJoined', (data) => {
@@ -210,6 +219,7 @@ socket.on('gameJoined', (data) => {
     document.getElementById('gameId').textContent = data.gameId;
     updatePlayersList(data.players);
     showScreen('lobby');
+    addChatMessage('Вы присоединились к игре!', 'system');
 });
 
 socket.on('playerJoined', (data) => {
