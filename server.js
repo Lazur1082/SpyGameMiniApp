@@ -154,12 +154,10 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Измените обработчик события для присоединения игрока
+    // Обработка события присоединения игрока
     socket.on('playerJoined', (data) => {
-        if (data.playerName) {
-            updatePlayersList(data.players);
-            addChatMessage(`${data.playerName} присоединился к игре`, 'system');
-        }
+        updatePlayersList(data.players);
+        addChatMessage(`${data.playerName} присоединился к игре`, 'system');
     });
 });
 
@@ -209,3 +207,26 @@ function hideLoadingScreen() {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(hideLoadingScreen, 1000);
 });
+
+// Game joining
+if (buttons.confirmJoin) {
+    buttons.confirmJoin.addEventListener('click', () => {
+        const gameId = inputs.gameId.value.trim();
+        const playerName = document.getElementById('playerNameJoin').value.trim(); // Получаем ник
+
+        if (!gameId) {
+            alert('Введите код игры');
+            return;
+        }
+
+        if (!playerName) {
+            alert('Введите ваш ник');
+            return;
+        }
+
+        socket.emit('joinGame', {
+            gameId,
+            playerName // Передаем ник в событии
+        });
+    });
+}
